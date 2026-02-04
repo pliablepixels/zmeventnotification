@@ -12,7 +12,7 @@ use ZmEventNotification::Config qw(:all);
 our @EXPORT_OK = qw(
   trim rsplit uniq getInterval isValidMonIntList isInList
   getConnFields getObjectForConn getConnectionIdentity parseDetectResults
-  buildPictureUrl stripFrameMatchType maskPassword untaintCmd appendImagePath
+  buildPictureUrl stripFrameMatchType maskPassword appendImagePath
 );
 
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
@@ -167,12 +167,6 @@ sub maskPassword {
   my $str = shift;
   $str =~ s/pass(word)?=(.*?)($|&|})/pass$1=xxx$3/g;
   return $str;
-}
-
-sub untaintCmd {
-  my $cmd = shift;
-  ($cmd) = $cmd =~ /^(.*)$/;
-  return $cmd;
 }
 
 sub appendImagePath {

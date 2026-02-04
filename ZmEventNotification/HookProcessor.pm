@@ -7,7 +7,7 @@ use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday);
 use ZmEventNotification::Constants qw(:all);
 use ZmEventNotification::Config qw(:all);
-use ZmEventNotification::Util qw(getConnectionIdentity isInList getInterval parseDetectResults buildPictureUrl stripFrameMatchType untaintCmd appendImagePath);
+use ZmEventNotification::Util qw(getConnectionIdentity isInList getInterval parseDetectResults buildPictureUrl stripFrameMatchType appendImagePath);
 use ZmEventNotification::FCM qw(sendOverFCM);
 use ZmEventNotification::MQTT qw(sendOverMQTTBroker);
 use ZmEventNotification::Rules qw(isAllowedInRules);
@@ -277,7 +277,6 @@ sub _run_api_push {
 
     $api_cmd = appendImagePath($api_cmd, $eid) if $hooks_config{hook_pass_image_path};
     main::Info("Executing API script command for $event_type: $api_cmd");
-    $api_cmd = untaintCmd($api_cmd);
     my $api_res = `$api_cmd`;
     chomp($api_res);
     my $retcode = $? >> 8;
@@ -329,7 +328,6 @@ sub processNewAlarmsInFork {
 
           $cmd = appendImagePath($cmd, $eid) if $hooks_config{hook_pass_image_path};
           main::Debug(1, 'Invoking hook on event start:' . $cmd);
-          $cmd = untaintCmd($cmd);
           print main::WRITER "update_parallel_hooks--TYPE--add\n";
           my $res = `$cmd`;
           $hookResult = $? >> 8;
@@ -354,7 +352,6 @@ sub processNewAlarmsInFork {
               . $resJsonString . '" ';
 
             $user_cmd = appendImagePath($user_cmd, $eid) if $hooks_config{hook_pass_image_path};
-            $user_cmd = untaintCmd($user_cmd);
             main::Debug(1, "invoking user start notification script $user_cmd");
             my $user_res = `$user_cmd`;
           } # user notify script
@@ -457,8 +454,6 @@ sub processNewAlarmsInFork {
 
           $cmd = appendImagePath($cmd, $eid) if $hooks_config{hook_pass_image_path};
           main::Debug(1, 'Invoking hook on event end:' . $cmd);
-          $cmd = untaintCmd($cmd);
-
           print main::WRITER "update_parallel_hooks--TYPE--add\n";
           my $res = `$cmd`;
           $hookResult = $? >> 8;
@@ -486,7 +481,6 @@ sub processNewAlarmsInFork {
               . $resJsonString . '" ';
 
             $user_cmd = appendImagePath($user_cmd, $eid) if $hooks_config{hook_pass_image_path};
-            $user_cmd = untaintCmd($user_cmd);
             main::Debug(1, "invoking user end notification script $user_cmd");
             my $user_res = `$user_cmd`;
           } # user notify script

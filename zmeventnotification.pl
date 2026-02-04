@@ -1,4 +1,4 @@
-#!/usr/bin/perl  -T
+#!/usr/bin/perl
 #
 # ==========================================================================
 #
@@ -43,12 +43,10 @@ use Time::Seconds;
 use Symbol qw(qualify_to_ref);
 use IO::Select;
 use FindBin;
-# Untaint the script directory for use lib (safe: derived from $0)
 our $app_version;
 BEGIN {
-  my ($safe_dir) = $FindBin::RealBin =~ /^(.+)$/;
   require lib;
-  lib->import($safe_dir);
+  lib->import($FindBin::RealBin);
 
   # Read version from the VERSION file at repo root
   my $version_file = "$FindBin::RealBin/VERSION";
@@ -680,12 +678,8 @@ sub restartES {
   } else {
     Debug(1, 'Self exec-ing as zmdc is not tracking me');
 
-    # untaint via reg-exp
-    if ( $0 =~ /^(.*)$/ ) {
-      my $f = $1;
-      Info("restarting $f");
-      exec($f);
-    }
+    Info("restarting $0");
+    exec($0);
   }
 }
 

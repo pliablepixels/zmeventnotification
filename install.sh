@@ -409,6 +409,11 @@ install_es_config() {
             print_success "secrets migration complete"
             mv "${TARGET_CONFIG}/secrets.ini" "${TARGET_CONFIG}/secrets.ini.migrated"
             print_important "Renamed old secrets.ini to secrets.ini.migrated"
+            # Update secrets path in main config if it still references .ini
+            if [ -f "${TARGET_CONFIG}/zmeventnotification.yml" ]; then
+                sed -i 's|secrets\.ini|secrets.yml|g' "${TARGET_CONFIG}/zmeventnotification.yml"
+                print_success "Updated secrets path in zmeventnotification.yml"
+            fi
         else
             print_warning "secrets migration failed"
         fi
