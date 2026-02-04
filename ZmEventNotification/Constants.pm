@@ -19,12 +19,6 @@ use constant {
   WEB  => 1002
 };
 
-# Child fork states
-use constant {
-  ACTIVE => 100,
-  EXITED => 101
-};
-
 # escontrol notification states
 use constant {
   ESCONTROL_FORCE_NOTIFY   => 1,

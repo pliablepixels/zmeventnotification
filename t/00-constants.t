@@ -23,10 +23,6 @@ is(FCM,  1000, 'FCM == 1000');
 is(MQTT, 1001, 'MQTT == 1001');
 is(WEB,  1002, 'WEB == 1002');
 
-# --- Child fork states ---
-is(ACTIVE, 100, 'ACTIVE == 100');
-is(EXITED, 101, 'EXITED == 101');
-
 # --- escontrol states ---
 is(ESCONTROL_FORCE_NOTIFY,   1,  'ESCONTROL_FORCE_NOTIFY == 1');
 is(ESCONTROL_DEFAULT_NOTIFY, 0,  'ESCONTROL_DEFAULT_NOTIFY == 0');

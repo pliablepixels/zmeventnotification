@@ -12,7 +12,7 @@ use ZmEventNotification::Config qw(:all);
 our @EXPORT_OK = qw(
   trim rsplit uniq getInterval isValidMonIntList isInList
   getConnFields getObjectForConn getConnectionIdentity parseDetectResults
-  buildPictureUrl stripFrameMatchType
+  buildPictureUrl stripFrameMatchType maskPassword untaintCmd appendImagePath
 );
 
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
@@ -73,7 +73,7 @@ sub isInList {
   my $mid     = shift;
   return 1 if ( !defined($monlist) || !$monlist || $monlist eq '-1' || $monlist eq '' );
 
-  my %mids = map { $_ => !undef } split(',', $monlist);
+  my %mids = map { $_ => 1 } split(',', $monlist);
   return exists $mids{$mid};
 }
 
@@ -154,15 +154,33 @@ sub buildPictureUrl {
   my $match_type = substr($cause, 0, 3);
   if ($match_type eq '[a]') {
     $pic = $pic =~ s/BESTMATCH/alarm/gr;
-    my $dpic = $pic;
-    $dpic =~ s/pass(word)?=(.*?)($|&)/pass$1=xxx$3/g;
-    main::Debug(2, "$label: Alarm frame matched, picture url: $dpic");
+    main::Debug(2, "$label: Alarm frame matched, picture url: " . maskPassword($pic));
   } elsif ($match_type eq '[s]') {
     $pic = $pic =~ s/BESTMATCH/snapshot/gr;
     main::Debug(2, "$label: Snapshot frame matched, picture url: $pic");
   }
 
   return $pic;
+}
+
+sub maskPassword {
+  my $str = shift;
+  $str =~ s/pass(word)?=(.*?)($|&|})/pass$1=xxx$3/g;
+  return $str;
+}
+
+sub untaintCmd {
+  my $cmd = shift;
+  ($cmd) = $cmd =~ /^(.*)$/;
+  return $cmd;
+}
+
+sub appendImagePath {
+  my ($cmd, $eid) = @_;
+  my $event = new ZoneMinder::Event($eid);
+  $cmd = $cmd . ' "' . $event->Path() . '"';
+  main::Debug(2, 'Adding event path:' . $event->Path());
+  return $cmd;
 }
 
 sub parseDetectResults {

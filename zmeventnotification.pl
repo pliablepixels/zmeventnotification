@@ -36,14 +36,12 @@
 
 use strict;
 use warnings;
-use bytes;
 
 use POSIX ':sys_wait_h';
 use Time::HiRes qw/gettimeofday/;
 use Time::Seconds;
 use Symbol qw(qualify_to_ref);
 use IO::Select;
-use MIME::Base64;
 use FindBin;
 # Untaint the script directory for use lib (safe: derived from $0)
 our $app_version;
@@ -80,8 +78,6 @@ use ZmEventNotification::WebSocketHandler qw(:all);
 use ZmEventNotification::HookProcessor qw(:all);
 
 use ZoneMinder;
-use POSIX;
-use DBI;
 use version;
 
 # Flush output immediately so log lines aren't buffered
@@ -95,7 +91,6 @@ delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 if ( !try_use('JSON') ) {
   if ( !try_use('JSON::XS') ) {
     Fatal('JSON or JSON::XS  missing');
-    exit(-1);
   }
 }
 
@@ -108,7 +103,6 @@ my $parallel_hooks = 0; # Global tracker for active hooks
 my $total_forks = 0;    # Global tracker of all forks since start
 
 my $help;
-my $version;
 
 our $config_file;
 our $config_file_present;
@@ -122,8 +116,6 @@ our %monitors            = ();
 my %active_events       = ();
 my $monitor_reload_time = 0;
 my $es_start_time       = time();
-my $apns_feedback_time  = 0;
-my $proxy_reach_time    = 0;
 our @active_connections = ();
 our $wss;
 my $zmdc_active = 0;
@@ -180,16 +172,11 @@ USAGE
 
 GetOptions(
   'help'         => \$help,
-  'version'      => \$version,
   'config=s'     => \$config_file,
   'check-config' => \$check_config,
   'debug'        => \my $debug
 );
 
-if ($version) {
-  print($app_version);
-  exit(0);
-}
 exit( print(USAGE) ) if $help;
 
 if ( !$config_file ) {
@@ -391,29 +378,16 @@ sub try_use {
 
 sub checkNewEvents() {
 
-  my $eventFound = 0;
   my @newEvents  = ();
 
   if ((time() - $monitor_reload_time) > $server_config{monitor_reload_interval}) {
 
     # use this time to keep token counters updated
     my $update_tokens = 0;
-    my %tokens_data;
+    my $tokens_data;
     if ($fcm_config{enabled}) {
-      open(my $fh, '<', $fcm_config{token_file})
-      || Error('Cannot open to update token counts ' . $fcm_config{token_file});
-      my $hr;
-      my $data = do { local $/ = undef; <$fh> };
-      close($fh);
-      if ($data) { # Could be empty
-        eval { $hr = decode_json($data); };
-        if ($@) {
-          Error("Could not parse token file $fcm_config{token_file} for token counts: $!");
-        } else {
-          %tokens_data = %$hr;
-          $update_tokens = 1;
-        }
-      }
+      $tokens_data = readTokenFile();
+      $update_tokens = 1 if $tokens_data;
     }
 
     # this means we have hit the reload monitor timeframe
@@ -422,7 +396,7 @@ sub checkNewEvents() {
     my $ndx = 1;
     foreach (@active_connections) {
       if ($update_tokens and ($_->{type} == FCM)) {
-        $tokens_data{tokens}->{$_->{token}}->{invocations}=
+        $tokens_data->{tokens}->{$_->{token}}->{invocations}=
         defined($_->{invocations})? $_->{invocations} : {count=>0, at=>(localtime)[4]};
       }
 
@@ -441,13 +415,7 @@ sub checkNewEvents() {
     }
 
     if ($update_tokens && $fcm_config{enabled}) {
-      if (open(my $fh, '>', $fcm_config{token_file})) {
-        my $json = encode_json(\%tokens_data);
-        print $fh $json;
-        close($fh);
-      } else {
-        Error("Error writing tokens file $fcm_config{token_file} during count update: $!");
-      }
+      writeTokenFile($tokens_data);
     }
 
     foreach my $monitor ( values(%monitors) ) {
@@ -497,7 +465,6 @@ sub checkNewEvents() {
         # this means we haven't previously worked on this alarm
         # so create an event start object for this monitor
 
-        $eventFound++;
 
         # First we need to close any other open events for this monitor
         foreach my $ev ( keys %{ $active_events{$mid} } ) {
@@ -547,7 +514,7 @@ sub checkNewEvents() {
     } # end if ( $state == STATE_ALARM || $state == STATE_ALERT )
   } # end foreach monitor
 
-  Debug(2, "checkEvents() new events found=$eventFound");
+  Debug(2, 'checkEvents() new events found=' . scalar @newEvents);
   return @newEvents;
 }
 
@@ -582,9 +549,10 @@ sub loadMonitors {
     or Fatal("Can't prepare '$sql': " . $dbh->errstr());
   my $res = $sth->execute( $Config{ZM_SERVER_ID} ? $Config{ZM_SERVER_ID} : () )
     or Fatal("Can't execute: " . $sth->errstr());
+  my %skip = map { $_ => 1 } split(',', $server_config{skip_monitors} // '');
   while ( my $monitor = $sth->fetchrow_hashref() ) {
     next if $monitor->{Deleted};
-    if ( { map { $_ => 1 } split(',', $server_config{skip_monitors} // '') }->{ $monitor->{Id} } ) {
+    if ( $skip{ $monitor->{Id} } ) {
       Debug(1, "$$monitor{Id} is in skip list, not going to process");
       next;
     }

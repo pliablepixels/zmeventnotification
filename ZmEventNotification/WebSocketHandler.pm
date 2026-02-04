@@ -16,6 +16,12 @@ our @EXPORT_OK = qw(
 );
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
+sub _safe_send {
+  my ($conn, $str) = @_;
+  eval { $conn->send_utf8($str); };
+  main::Error("Error sending message: $@") if $@;
+}
+
 sub getNotificationStatusEsControl {
   my $id = shift;
   if ( !exists $escontrol_interface_settings{notifications}{$id} ) {
@@ -63,8 +69,7 @@ sub processEsControlCommand {
         reason  => 'NOTCONTROL',
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending NOT CONTROL: $@") if $@;
+    _safe_send($conn, $str);
 
     return;
   }
@@ -77,8 +82,7 @@ sub processEsControlCommand {
         reason => 'NODATA'
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending ADMIN NO DATA: $@") if $@;
+    _safe_send($conn, $str);
 
     return;
   }
@@ -93,22 +97,21 @@ sub processEsControlCommand {
         response => encode_json( \%escontrol_interface_settings )
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending message: $@") if $@;
+    _safe_send($conn, $str);
 
-  } elsif ( $json->{data}->{command} eq 'mute' ) {
-    main::Info('ESCONTROL: Admin Interface: Mute notifications');
+  } elsif ( $json->{data}->{command} eq 'mute' || $json->{data}->{command} eq 'unmute' ) {
+    my $is_mute = $json->{data}->{command} eq 'mute';
+    my $state = $is_mute ? ESCONTROL_FORCE_MUTE : ESCONTROL_FORCE_NOTIFY;
+    my $label = $is_mute ? 'Mute' : 'Unmute';
+    main::Info("ESCONTROL: Admin Interface: $label notifications");
 
-    my @mids;
-    if ( $json->{data}->{monitors} ) {
-      @mids = @{ $json->{data}->{monitors} };
-    } else {
-      @mids = getAllMonitorIds();
-    }
+    my @mids = $json->{data}->{monitors}
+      ? @{ $json->{data}->{monitors} }
+      : getAllMonitorIds();
 
     foreach my $mid (@mids) {
-      $escontrol_interface_settings{notifications}{$mid} = ESCONTROL_FORCE_MUTE;
-      main::Debug(2, "ESCONTROL: setting notification for Mid:$mid to ESCONTROL_FORCE_MUTE");
+      $escontrol_interface_settings{notifications}{$mid} = $state;
+      main::Debug(2, "ESCONTROL: setting notification for Mid:$mid to $state");
     }
 
     main::saveEsControlSettings();
@@ -119,35 +122,7 @@ sub processEsControlCommand {
         request => $json
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending message: $@") if $@;
-
-  } elsif ( $json->{data}->{command} eq 'unmute' ) {
-    main::Info('ESCONTROL: Admin Interface: Unmute notifications');
-
-    my @mids;
-    if ( $json->{data}->{monitors} ) {
-      @mids = @{ $json->{data}->{monitors} };
-    } else {
-      @mids = getAllMonitorIds();
-    }
-
-    foreach my $mid (@mids) {
-      $escontrol_interface_settings{notifications}{$mid} =
-        ESCONTROL_FORCE_NOTIFY;
-      main::Debug(2, "ESCONTROL: setting notification for Mid:$mid to ESCONTROL_FORCE_NOTIFY");
-    }
-
-    main::saveEsControlSettings();
-    my $str = encode_json(
-      { event   => 'escontrol',
-        type    => '',
-        status  => 'Success',
-        request => $json
-      }
-    );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending message: $@") if $@;
+    _safe_send($conn, $str);
 
   } elsif ( $json->{data}->{command} eq 'edit' ) {
     my $key = $json->{data}->{key};
@@ -165,8 +140,7 @@ sub processEsControlCommand {
         request => $json
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending message: $@") if $@;
+    _safe_send($conn, $str);
 
   } elsif ( $json->{data}->{command} eq 'restart' ) {
     main::Info('ES_CONTROL: restart ES');
@@ -178,8 +152,7 @@ sub processEsControlCommand {
         request => $json
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending message: $@") if $@;
+    _safe_send($conn, $str);
     main::restartES();
 
   } elsif ( $json->{data}->{command} eq 'reset' ) {
@@ -192,8 +165,7 @@ sub processEsControlCommand {
         request => $json
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending message: $@") if $@;
+    _safe_send($conn, $str);
     %escontrol_interface_settings = ( notifications => {} );
     populateEsControlNotification();
     main::saveEsControlSettings();
@@ -209,8 +181,7 @@ sub processEsControlCommand {
         request => $json
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending NOTSUPPORTED: $@") if $@;
+    _safe_send($conn, $str);
   }
 }
 
@@ -241,14 +212,12 @@ sub validateAuth {
         main::Debug(2, 'Comparing using mysql hash');
         if ( !main::try_use('Crypt::MySQL qw(password password41)') ) {
           main::Fatal('Crypt::MySQL  missing, cannot validate password');
-          return 0;
         }
         my $encryptedPassword = password41($p);
         return $state->{Password} eq $encryptedPassword;
       } else {                     # try bcrypt
         if ( !main::try_use('Crypt::Eksblowfish::Bcrypt') ) {
           main::Fatal('Crypt::Eksblowfish::Bcrypt missing, cannot validate password');
-          return 0;
         }
         my $saved_pass = $state->{Password};
 
@@ -284,8 +253,7 @@ sub processIncomingMessage {
         reason => 'BADJSON'
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending BADJSON: $@") if $@;
+    _safe_send($conn, $str);
     return;
   }
 
@@ -300,8 +268,7 @@ sub processIncomingMessage {
         reason => 'PUSHDISABLED'
       }
     );
-    eval { $conn->send_utf8($str); };
-    main::Error("Error sending PUSHDISABLED: $@") if $@;
+    _safe_send($conn, $str);
     return;
   } elsif ($json_string->{event} eq 'escontrol') {
     if ( !$escontrol_config{enabled} ) {
@@ -312,8 +279,7 @@ sub processIncomingMessage {
           reason => 'ESCONTROLDISABLED'
         }
       );
-      eval { $conn->send_utf8($str); };
-      main::Error("Error sending ESCONTROLDISABLED: $@") if $@;
+      _safe_send($conn, $str);
       return;
     }
     processEsControlCommand($json_string, $conn);
@@ -362,12 +328,10 @@ sub processIncomingMessage {
             reason => 'MISSINGPLATFORM'
           }
         );
-        eval { $conn->send_utf8($str); };
-        main::Error("Error sending MISSINGPLATFORM: $@") if $@;
+        _safe_send($conn, $str);
         return;
       }
 
-      my $token_matched = 0;
       my $stored_invocations = undef;
       my $stored_last_sent = undef;
 
@@ -466,8 +430,7 @@ sub processIncomingMessage {
             reason => 'MISSINGMONITORLIST'
           }
         );
-        eval { $conn->send_utf8($str); };
-        main::Error("Error sending MISSINGMONITORLIST: $@") if $@;
+        _safe_send($conn, $str);
         return;
       }
       if ( !exists( $data->{intlist} ) ) {
@@ -478,8 +441,7 @@ sub processIncomingMessage {
             reason => 'MISSINGINTERVALLIST'
           }
         );
-        eval { $conn->send_utf8($str); };
-        main::Error("Error sending MISSINGINTERVALLIST: $@") if $@;
+        _safe_send($conn, $str);
         return;
       }
       foreach (@main::active_connections) {
@@ -517,10 +479,7 @@ sub processIncomingMessage {
               version => $main::app_version
             }
           );
-          eval { $_->{conn}->send_utf8($str); };
-          if ($@) {
-            main::Error("Error sending version: $@");
-          }
+          _safe_send($_->{conn}, $str);
         }
       } # end foreach active_connections
     } # end if daa->type
@@ -560,8 +519,7 @@ sub processIncomingMessage {
               reason => (( $category eq 'escontrol' && !$escontrol_config{enabled} ) ? 'ESCONTROLDISABLED' : 'BADAUTH')
             }
           );
-          eval { $_->{conn}->send_utf8($str); };
-          main::Error("Error sending BADAUTH: $@") if $@;
+          _safe_send($_->{conn}, $str);
           main::Debug(1, 'marking for deletion - bad authentication provided by '.$_->{conn}->ip());
           $_->{state} = PENDING_DELETE;
         } else {
@@ -581,8 +539,7 @@ sub processIncomingMessage {
               version => $main::app_version
             }
           );
-          eval { $_->{conn}->send_utf8($str); };
-          main::Error("Error sending auth success: $@") if $@;
+          _safe_send($_->{conn}, $str);
           main::Info( "Correct authentication provided by " . $_->{conn}->ip() );
         } # end if validateAuth
       } # end if this is the right connection
@@ -596,8 +553,7 @@ sub processIncomingMessage {
         reason => 'NOTSUPPORTED'
       }
     );
-    eval { $_->{conn}->send_utf8($str); };
-    main::Error("Error sending NOTSUPPORTED: $@") if $@;
+    _safe_send($conn, $str);
   }
 }
 

@@ -4,19 +4,43 @@ use warnings;
 use Exporter 'import';
 use JSON;
 use MIME::Base64;
-use URI::Escape;
 use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday);
 use ZmEventNotification::Constants qw(:all);
 use ZmEventNotification::Config qw(:all);
-use ZmEventNotification::Util qw(uniq rsplit buildPictureUrl stripFrameMatchType);
+use ZmEventNotification::Util qw(uniq rsplit buildPictureUrl stripFrameMatchType maskPassword);
 
 our @EXPORT_OK = qw(
   deleteFCMToken get_google_access_token
   sendOverFCM sendOverFCMV1 sendOverFCMLegacy
   migrateTokens initFCMTokens saveFCMTokens
+  readTokenFile writeTokenFile
 );
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
+
+sub readTokenFile {
+  return undef if !-f $fcm_config{token_file};
+  open(my $fh, '<', $fcm_config{token_file})
+    or do { main::Error("Error opening $fcm_config{token_file}: $!"); return undef; };
+  my $data = do { local $/ = undef; <$fh> };
+  close($fh);
+  return undef if !$data;
+  my $hr;
+  eval { $hr = decode_json($data); };
+  if ($@) {
+    main::Error("Could not parse token file $fcm_config{token_file}: $@");
+    return undef;
+  }
+  return $hr;
+}
+
+sub writeTokenFile {
+  my $tokens_data = shift;
+  open(my $fh, '>', $fcm_config{token_file})
+    or do { main::Error("Error writing tokens file $fcm_config{token_file}: $!"); return; };
+  print $fh encode_json($tokens_data);
+  close($fh);
+}
 
 sub _check_monthly_limit {
   my $obj = shift;
@@ -51,27 +75,10 @@ sub _base64url_encode {
 sub deleteFCMToken {
   my $dtoken = shift;
   main::Debug(2, 'DeleteToken called with ...' . substr( $dtoken, -10 ));
-  return if !-f $fcm_config{token_file};
-  open( my $fh, '<', $fcm_config{token_file} ) or main::Fatal("Error opening $fcm_config{token_file}: $!");
-  my %tokens_data;
-  my $hr;
-  my $data = do { local $/ = undef; <$fh> };
-  close($fh);
-  eval { $hr = decode_json($data); };
-
-  if ($@) {
-    main::Error("Could not delete token from file: $!");
-    return;
-  } else {
-    %tokens_data = %$hr;
-    delete $tokens_data{tokens}->{$dtoken}
-      if exists( $tokens_data{tokens}->{$dtoken} );
-    open( my $fh, '>', $fcm_config{token_file} )
-      or main::Error("Error writing tokens file: $!");
-    my $json = encode_json( \%tokens_data );
-    print $fh $json;
-    close($fh);
-  }
+  my $hr = readTokenFile();
+  return if !$hr;
+  delete $hr->{tokens}->{$dtoken} if exists $hr->{tokens}->{$dtoken};
+  writeTokenFile($hr);
 
   foreach (@main::active_connections) {
     next if ( $_ eq '' || $_->{token} ne $dtoken );
@@ -103,6 +110,9 @@ sub get_google_access_token {
   my $client_email = $data->{client_email};
   my $private_key_pem = $data->{private_key};
   my $token_uri = $data->{token_uri} || 'https://oauth2.googleapis.com/token';
+
+  # Cache project_id for use by sendOverFCMV1
+  $fcm_config{cached_project_id} = $data->{project_id} if $data->{project_id};
 
   my $now = time();
   my $exp = $now + 3600;
@@ -150,17 +160,58 @@ sub get_google_access_token {
 
 sub sendOverFCM {
   if ($fcm_config{use_v1}) {
-    sendOverFCMV1( shift, shift, shift, shift );
+    sendOverFCMV1(@_);
   } else {
-    sendOverFCMLegacy( shift, shift, shift, shift );
+    sendOverFCMLegacy(@_);
   }
 }
 
+sub _prepare_fcm_common {
+  my ($alarm, $obj, $event_type, $resCode, $label) = @_;
+
+  my $mid   = $alarm->{MonitorId};
+  my $eid   = $alarm->{EventId};
+  my $mname = $alarm->{Name};
+
+  return () if _check_monthly_limit($obj);
+
+  my $pic = buildPictureUrl($eid, $alarm->{Cause}, $resCode, $label);
+  $alarm->{Cause} = stripFrameMatchType($alarm->{Cause});
+
+  my $body = $alarm->{Cause};
+  $body .= ' ended' if $event_type eq 'event_end';
+  $body .= ' at ' . strftime($fcm_config{date_format}, localtime);
+
+  my $badge = $obj->{badge} + 1;
+  my $count = defined($obj->{invocations}) ? $obj->{invocations}->{count} + 1 : 0;
+  my $at = (localtime)[4];
+
+  print main::WRITER 'fcm_notification--TYPE--' . $obj->{token} . '--SPLIT--' . $badge
+                .'--SPLIT--' . $count .'--SPLIT--' . $at . "\n";
+
+  my $title = $mname . ' Alarm';
+  $title = $title . ' (' . $eid . ')' if $notify_config{tag_alarm_event_id};
+  $title = 'Ended:' . $title          if $event_type eq 'event_end';
+
+  return ($mid, $eid, $mname, $pic, $body, $badge, $title);
+}
+
+sub _send_supplementary_msg {
+  my ($obj, $alarm) = @_;
+  return unless ($obj->{state} == VALID_CONNECTION) && exists $obj->{conn};
+  my $sup_str = encode_json(
+    { event         => 'alarm',
+      type          => '',
+      status        => 'Success',
+      supplementary => 'true',
+      events        => [$alarm]
+    }
+  );
+  print main::WRITER 'message--TYPE--' . $obj->{id} . '--SPLIT--' . $sup_str . "\n";
+}
+
 sub sendOverFCMV1 {
-  my $alarm      = shift;
-  my $obj        = shift;
-  my $event_type = shift;
-  my $resCode    = shift;
+  my ($alarm, $obj, $event_type, $resCode) = @_;
   my $key;
   my $uri;
 
@@ -175,17 +226,7 @@ sub sendOverFCMV1 {
 
       $key = "Bearer $access_token";
 
-      local $/;
-      my $fh;
-      if (!open( $fh, '<', $fcm_config{service_account_file} )) {
-          main::Error("fcmv1: Cannot open service account file $fcm_config{service_account_file}: $!. Push notification aborted.");
-          return;
-      }
-      my $json_text = <$fh>;
-      close($fh);
-
-      my $data = decode_json($json_text);
-      my $project_id = $data->{project_id};
+      my $project_id = $fcm_config{cached_project_id};
       if (!$project_id) {
           main::Error("fcmv1: No project_id found in service account file. Push notification aborted.");
           return;
@@ -201,28 +242,9 @@ sub sendOverFCMV1 {
       main::Debug(2, "fcmv1: Using proxy URL: $uri");
   }
 
-  my $mid   = $alarm->{MonitorId};
-  my $eid   = $alarm->{EventId};
-  my $mname = $alarm->{Name};
-
-  return if _check_monthly_limit($obj);
-
-  my $pic = buildPictureUrl($eid, $alarm->{Cause}, $resCode, 'fcmv1');
-  $alarm->{Cause} = stripFrameMatchType($alarm->{Cause});
-
-  my $body = $alarm->{Cause};
-  $body .= ' ended' if $event_type eq 'event_end';
-  $body .= ' at ' . strftime($fcm_config{date_format}, localtime);
-
-  my $badge = $obj->{badge} + 1;
-  my $count = defined($obj->{invocations})?$obj->{invocations}->{count}+1:0;
-
-  print main::WRITER 'fcm_notification--TYPE--' . $obj->{token} . '--SPLIT--' . $badge
-                .'--SPLIT--' . $count .'--SPLIT--'.(localtime)[4]. "\n";
-
-  my $title = $mname . ' Alarm';
-  $title = $title . ' (' . $eid . ')' if $notify_config{tag_alarm_event_id};
-  $title = 'Ended:' . $title          if $event_type eq 'event_end';
+  my ($mid, $eid, $mname, $pic, $body, $badge, $title) =
+    _prepare_fcm_common($alarm, $obj, $event_type, $resCode, 'fcmv1');
+  return if !defined $mid;
 
   my $message_v2;
 
@@ -340,8 +362,7 @@ sub sendOverFCMV1 {
       }
   }
   my $json = encode_json($message_v2);
-  my $djson = $json;
-  $djson =~ s/pass(word)?=(.*?)($|&|})/pass$1=xxx$3/g;
+  my $djson = maskPassword($json);
 
   main::Debug(2, "fcmv1: Final JSON using FCMV1 being sent is: $djson to token: ..."
       . substr( $obj->{token}, -6 ));
@@ -366,17 +387,7 @@ sub sendOverFCMV1 {
     }
   }
 
-  if ( ($obj->{state} == VALID_CONNECTION) && exists $obj->{conn} ) {
-    my $sup_str = encode_json(
-      { event         => 'alarm',
-        type          => '',
-        status        => 'Success',
-        supplementary => 'true',
-        events        => [$alarm]
-      }
-    );
-    print main::WRITER 'message--TYPE--' . $obj->{id} . '--SPLIT--' . $sup_str . "\n";
-  }
+  _send_supplementary_msg($obj, $alarm);
 }
 
 sub sendOverFCMLegacy {
@@ -384,35 +395,13 @@ sub sendOverFCMLegacy {
   use constant NINJA_API_KEY =>
     'AAAApYcZ0mA:APA91bG71SfBuYIaWHJorjmBQB3cAN7OMT7bAxKuV3ByJ4JiIGumG6cQw0Bo6_fHGaWoo4Bl-SlCdxbivTv5Z-2XPf0m86wsebNIG15pyUHojzmRvJKySNwfAHs7sprTGsA_SIR_H43h';
 
-  my $alarm      = shift;
-  my $obj        = shift;
-  my $event_type = shift;
-  my $resCode    = shift;
+  my ($alarm, $obj, $event_type, $resCode) = @_;
 
-  my $mid   = $alarm->{MonitorId};
-  my $eid   = $alarm->{EventId};
-  my $mname = $alarm->{Name};
+  my ($mid, $eid, $mname, $pic, $body, $badge, $title) =
+    _prepare_fcm_common($alarm, $obj, $event_type, $resCode, 'legacy');
+  return if !defined $mid;
 
-  return if _check_monthly_limit($obj);
-
-  my $pic = buildPictureUrl($eid, $alarm->{Cause}, $resCode, 'legacy');
-  $alarm->{Cause} = stripFrameMatchType($alarm->{Cause});
-
-  my $body = $alarm->{Cause};
-  $body .= ' ended' if $event_type eq 'event_end';
-  $body .= ' at ' . strftime($fcm_config{date_format}, localtime);
-
-  my $badge = $obj->{badge} + 1;
-  my $count = defined($obj->{invocations})?$obj->{invocations}->{count}+1:0;
-  my $at = (localtime)[4];
-
-  print main::WRITER 'fcm_notification--TYPE--' . $obj->{token} . '--SPLIT--' . $badge
-                .'--SPLIT--' . $count .'--SPLIT--' . $at . "\n";
-
-  my $key   = 'key=' . NINJA_API_KEY;
-  my $title = $mname . ' Alarm';
-  $title = $title . ' (' . $eid . ')' if $notify_config{tag_alarm_event_id};
-  $title = 'Ended:' . $title          if $event_type eq 'event_end';
+  my $key = 'key=' . NINJA_API_KEY;
 
   my $ios_message = {
     to           => $obj->{token},
@@ -486,8 +475,7 @@ sub sendOverFCMLegacy {
     $main::notId = ( $main::notId + 1 ) % 100000;
   }
 
-  my $djson = $json;
-  $djson =~ s/pass(word)?=(.*?)($|&)/pass$1=xxx$3/g;
+  my $djson = maskPassword($json);
 
   main::Debug(2, "legacy: Final JSON being sent is: $djson to token: ..."
       . substr( $obj->{token}, -6 ));
@@ -525,17 +513,7 @@ sub sendOverFCMLegacy {
     main::Error('FCM push message Error:' . $res->status_line);
   }
 
-  if ($obj->{state} == VALID_CONNECTION && exists $obj->{conn}) {
-    my $sup_str = encode_json(
-      { event         => 'alarm',
-        type          => '',
-        status        => 'Success',
-        supplementary => 'true',
-        events        => [$alarm]
-      }
-    );
-    print main::WRITER 'message--TYPE--' . $obj->{id} . '--SPLIT--' . $sup_str . "\n";
-  }
+  _send_supplementary_msg($obj, $alarm);
 }
 
 sub migrateTokens {
@@ -570,33 +548,18 @@ sub migrateTokens {
 sub initFCMTokens {
   main::Debug(1, 'Initializing FCM tokens...');
   if (!-f $fcm_config{token_file}) {
-    open(my $foh, '>', $fcm_config{token_file}) or main::Fatal("Error opening $fcm_config{token_file}: $!");
     main::Debug(1, 'Creating ' . $fcm_config{token_file});
-    print $foh '{"tokens":{}}';
-    close($foh);
+    writeTokenFile({tokens => {}});
   }
 
-  open(my $fh, '<', $fcm_config{token_file}) or main::Fatal("Error opening $fcm_config{token_file}: $!");
-  my %tokens_data;
-  my $hr;
-  my $data = do { local $/ = undef; <$fh> };
-  close ($fh);
-  eval { $hr = decode_json($data); };
-  if ($@) {
+  my $hr = readTokenFile();
+  if (!$hr) {
     main::Info('tokens is not JSON, migrating format...');
     migrateTokens();
-    open(my $fh, '<', $fcm_config{token_file}) or main::Fatal("Error opening $fcm_config{token_file}: $!");
-    my $data = do { local $/ = undef; <$fh> };
-    close ($fh);
-    eval { $hr = decode_json($data); };
-    if ($@) {
-      main::Fatal("Migration to JSON file failed: $!");
-    } else {
-      %tokens_data = %$hr;
-    }
-  } else {
-    %tokens_data = %$hr;
+    $hr = readTokenFile();
+    main::Fatal("Migration to JSON file failed") if !$hr;
   }
+  my %tokens_data = %$hr;
 
   %main::fcm_tokens_map = %tokens_data;
   @main::active_connections = ();
@@ -654,27 +617,17 @@ sub saveFCMTokens {
 
   main::Debug(2, "SaveTokens called with:monlist=$smonlist, intlist=$sintlist, platform=$splatform, push=$spushstate");
 
-  open(my $fh, '<', $fcm_config{token_file}) || main::Fatal('Cannot open for read '.$fcm_config{token_file});
-  my $data = do { local $/ = undef; <$fh> };
-  close($fh);
+  my $tokens_data = readTokenFile();
+  return if !$tokens_data;
 
-  my $tokens_data;
-  eval { $tokens_data = decode_json($data); };
-  if ($@) {
-    main::Error("Could not parse token file: $!");
-    return;
-  }
-  $$tokens_data{tokens}->{$stoken}->{monlist} = $smonlist if $smonlist ne '-1';
-  $$tokens_data{tokens}->{$stoken}->{intlist} = $sintlist if $sintlist ne '-1';
-  $$tokens_data{tokens}->{$stoken}->{platform}  = $splatform;
-  $$tokens_data{tokens}->{$stoken}->{pushstate} = $spushstate;
-  $$tokens_data{tokens}->{$stoken}->{invocations} = $invocations;
-  $$tokens_data{tokens}->{$stoken}->{appversion} = $appversion;
+  $tokens_data->{tokens}->{$stoken}->{monlist} = $smonlist if $smonlist ne '-1';
+  $tokens_data->{tokens}->{$stoken}->{intlist} = $sintlist if $sintlist ne '-1';
+  $tokens_data->{tokens}->{$stoken}->{platform}  = $splatform;
+  $tokens_data->{tokens}->{$stoken}->{pushstate} = $spushstate;
+  $tokens_data->{tokens}->{$stoken}->{invocations} = $invocations;
+  $tokens_data->{tokens}->{$stoken}->{appversion} = $appversion;
 
-  open($fh, '>', $fcm_config{token_file})
-    or main::Error("Error writing tokens file $fcm_config{token_file}: $!");
-  print $fh encode_json($tokens_data);
-  close($fh);
+  writeTokenFile($tokens_data);
   return ( $smonlist, $sintlist );
 }
 

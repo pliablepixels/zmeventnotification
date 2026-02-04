@@ -7,7 +7,7 @@ use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday);
 use ZmEventNotification::Constants qw(:all);
 use ZmEventNotification::Config qw(:all);
-use ZmEventNotification::Util qw(getConnectionIdentity isInList getInterval parseDetectResults buildPictureUrl stripFrameMatchType);
+use ZmEventNotification::Util qw(getConnectionIdentity isInList getInterval parseDetectResults buildPictureUrl stripFrameMatchType untaintCmd appendImagePath);
 use ZmEventNotification::FCM qw(sendOverFCM);
 use ZmEventNotification::MQTT qw(sendOverMQTTBroker);
 use ZmEventNotification::Rules qw(isAllowedInRules);
@@ -224,6 +224,69 @@ sub shouldSendEventToConn {
   return $retVal;
 }
 
+sub _tag_detected_objects {
+  my ($eid, $resJsonString, $label) = @_;
+  return unless $hooks_config{tag_detected_objects} && $resJsonString;
+  eval {
+    my $det = decode_json($resJsonString);
+    my @labels;
+    for my $item (@$det) {
+      push @labels, $item->{label} if $item->{label};
+    }
+    tagEventObjects($eid, \@labels) if @labels;
+  };
+  main::Error("tagEventObjects ($label): $@") if $@;
+}
+
+sub _build_alarm_obj {
+  my ($mname, $mid, $eid, $cause, $detectJson, $rulesObject) = @_;
+  return {
+    Name          => $mname,
+    MonitorId     => $mid,
+    EventId       => $eid,
+    Cause         => $cause,
+    DetectionJson => $detectJson || [],
+    RulesObject   => $rulesObject
+  };
+}
+
+sub _run_api_push {
+  my ($temp_alarm_obj, $eid, $mid, $event_type, $hookResult) = @_;
+  return unless $push_config{enabled} && $push_config{script};
+
+  if ($event_type eq 'event_end' && !$notify_config{send_event_end_notification}) {
+    main::Debug(1, 'Not sending event_end push over API as send_event_end_notification is no');
+    return;
+  }
+
+  my $hook_key = $event_type eq 'event_start' ? 'event_start_hook' : 'event_end_hook';
+
+  if ( isAllowedChannel( $event_type, 'api', $hookResult )
+    || !$hooks_config{$hook_key}
+    || !$hooks_config{enabled} )
+  {
+    main::Info("Sending push over API as it is allowed for $event_type");
+
+    my $api_cmd =
+        $push_config{script} . ' '
+      . $eid . ' '
+      . $mid . ' "'
+      . $temp_alarm_obj->{Name} . '" "'
+      . $temp_alarm_obj->{Cause} . '" '
+      . " $event_type";
+
+    $api_cmd = appendImagePath($api_cmd, $eid) if $hooks_config{hook_pass_image_path};
+    main::Info("Executing API script command for $event_type: $api_cmd");
+    $api_cmd = untaintCmd($api_cmd);
+    my $api_res = `$api_cmd`;
+    chomp($api_res);
+    my $retcode = $? >> 8;
+    main::Debug(1, "API push script returned ($event_type): $retcode");
+  } else {
+    main::Info("Not sending push over API as it is not allowed for $event_type");
+  }
+}
+
 sub processNewAlarmsInFork {
   my $newEvent       = shift;
   my $alarm          = $newEvent->{Alarm};
@@ -238,6 +301,7 @@ sub processNewAlarmsInFork {
   my $hookString = '';
 
   my $endProcessed = 0;
+  my %skip_hooks = map { $_ => 1 } split(',', $hooks_config{hook_skip_monitors} // '');
 
   my $start_time = time();
 
@@ -250,7 +314,7 @@ sub processNewAlarmsInFork {
     }
 
     if ( $alarm->{Start}->{State} eq 'pending' ) {
-      if ( { map { $_ => 1 } split(',', $hooks_config{hook_skip_monitors} // '') }->{$mid} ) {
+      if ( $skip_hooks{$mid} ) {
         main::Info("$mid is in hook skip list, not using hooks");
         $alarm->{Start}->{State} = 'ready';
         $hookResult = 0;
@@ -263,18 +327,9 @@ sub processNewAlarmsInFork {
             . $alarm->{MonitorName} . '" "'
             . $alarm->{Start}->{Cause} . '"';
 
-          if ($hooks_config{hook_pass_image_path}) {
-            my $event = new ZoneMinder::Event($eid);
-            $cmd = $cmd . ' "' . $event->Path() . '"';
-            main::Debug(2, 'Adding event path:'
-                . $event->Path()
-                . ' to hook for image storage');
-          }
+          $cmd = appendImagePath($cmd, $eid) if $hooks_config{hook_pass_image_path};
           main::Debug(1, 'Invoking hook on event start:' . $cmd);
-
-          if ( $cmd =~ /^(.*)$/ ) {
-            $cmd = $1;
-          }
+          $cmd = untaintCmd($cmd);
           print main::WRITER "update_parallel_hooks--TYPE--add\n";
           my $res = `$cmd`;
           $hookResult = $? >> 8;
@@ -298,17 +353,8 @@ sub processNewAlarmsInFork {
               . $resTxt . '" ' . '"'
               . $resJsonString . '" ';
 
-            if ($hooks_config{hook_pass_image_path}) {
-              my $event = new ZoneMinder::Event($eid);
-              $user_cmd = $user_cmd . ' "' . $event->Path() . '"';
-              main::Debug(1, 'Adding event path:'
-                  . $event->Path()
-                  . ' to $user_cmd for image location');
-            }
-
-            if ( $user_cmd =~ /^(.*)$/ ) {
-              $user_cmd = $1;
-            }
+            $user_cmd = appendImagePath($user_cmd, $eid) if $hooks_config{hook_pass_image_path};
+            $user_cmd = untaintCmd($user_cmd);
             main::Debug(1, "invoking user start notification script $user_cmd");
             my $user_res = `$user_cmd`;
           } # user notify script
@@ -338,17 +384,7 @@ sub processNewAlarmsInFork {
             $hookString = $resTxt;
           }
 
-          if ($hooks_config{tag_detected_objects} && $hookResult == 0 && $resJsonString) {
-            eval {
-              my $det = decode_json($resJsonString);
-              my @labels;
-              for my $item (@$det) {
-                push @labels, $item->{label} if $item->{label};
-              }
-              tagEventObjects($eid, \@labels) if @labels;
-            };
-            main::Error("tagEventObjects (event_start): $@") if $@;
-          }
+          _tag_detected_objects($eid, $resJsonString, 'event_start') if $hookResult == 0;
         } else {
           main::Info(
             'use hooks/start hook not being used, going to directly send out a notification if checks pass'
@@ -364,56 +400,13 @@ sub processNewAlarmsInFork {
       if ( !$rulesAllowed ) {
         main::Debug(1, 'rules: Not processing start notifications as rules checks failed');
       } else {
-        my $cause          = $alarm->{Start}->{Cause};
-        my $detectJson     = $alarm->{Start}->{DetectionJson} || [];
-        my $temp_alarm_obj = {
-          Name          => $mname,
-          MonitorId     => $mid,
-          EventId       => $eid,
-          Cause         => $cause,
-          DetectionJson => $detectJson,
-          RulesObject   => $rulesObject
-        };
+        my $temp_alarm_obj = _build_alarm_obj(
+          $mname, $mid, $eid, $alarm->{Start}->{Cause},
+          $alarm->{Start}->{DetectionJson}, $rulesObject
+        );
 
-        if ( $push_config{enabled} && $push_config{script} ) {
-          if ( isAllowedChannel( 'event_start', 'api', $hookResult )
-            || !$hooks_config{event_start_hook}
-            || !$hooks_config{enabled} )
-          {
-            main::Info('Sending push over API as it is allowed for event_start');
-
-            my $api_cmd =
-              $push_config{script} . ' '
-              . $eid . ' '
-              . $mid . ' ' . ' "'
-              . $temp_alarm_obj->{Name} . '" ' . ' "'
-              . $temp_alarm_obj->{Cause} . '" '
-              . ' event_start';
-
-            if ($hooks_config{hook_pass_image_path}) {
-              my $event = new ZoneMinder::Event($eid);
-              $api_cmd = $api_cmd . ' "' . $event->Path() . '"';
-              main::Debug(2, 'Adding event path:'
-                  . $event->Path()
-                  . ' to api_cmd for image location');
-            }
-
-            main::Info("Executing API script command for event_start $api_cmd");
-            if ( $api_cmd =~ /^(.*)$/ ) {
-              $api_cmd = $1;
-            }
-            my $api_res = `$api_cmd`;
-            main::Info("Returned from $api_cmd");
-            chomp($api_res);
-            my $api_retcode = $? >> 8;
-            main::Debug(1, "API push script returned : $api_retcode");
-          } else {
-            main::Info(
-              'Not sending push over API as it is not allowed for event_start');
-          }
-        }
+        _run_api_push($temp_alarm_obj, $eid, $mid, 'event_start', $hookResult);
         main::Debug(1, 'Matching alarm to connection rules...');
-        my ($serv) = @_;
         my %fcm_token_duplicates = ();
         foreach (@main::active_connections) {
           if ($_->{token} && $fcm_token_duplicates{$_->{token}}) {
@@ -430,7 +423,7 @@ sub processNewAlarmsInFork {
       $alarm->{Start}->{State} = 'done';
     }
     elsif ( ($alarm->{End}->{State} // '') eq 'pending' ) {
-      if ( { map { $_ => 1 } split(',', $hooks_config{hook_skip_monitors} // '') }->{$mid} ) {
+      if ( $skip_hooks{$mid} ) {
         main::Info("$mid is in hook skip list, not using hooks");
         $alarm->{End}->{State} = 'ready';
         $hookResult = 0;
@@ -462,17 +455,9 @@ sub processNewAlarmsInFork {
             . $alarm->{MonitorName} . '" "'
             . $notes . '"';
 
-          if ($hooks_config{hook_pass_image_path}) {
-            my $event = new ZoneMinder::Event($eid);
-            $cmd = $cmd . ' "' . $event->Path() . '"';
-            main::Debug(2, 'Adding event path:'
-                . $event->Path()
-                . ' to hook for image storage');
-          }
+          $cmd = appendImagePath($cmd, $eid) if $hooks_config{hook_pass_image_path};
           main::Debug(1, 'Invoking hook on event end:' . $cmd);
-          if ( $cmd =~ /^(.*)$/ ) {
-            $cmd = $1;
-          }
+          $cmd = untaintCmd($cmd);
 
           print main::WRITER "update_parallel_hooks--TYPE--add\n";
           my $res = `$cmd`;
@@ -500,18 +485,8 @@ sub processNewAlarmsInFork {
               . $resTxt . '" ' . '"'
               . $resJsonString . '" ';
 
-            if ($hooks_config{hook_pass_image_path}) {
-              my $event = new ZoneMinder::Event($eid);
-              $user_cmd = $user_cmd . ' "' . $event->Path() . '"';
-              main::Debug(2, 'Adding event path:'
-                  . $event->Path()
-                  . ' to $user_cmd for image location');
-
-            }
-
-            if ( $user_cmd =~ /^(.*)$/ ) {
-              $user_cmd = $1;
-            }
+            $user_cmd = appendImagePath($user_cmd, $eid) if $hooks_config{hook_pass_image_path};
+            $user_cmd = untaintCmd($user_cmd);
             main::Debug(1, "invoking user end notification script $user_cmd");
             my $user_res = `$user_cmd`;
           } # user notify script
@@ -543,17 +518,7 @@ sub processNewAlarmsInFork {
             $hookString = $resTxt;
           }
 
-          if ($hooks_config{tag_detected_objects} && $hookResult == 0 && $resJsonString) {
-            eval {
-              my $det = decode_json($resJsonString);
-              my @labels;
-              for my $item (@$det) {
-                push @labels, $item->{label} if $item->{label};
-              }
-              tagEventObjects($eid, \@labels) if @labels;
-            };
-            main::Error("tagEventObjects (event_end): $@") if $@;
-          }
+          _tag_detected_objects($eid, $resJsonString, 'event_end') if $hookResult == 0;
         } else {
           main::Info(
             'end hooks/use hooks not being used, going to directly send out a notification if checks pass'
@@ -576,61 +541,14 @@ sub processNewAlarmsInFork {
       } elsif ( !$rulesAllowed ) {
         main::Debug(1, 'rules: Not processing end notifications as rules checks failed for start notification');
       } else {
-        my $cause          = $alarm->{End}->{Cause};
-        my $detectJson     = $alarm->{End}->{DetectionJson} || [];
-        my $temp_alarm_obj = {
-          Name          => $mname,
-          MonitorId     => $mid,
-          EventId       => $eid,
-          Cause         => $cause,
-          DetectionJson => $detectJson,
-          RulesObject   => $rulesObject
-        };
+        my $temp_alarm_obj = _build_alarm_obj(
+          $mname, $mid, $eid, $alarm->{End}->{Cause},
+          $alarm->{End}->{DetectionJson}, $rulesObject
+        );
 
-        if ( $push_config{enabled} && $push_config{script} ) {
-          if ($notify_config{send_event_end_notification}) {
-            if ( isAllowedChannel( 'event_end', 'api', $hookResult )
-              || !$hooks_config{event_end_hook}
-              || !$hooks_config{enabled} )
-            {
-              main::Debug(1, 'Sending push over API as it is allowed for event_end');
-
-              my $api_cmd =
-                  $push_config{script} . ' '
-                . $eid . ' '
-                . $mid . ' ' . ' "'
-                . $temp_alarm_obj->{Name} . '" ' . ' "'
-                . $temp_alarm_obj->{Cause} . '" '
-                . ' event_end';
-
-              if ($hooks_config{hook_pass_image_path}) {
-                my $event = new ZoneMinder::Event($eid);
-                $api_cmd = $api_cmd . ' "' . $event->Path() . '"';
-                main::Debug(2, 'Adding event path:'
-                    . $event->Path()
-                    . ' to api_cmd for image location');
-              }
-              main::Info("Executing API script command for event_end $api_cmd");
-
-              if ( $api_cmd =~ /^(.*)$/ ) {
-                $api_cmd = $1;
-              }
-              my $res = `$api_cmd`;
-              main::Debug(2, "returned from api cmd for event_end");
-              chomp($res);
-              my $retcode = $? >> 8;
-              main::Debug(1, "API push script returned (event_end) : $retcode");
-            } else {
-              main::Debug(1, 'Not sending push over API as it is not allowed for event_start');
-            }
-          } else {
-            main::Debug(1, 'Not sending event_end push over API as send_event_end_notification is no');
-          }
-        }
+        _run_api_push($temp_alarm_obj, $eid, $mid, 'event_end', $hookResult);
 
         main::Debug(1, 'Matching alarm to connection rules...');
-
-        my ($serv) = @_;
         foreach (@main::active_connections) {
           if ( isInList( $_->{monlist}, $temp_alarm_obj->{MonitorId} ) ) {
             sendEvent( $temp_alarm_obj, $_, 'event_end', $hookResult );

@@ -80,8 +80,6 @@ sub isAllowedInRules {
         exists( $rule_ref->{time_format} )
         ? $rule_ref->{time_format}
         : "%I:%M %p";
-      my $dow = $rule_ref->{daysofweek};
-
       main::Debug(2, "rules: parsing rule $from/$to using format:$format");
       my $d_from = Time::Piece->strptime( $from, $format );
       my $d_to   = Time::Piece->strptime( $to,   $format );
