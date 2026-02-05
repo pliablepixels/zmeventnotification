@@ -222,6 +222,14 @@ install_es() {
             echo "Installed $(basename $pm_file)" || print_error "Failed to install $(basename $pm_file)"
     done
 
+    # Update Version.pm with the version from VERSION file
+    if [ -f "VERSION" ]; then
+        ES_VERSION=$(cat VERSION | tr -d '[:space:]')
+        sed -i "s/^our \$VERSION = '.*';$/our \$VERSION = '${ES_VERSION}';/" \
+            "${TARGET_PERL_LIB}/ZmEventNotification/Version.pm" &&
+            echo "Set version to ${ES_VERSION} in Version.pm" || print_error "Failed to set version"
+    fi
+
     # No need to patch use lib - FindBin resolves the script's directory at runtime,
     # and installed modules in ${TARGET_PERL_LIB} are already in @INC.
 }

@@ -48,15 +48,9 @@ BEGIN {
   require lib;
   lib->import($FindBin::RealBin);
 
-  # Read version from the VERSION file at repo root
-  my $version_file = "$FindBin::RealBin/VERSION";
-  open(my $vfh, '<', $version_file) or die "Cannot open $version_file: $!\n";
-  my $raw_version = <$vfh>;
-  close $vfh;
-  chomp $raw_version;
-  ($raw_version) = $raw_version =~ /^([\d.]+)$/
-      or die "Invalid version in $version_file\n";
-  $app_version = $raw_version;
+  # Load version from module (updated by install.sh during installation)
+  require ZmEventNotification::Version;
+  $app_version = $ZmEventNotification::Version::VERSION;
 
   # Handle --version before loading heavy dependencies
   if (defined $ARGV[0] && $ARGV[0] eq '--version') {
