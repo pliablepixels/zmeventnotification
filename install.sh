@@ -409,11 +409,6 @@ install_es_config() {
             print_success "secrets migration complete"
             mv "${TARGET_CONFIG}/secrets.ini" "${TARGET_CONFIG}/secrets.ini.migrated"
             print_important "Renamed old secrets.ini to secrets.ini.migrated"
-            # Update secrets path in main config if it still references .ini
-            if [ -f "${TARGET_CONFIG}/zmeventnotification.yml" ]; then
-                sed -i 's|secrets\.ini|secrets.yml|g' "${TARGET_CONFIG}/zmeventnotification.yml"
-                print_success "Updated secrets path in zmeventnotification.yml"
-            fi
         else
             print_warning "secrets migration failed"
         fi
@@ -436,6 +431,14 @@ install_es_config() {
         echo "Upgrading existing secrets with any new keys..."
         ${PYTHON} tools/config_upgrade_yaml.py -c "${TARGET_CONFIG}/secrets.yml" -e secrets.example.yml &&
             print_success "secrets upgraded" || print_warning "secrets upgrade failed"
+    fi
+
+    # Fix stale secrets.ini reference in config if secrets.yml exists
+    if [ -f "${TARGET_CONFIG}/zmeventnotification.yml" ] && [ -f "${TARGET_CONFIG}/secrets.yml" ]; then
+        if grep -q 'secrets\.ini' "${TARGET_CONFIG}/zmeventnotification.yml"; then
+            sed -i 's|secrets\.ini|secrets.yml|g' "${TARGET_CONFIG}/zmeventnotification.yml"
+            print_success "Updated secrets path from .ini to .yml in zmeventnotification.yml"
+        fi
     fi
 
     # Migrate es_rules.json to YAML if needed
