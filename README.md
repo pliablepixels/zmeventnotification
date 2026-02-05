@@ -35,21 +35,13 @@ sudo -H pip install pyzm/ --break-system-packages
 
 ### 3. Install the Event Server and hook helpers
 
-If upgrading from an older `.ini`-based config, install PyYAML first for the migration:
-
-```bash
-pip3 install pyyaml
-```
-
-Then run the installer:
-
 ```bash
 cd zmeventnotification
 sudo -H ./install.sh
 cd ..
 ```
 
-The installer handles Perl dependencies, hook helper setup, config file placement, and model downloads.
+The installer handles Perl dependencies, hook helper setup, config file placement, model downloads, and automatic migration from older `.ini` configs to YAML.
 
 Testing (Development)
 ----------------------

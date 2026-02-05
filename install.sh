@@ -392,6 +392,9 @@ install_hook() {
 
 # move ES config files
 install_es_config() {
+    # Ensure pyyaml is installed for config migration/upgrade scripts
+    ${PY_SUDO} ${PIP} install pyyaml ${PIP_COMPAT} >/dev/null 2>&1
+
     # Auto-migrate from INI to YAML if needed
     if [ -f "${TARGET_CONFIG}/zmeventnotification.ini" ] && [ ! -f "${TARGET_CONFIG}/zmeventnotification.yml" ]; then
         echo "Found existing zmeventnotification.ini but no zmeventnotification.yml - running migration..."
