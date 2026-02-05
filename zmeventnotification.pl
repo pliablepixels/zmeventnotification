@@ -37,7 +37,7 @@
 use strict;
 use warnings;
 
-use POSIX ':sys_wait_h';
+use POSIX qw(:sys_wait_h ceil);
 use Time::HiRes qw/gettimeofday/;
 use Time::Seconds;
 use Symbol qw(qualify_to_ref);
