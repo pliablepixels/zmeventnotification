@@ -136,7 +136,10 @@ sub buildPictureUrl {
   my ($eid, $cause, $resCode, $label) = @_;
   $label //= '';
 
-  my $pic = $notify_config{picture_url} =~ s/EVENTID/$eid/gr;
+  my $base_url = $notify_config{picture_url} // '';
+  return '' if $base_url eq '';
+
+  my $pic = $base_url =~ s/EVENTID/$eid/gr;
 
   if ($resCode == 1) {
     main::Debug(2, "$label: called when hook failed, not using objdetect in url");
@@ -179,10 +182,11 @@ sub appendImagePath {
 
 sub parseDetectResults {
   my $results = shift;
+  $results //= '';
   my ($txt, $jsonstring) = $results ? split('--SPLIT--', $results) : ('','[]');
   $txt = '' if !$txt;
   $jsonstring = '[]' if !$jsonstring;
-  main::Debug(2, "parse of hook:$txt and $jsonstring from $results");
+  main::Debug(2, "parse of hook:$txt and $jsonstring from " . ($results || '(empty)'));
   return ($txt, $jsonstring);
 }
 
