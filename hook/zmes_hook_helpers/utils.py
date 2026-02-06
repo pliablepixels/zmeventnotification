@@ -368,9 +368,10 @@ def process_config(args, ctx):
     base_data_path = str(g.config.get('base_data_path', '/var/lib/zmeventnotification'))
 
     def _substitute_paths(obj):
-        """Recursively replace ${base_data_path} in strings."""
+        """Recursively replace ${base_data_path} and legacy {{base_data_path}} in strings."""
         if isinstance(obj, str):
             obj = obj.replace('${base_data_path}', base_data_path)
+            obj = obj.replace('{{base_data_path}}', base_data_path)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_paths(v) for k, v in obj.items()}
