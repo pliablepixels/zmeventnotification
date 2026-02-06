@@ -591,7 +591,8 @@ except Exception as e:
     print(f"  Skipping doctor checks (could not parse config: {e})")
     sys.exit(0)
 
-ml = cfg.get("ml_sequence", {}) if cfg else {}
+ml_section = cfg.get("ml", {}) if cfg else {}
+ml = ml_section.get("ml_sequence", {}) if isinstance(ml_section, dict) else {}
 
 # --- Collect enabled models ---
 enabled_models = []
