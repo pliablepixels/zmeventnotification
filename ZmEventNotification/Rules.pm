@@ -33,10 +33,12 @@ sub isAllowedInRules {
   my $cause = $alarm->{Start}->{Cause};
 
   if (index($cause, 'detected:') == -1) {
-    if (index($alarm->{End}->{Cause}, 'detected:') != -1) {
-      $cause = $alarm->{End}->{Cause};
-    } elsif (index($alarm->{Cause}, 'detected:') != -1)  {
-      $cause = $alarm->{Cause};
+    my $end_cause = $alarm->{End}->{Cause} // '';
+    my $top_cause = $alarm->{Cause} // '';
+    if (index($end_cause, 'detected:') != -1) {
+      $cause = $end_cause;
+    } elsif (index($top_cause, 'detected:') != -1)  {
+      $cause = $top_cause;
     }
   }
 
