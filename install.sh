@@ -563,6 +563,115 @@ print_opencv_message() {
 EOF
 }
 
+# Post-install diagnostic checks
+run_doctor_checks() {
+    local config="${TARGET_CONFIG}/objectconfig.yml"
+    [ ! -f "$config" ] && return
+
+    echo
+    echo "Running post-install diagnostic checks..."
+
+    ${PYTHON} - "$config" <<'PYEOF' || true
+import sys, os
+
+config_path = sys.argv[1]
+warnings = []
+
+# --- Parse YAML config ---
+try:
+    import yaml
+except ImportError:
+    print("  Skipping doctor checks (pyyaml not installed)")
+    sys.exit(0)
+
+try:
+    with open(config_path) as f:
+        cfg = yaml.safe_load(f)
+except Exception as e:
+    print(f"  Skipping doctor checks (could not parse config: {e})")
+    sys.exit(0)
+
+ml = cfg.get("ml_sequence", {}) if cfg else {}
+
+# --- Collect enabled models ---
+enabled_models = []
+for section_key in ("object", "face", "alpr"):
+    section = ml.get(section_key, {})
+    if not isinstance(section, dict):
+        continue
+    for model in section.get("sequence", []):
+        if not isinstance(model, dict):
+            continue
+        if str(model.get("enabled", "no")).lower() in ("yes", "true", "1"):
+            enabled_models.append((section_key, model))
+
+# --- Check 1: GPU configured but no CUDA ---
+gpu_models = [
+    (s, m) for s, m in enabled_models
+    if str(m.get("object_processor", "")).lower() == "gpu"
+]
+if gpu_models:
+    try:
+        import cv2
+        cuda_count = cv2.cuda.getCudaEnabledDeviceCount()
+    except Exception:
+        cuda_count = 0
+    if cuda_count == 0:
+        names = ", ".join(m.get("name", "unknown") for _, m in gpu_models)
+        warnings.append(
+            f"GPU processing configured but no CUDA devices found.\n"
+            f"    Affected models: {names}\n"
+            f"    Change object_processor to 'cpu' in {config_path} or install CUDA."
+        )
+
+# --- Check 2: face_recognition not installed ---
+face_dlib_models = [
+    (s, m) for s, m in enabled_models
+    if s == "face" and str(m.get("face_detection_framework", "")).lower() == "dlib"
+]
+if face_dlib_models:
+    try:
+        import face_recognition  # noqa: F401
+    except ImportError:
+        names = ", ".join(m.get("name", "unknown") for _, m in face_dlib_models)
+        warnings.append(
+            f"face_recognition package is not installed but DLIB face detection is enabled.\n"
+            f"    Affected models: {names}\n"
+            f"    Install it with: pip3 install face_recognition"
+        )
+
+# --- Check 3: OpenCV too old for ONNX / yolov4 ---
+onnx_or_v4_models = []
+for s, m in enabled_models:
+    weights = str(m.get("object_weights", ""))
+    name_lower = str(m.get("name", "")).lower()
+    if weights.endswith(".onnx") or "yolov4" in name_lower or "yolov26" in name_lower:
+        onnx_or_v4_models.append((s, m))
+
+if onnx_or_v4_models:
+    try:
+        import cv2
+        ver = tuple(int(x) for x in cv2.__version__.split(".")[:2])
+    except Exception:
+        ver = (0, 0)
+    if ver < (4, 13):
+        names = ", ".join(m.get("name", "unknown") for _, m in onnx_or_v4_models)
+        ver_str = ".".join(str(x) for x in ver) if ver != (0, 0) else "not installed"
+        warnings.append(
+            f"OpenCV {ver_str} detected but 4.13+ is required for ONNX/YOLOv4 models.\n"
+            f"    Affected models: {names}\n"
+            f"    Disable these models or upgrade OpenCV."
+        )
+
+# --- Print results ---
+if warnings:
+    for w in warnings:
+        print(f"\033[0;33mWARNING:\033[0m {w}")
+else:
+    print("  All checks passed.")
+PYEOF
+}
+
 # wuh
 display_help() {
     cat << EOF
@@ -853,5 +962,7 @@ else
 fi
 
 
+run_doctor_checks
+
 echo
-echo "*** Please remember to start the Event Server after this update ***" 
+echo "*** Please remember to start the Event Server after this update ***"
