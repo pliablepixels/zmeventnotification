@@ -213,8 +213,22 @@ install_es() {
 
     echo '*** Installing ES ***'
     mkdir -p "${TARGET_DATA}/push" 2>/dev/null
-    install -m 755 -o "${WEB_OWNER}" -g "${WEB_GROUP}" zmeventnotification.pl "${TARGET_BIN_ES}" &&
-            print_success "Completed, but you will still have to install ES dependencies as per https://zmeventnotification.readthedocs.io/en/latest/guides/install.html#install-dependencies"  || print_error "failed"
+    local es_target="${TARGET_BIN_ES}/zmeventnotification.pl"
+    if install -m 755 -o "${WEB_OWNER}" -g "${WEB_GROUP}" zmeventnotification.pl "${TARGET_BIN_ES}"; then
+        print_success "Completed, but you will still have to install ES dependencies as per https://zmeventnotification.readthedocs.io/en/latest/guides/install.html#install-dependencies"
+    elif [ -f "$es_target" ]; then
+        # install(1) unlinks the target first, which fails on bind mounts.
+        # Fall back to in-place copy which overwrites contents without unlinking.
+        print_warning "'install' failed (target may be a bind mount). Trying in-place copy..."
+        if cp zmeventnotification.pl "$es_target" && chmod 755 "$es_target"; then
+            chown "${WEB_OWNER}:${WEB_GROUP}" "$es_target" 2>/dev/null
+            print_success "Copied in-place"
+        else
+            print_error "In-place copy also failed. Check permissions on ${es_target}"
+        fi
+    else
+        print_error "failed to install to ${es_target}"
+    fi
 
     echo '*** Installing Perl modules ***'
     mkdir -p "${TARGET_PERL_LIB}/ZmEventNotification/"
