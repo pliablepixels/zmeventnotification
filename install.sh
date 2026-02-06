@@ -641,28 +641,39 @@ if face_dlib_models:
             f"    Install it with: pip3 install face_recognition"
         )
 
-# --- Check 3: OpenCV too old for ONNX / yolov4 ---
-onnx_or_v4_models = []
+# --- Check 3: OpenCV too old for ONNX/yolov26 or yolov4 ---
+try:
+    import cv2
+    cv_ver = tuple(int(x) for x in cv2.__version__.split(".")[:2])
+except Exception:
+    cv_ver = (0, 0)
+cv_ver_str = ".".join(str(x) for x in cv_ver) if cv_ver != (0, 0) else "not installed"
+
+onnx_models = []
+v4_models = []
 for s, m in enabled_models:
     weights = str(m.get("object_weights", ""))
     name_lower = str(m.get("name", "")).lower()
-    if weights.endswith(".onnx") or "yolov4" in name_lower or "yolov26" in name_lower:
-        onnx_or_v4_models.append((s, m))
+    if weights.endswith(".onnx") or "yolov26" in name_lower:
+        onnx_models.append((s, m))
+    elif "yolov4" in name_lower:
+        v4_models.append((s, m))
 
-if onnx_or_v4_models:
-    try:
-        import cv2
-        ver = tuple(int(x) for x in cv2.__version__.split(".")[:2])
-    except Exception:
-        ver = (0, 0)
-    if ver < (4, 13):
-        names = ", ".join(m.get("name", "unknown") for _, m in onnx_or_v4_models)
-        ver_str = ".".join(str(x) for x in ver) if ver != (0, 0) else "not installed"
-        warnings.append(
-            f"OpenCV {ver_str} detected but 4.13+ is required for ONNX/YOLOv4 models.\n"
-            f"    Affected models: {names}\n"
-            f"    Disable these models or upgrade OpenCV."
-        )
+if onnx_models and cv_ver < (4, 13):
+    names = ", ".join(m.get("name", "unknown") for _, m in onnx_models)
+    warnings.append(
+        f"OpenCV {cv_ver_str} detected but 4.13+ is required for ONNX YOLOv26 models.\n"
+        f"    Affected models: {names}\n"
+        f"    Upgrade OpenCV, or disable YOLOv26 and enable YOLOv4 instead (works with OpenCV 4.4+)."
+    )
+
+if v4_models and cv_ver < (4, 4):
+    names = ", ".join(m.get("name", "unknown") for _, m in v4_models)
+    warnings.append(
+        f"OpenCV {cv_ver_str} detected but 4.4+ is required for YOLOv4 models.\n"
+        f"    Affected models: {names}\n"
+        f"    Upgrade OpenCV or disable these models."
+    )
 
 # --- Print results ---
 if warnings:
