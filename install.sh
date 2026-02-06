@@ -510,6 +510,15 @@ install_hook_config() {
         ${PYTHON} tools/config_upgrade_yaml.py -c "${TARGET_CONFIG}/objectconfig.yml" -e hook/objectconfig.yml &&
             print_success "hook config upgraded" || print_warning "hook config upgrade failed"
     fi
+
+    # Fix stale secrets.ini reference in objectconfig if secrets.yml exists
+    if [ -f "${TARGET_CONFIG}/objectconfig.yml" ] && [ -f "${TARGET_CONFIG}/secrets.yml" ]; then
+        if grep -q 'secrets\.ini' "${TARGET_CONFIG}/objectconfig.yml"; then
+            sed -i 's|secrets\.ini|secrets.yml|g' "${TARGET_CONFIG}/objectconfig.yml"
+            print_success "Updated secrets path from .ini to .yml in objectconfig.yml"
+        fi
+    fi
+
     echo "====> Remember to fill in the right values in the config files, or your system won't work! <============="
     echo "====> If you changed $TARGET_CONFIG remember to fix  ${TARGET_BIN_HOOK}/zm_event_start.sh! <========"
     echo
