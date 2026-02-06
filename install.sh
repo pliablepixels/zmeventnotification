@@ -565,13 +565,20 @@ EOF
 
 # Post-install diagnostic checks
 run_doctor_checks() {
-    local config="${TARGET_CONFIG}/objectconfig.yml"
-    [ ! -f "$config" ] && return
+    local hook_config="${TARGET_CONFIG}/objectconfig.yml"
+    local es_config="${TARGET_CONFIG}/zmeventnotification.yml"
+    [ ! -f "$hook_config" ] && [ ! -f "$es_config" ] && return
 
     echo
     echo "Running post-install diagnostic checks..."
 
-    ${PYTHON} tools/install_doctor.py "$config" || true
+    ${PYTHON} tools/install_doctor.py \
+        --hook-config "$hook_config" \
+        --es-config "$es_config" \
+        --web-owner "${WEB_OWNER}" \
+        --web-group "${WEB_GROUP}" \
+        --base-data "${TARGET_DATA}" \
+        || true
 }
 
 # wuh
