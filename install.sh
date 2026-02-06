@@ -342,7 +342,7 @@ install_hook() {
         if [ "${INSTALL_YOLOV26}" == "yes" ]
         then
             echo 'Checking for ONNX YOLOv26 model files...'
-            print_warning 'Note, you need OpenCV 4.10+ for ONNX YOLOv26 to work'
+            print_warning 'Note, you need OpenCV 4.13+ for ONNX YOLOv26 to work (TopK layer support required)'
             download_if_needed ultralytics \
                 'yolo26n.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo26n.onnx' \
                 'yolo26s.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo26s.onnx' \
@@ -551,10 +551,11 @@ print_opencv_message() {
     cat << EOF
 
     |-------------------------- NOTE -------------------------------------|
-    
+
      Hooks are installed, but please make sure you have the right version
-     of OpenCV installed. I recommend removing any pip packages you may
-     have installed of opencv* and compiling OpenCV 4.4.x+ from source. 
+     of OpenCV installed. ONNX YOLOv26 models require OpenCV 4.13+.
+     I recommend removing any pip packages you may have installed of
+     opencv* and compiling OpenCV 4.13+ from source.
      See https://zmeventnotification.readthedocs.io/en/latest/guides/hooks.html#opencv-install
 
     |----------------------------------------------------------------------|
@@ -609,7 +610,7 @@ display_help() {
         INSTALL_YOLOV4: Download and install yolov4 model (default:yes)
         INSTALL_TINY_YOLOV4: Download and install tiny yolov4 model (default:yes)
         INSTALL_CORAL_EDGETPU: Download and install coral models (default:no)
-        INSTALL_YOLOV26: Download and install ONNX YOLOv26 models (default:yes). Needs OpenCV 4.10+
+        INSTALL_YOLOV26: Download and install ONNX YOLOv26 models (default:yes). Needs OpenCV 4.13+
 
         TARGET_CONFIG: Path to ES config dir (default: /etc/zm)
         TARGET_DATA: Path to ES data dir (default: /var/lib/zmeventnotification)
