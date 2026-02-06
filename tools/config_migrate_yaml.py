@@ -61,7 +61,30 @@ def collect_variables(cp):
         for key, value in cp.items(section):
             # Skip complex values (dicts/lists) - only simple strings can be variable definitions
             if key not in LITERAL_KEYS and not is_polygon(value):
-                variables[key] = value
+                variables[key] = strip_quotes(value)
+    return variables
+
+
+def resolve_variable_chains(variables, max_iterations=10):
+    """Expand {{variable}} references within the variables dict itself.
+
+    Handles chained references like A={{B}} where B={{C}}/path so that
+    A resolves to the fully expanded value.
+    """
+    for _ in range(max_iterations):
+        changed = False
+        for key, value in list(variables.items()):
+            if isinstance(value, str) and '{{' in value:
+                new_value = re.sub(
+                    r'\{\{(\w+)\}\}',
+                    lambda m: str(variables.get(m.group(1), m.group(0))),
+                    value,
+                )
+                if new_value != value:
+                    variables[key] = new_value
+                    changed = True
+        if not changed:
+            break
     return variables
 
 
@@ -180,6 +203,39 @@ def safe_eval(value):
     return _restore(result) if placeholders else result
 
 
+def strip_quotes(value):
+    """Strip matching surrounding quotes that ConfigParser preserves as literals."""
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+        return value[1:-1]
+    return value
+
+
+def coerce_value(value):
+    """Coerce a string to int or float if it looks numeric."""
+    if not isinstance(value, str):
+        return value
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    return value
+
+
+def coerce_types(obj):
+    """Recursively coerce string values to appropriate Python types."""
+    if isinstance(obj, dict):
+        return {k: coerce_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [coerce_types(item) for item in obj]
+    elif isinstance(obj, str):
+        return coerce_value(obj)
+    return obj
+
+
 def is_polygon(value):
     """Check if a value looks like polygon coordinates (e.g. '306,356 1003,341 ...')."""
     parts = value.strip().split(' ')
@@ -208,7 +264,7 @@ def migrate_section(cp, section_name):
         if key in LITERAL_KEYS:
             result[key] = safe_eval(value)
         else:
-            result[key] = value
+            result[key] = strip_quotes(value)
     return result
 
 
@@ -233,7 +289,7 @@ def migrate_monitor(cp, section_name):
         elif key in LITERAL_KEYS:
             overrides[key] = safe_eval(value)
         else:
-            overrides[key] = value
+            overrides[key] = strip_quotes(value)
 
     # Attach detection patterns to their zones
     for zone_name, pattern in zone_patterns.items():
@@ -249,14 +305,24 @@ def migrate_monitor(cp, section_name):
     return overrides
 
 
-def remove_indirection_keys(obj, keys_to_remove):
-    """Remove keys that were only used for {{variable}} indirection."""
-    if isinstance(obj, dict):
-        return {k: remove_indirection_keys(v, keys_to_remove)
-                for k, v in obj.items() if k not in keys_to_remove}
-    elif isinstance(obj, list):
-        return [remove_indirection_keys(item, keys_to_remove) for item in obj]
-    return obj
+def remove_indirection_keys(output, keys_to_remove):
+    """Remove indirection-only keys from the top level of each section only.
+
+    Does NOT recurse into nested structures like ml_sequence/stream_sequence,
+    where these same key names are legitimate configuration parameters.
+    """
+    for section_name, section_data in output.items():
+        if not isinstance(section_data, dict):
+            continue
+        if section_name == 'monitors':
+            for monitor_data in section_data.values():
+                if isinstance(monitor_data, dict):
+                    for key in keys_to_remove:
+                        monitor_data.pop(key, None)
+        else:
+            for key in keys_to_remove:
+                section_data.pop(key, None)
+    return output
 
 
 def build_yaml(cp):
@@ -285,8 +351,9 @@ def build_yaml(cp):
     if monitors:
         output['monitors'] = monitors
 
-    # Collect variables and expand {{variable}} references
+    # Collect variables, resolve chained references, then expand
     variables = collect_variables(cp)
+    variables = resolve_variable_chains(variables)
     output, expanded_vars = expand_variables(output, variables)
 
     # Find any unexpanded variables (missing definitions)
@@ -296,14 +363,33 @@ def build_yaml(cp):
     keys_to_remove = INDIRECTION_ONLY_KEYS & expanded_vars
     output = remove_indirection_keys(output, keys_to_remove)
 
+    # Coerce numeric strings to int/float
+    output = coerce_types(output)
+
     return output, expanded_vars, unexpanded_vars
 
 
-def represent_str(dumper, data):
-    """Custom representer: use block style for multiline, plain for simple strings."""
+class QuotedStr(str):
+    """String subclass that signals the YAML dumper to use single quotes."""
+    pass
+
+
+def quote_string_values(obj):
+    """Wrap string values (not dict keys) in QuotedStr for single-quoting."""
+    if isinstance(obj, dict):
+        return {k: quote_string_values(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [quote_string_values(item) for item in obj]
+    elif isinstance(obj, str):
+        return QuotedStr(obj)
+    return obj
+
+
+def _represent_quoted_str(dumper, data):
+    """Single-quote QuotedStr values; block style for multiline."""
     if '\n' in data:
         return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style="'")
 
 
 def main():
@@ -315,12 +401,14 @@ def main():
     cp = parse_ini(args.config)
     yaml_data, expanded_vars, unexpanded_vars = build_yaml(cp)
 
-    yaml.add_representer(str, represent_str)
+    yaml.add_representer(QuotedStr, _represent_quoted_str)
+    yaml_data = quote_string_values(yaml_data)
 
     with open(args.output, 'w') as f:
         f.write("# Migrated from {}\n".format(args.config))
         f.write("# Please review and adjust as needed\n\n")
-        yaml.dump(yaml_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        yaml.dump(yaml_data, f, default_flow_style=False, sort_keys=False,
+                  allow_unicode=True)
 
     print("Migration complete: {} -> {}".format(args.config, args.output))
 
