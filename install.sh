@@ -203,7 +203,8 @@ install_es() {
     if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" ]]; then
       $INSTALLER install -y libyaml-libyaml-perl libcrypt-mysql-perl libcrypt-eksblowfish-perl \
           libcrypt-openssl-rsa-perl libmodule-build-perl libyaml-perl libjson-perl \
-          liblwp-protocol-https-perl libio-socket-ssl-perl liburi-perl libdbi-perl
+          liblwp-protocol-https-perl libio-socket-ssl-perl liburi-perl libdbi-perl \
+          libtest-warn-perl
       echo "Note: Net::WebSocket::Server is also required but not available via apt."
       echo "Install it via CPAN if not already present: sudo cpanm Net::WebSocket::Server"
     else
