@@ -45,13 +45,15 @@ sub writeTokenFile {
 sub _check_monthly_limit {
   my $obj = shift;
   my $curmonth = (localtime)[4];
-  if (defined($obj->{invocations})) {
-    my $month = $obj->{invocations}->{at};
+  if (defined($obj->{invocations}) && ref($obj->{invocations}) eq 'HASH') {
+    my $month = $obj->{invocations}->{at} // -1;
+    my $count = $obj->{invocations}->{count} // 0;
     if ($curmonth != $month) {
       $obj->{invocations}->{count} = 0;
+      $obj->{invocations}->{at} = $curmonth;
       main::Debug(1, 'Resetting counters for token...' . substr($obj->{token}, -10) . ' as month changed');
     }
-    if ($obj->{invocations}->{count} > DEFAULT_MAX_FCM_PER_MONTH_PER_TOKEN) {
+    if ($count > DEFAULT_MAX_FCM_PER_MONTH_PER_TOKEN) {
       main::Error('Exceeded message count of ' .
         DEFAULT_MAX_FCM_PER_MONTH_PER_TOKEN . ' for this month, for token...' .
         substr($obj->{token}, -10) . ', not sending FCM');
@@ -499,7 +501,10 @@ sub sendOverFCMLegacy {
       return;
     }
     if ( $json_string->{failure} eq 1 ) {
-      my $reason = $json_string->{results}[0]->{error};
+      my $reason = 'unknown';
+      if (ref($json_string->{results}) eq 'ARRAY' && @{$json_string->{results}}) {
+        $reason = $json_string->{results}[0]->{error} // 'unknown';
+      }
       main::Error('Error sending FCM for token:' . $obj->{token});
       main::Error('Error value =' . $reason);
       if ( $reason eq 'NotRegistered'
@@ -565,13 +570,13 @@ sub initFCMTokens {
   @main::active_connections = ();
   foreach my $key ( keys %{ $tokens_data{tokens} } ) {
     my $token      = $key;
-    my $monlist    = $tokens_data{tokens}->{$key}->{monlist};
-    my $intlist    = $tokens_data{tokens}->{$key}->{intlist};
-    my $platform   = $tokens_data{tokens}->{$key}->{platform};
-    my $pushstate  = $tokens_data{tokens}->{$key}->{pushstate};
-    my $appversion = $tokens_data{tokens}->{$key}->{appversion};
-    my $invocations = defined($tokens_data{tokens}->{$key}->{invocations}) ?
-      $tokens_data{tokens}->{$key}->{invocations} : {count=>0, at=>(localtime)[4]};
+    my $token_data = $tokens_data{tokens}->{$key} // {};
+    my $monlist    = $token_data->{monlist} // '';
+    my $intlist    = $token_data->{intlist} // '';
+    my $platform   = $token_data->{platform} // 'unknown';
+    my $pushstate  = $token_data->{pushstate} // 'enabled';
+    my $appversion = $token_data->{appversion} // 'unknown';
+    my $invocations = $token_data->{invocations} // {count=>0, at=>(localtime)[4]};
 
     push @main::active_connections,
       {

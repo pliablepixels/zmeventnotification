@@ -55,6 +55,10 @@ sub isAllowedInRules {
   }
 
   my $entry_ref = $es_rules{notifications}->{monitors}->{$id}->{rules};
+  if (!defined($entry_ref) || ref($entry_ref) ne 'ARRAY') {
+    main::Debug(1, "rules: No valid rules array found for Monitor:$id, allowing");
+    return ( $MISSING_RULE_RESULT, {} );
+  }
   my $rulecnt = 0;
   foreach my $rule_ref ( @{$entry_ref} ) {
     $rulecnt++;

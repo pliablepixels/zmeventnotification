@@ -229,8 +229,10 @@ sub _tag_detected_objects {
   return unless $hooks_config{tag_detected_objects} && $resJsonString;
   eval {
     my $det = decode_json($resJsonString);
+    return unless defined($det) && ref($det) eq 'ARRAY';
     my @labels;
     for my $item (@$det) {
+      next unless ref($item) eq 'HASH';
       push @labels, $item->{label} if $item->{label};
     }
     tagEventObjects($eid, \@labels) if @labels;

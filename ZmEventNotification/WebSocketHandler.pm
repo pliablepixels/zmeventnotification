@@ -174,7 +174,7 @@ sub processEsControlCommand {
 
   } else {
     my $str = encode_json(
-      { event   => $json->{escontrol},
+      { event   => 'escontrol',
         type    => 'command',
         status  => 'Fail',
         reason  => 'NOTSUPPORTED',

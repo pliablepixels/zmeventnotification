@@ -445,6 +445,8 @@ sub checkNewEvents() {
     # is STATE_PRE_ALERT. This is needed to catch alarms
     # that occur in < polling time of ES and then moves to ALERT
     if ($state == STATE_ALARM || $state == STATE_ALERT) {
+      # Ensure the monitor hash exists to avoid autovivification issues
+      $active_events{$mid} //= {};
       if (!$active_events{$mid}->{$current_event}) {
         if ($active_events{$mid}->{last_event_processed} and
           ($active_events{$mid}->{last_event_processed} >= $current_event)

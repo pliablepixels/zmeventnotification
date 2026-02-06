@@ -53,9 +53,16 @@ sub getInterval {
   my $monlist = shift;
   my $mid     = shift;
 
+  $intlist //= '';
+  $monlist //= '';
+
   my @ints = split(',', $intlist);
-  my %ints = map { $_ => shift @ints } split(',', $monlist);
-  if ( $ints{$mid} ) {
+  my @mons = split(',', $monlist);
+  my %ints;
+  for my $i (0 .. $#mons) {
+    $ints{$mons[$i]} = $ints[$i] // 0;
+  }
+  if ( defined($ints{$mid}) && $ints{$mid} ne '' ) {
     return $ints{$mid};
   }
   my ( $caller, undef, $line ) = caller;

@@ -39,7 +39,7 @@ sub getNotesFromEventDB {
   my $notes = $sth->fetchrow_hashref();
   $sth->finish();
 
-  return $notes->{Notes};
+  return $notes ? $notes->{Notes} : undef;
 }
 
 sub getZmUserId {
