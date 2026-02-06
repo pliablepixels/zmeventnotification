@@ -47,12 +47,13 @@ sub _check_monthly_limit {
   my $curmonth = (localtime)[4];
   if (defined($obj->{invocations}) && ref($obj->{invocations}) eq 'HASH') {
     my $month = $obj->{invocations}->{at} // -1;
-    my $count = $obj->{invocations}->{count} // 0;
     if ($curmonth != $month) {
       $obj->{invocations}->{count} = 0;
       $obj->{invocations}->{at} = $curmonth;
       main::Debug(1, 'Resetting counters for token...' . substr($obj->{token}, -10) . ' as month changed');
     }
+    # Check count after potential reset
+    my $count = $obj->{invocations}->{count} // 0;
     if ($count > DEFAULT_MAX_FCM_PER_MONTH_PER_TOKEN) {
       main::Error('Exceeded message count of ' .
         DEFAULT_MAX_FCM_PER_MONTH_PER_TOKEN . ' for this month, for token...' .

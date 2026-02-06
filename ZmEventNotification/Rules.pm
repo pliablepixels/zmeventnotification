@@ -30,7 +30,7 @@ sub isAllowedInRules {
   my $alarm = shift;
   my $id    = $alarm->{MonitorId};
   my $name  = $alarm->{Name};
-  my $cause = $alarm->{Start}->{Cause};
+  my $cause = $alarm->{Start}->{Cause} // '';
 
   if (index($cause, 'detected:') == -1) {
     my $end_cause = $alarm->{End}->{Cause} // '';
