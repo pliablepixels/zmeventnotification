@@ -233,8 +233,14 @@ install_es() {
     echo '*** Installing Perl modules ***'
     mkdir -p "${TARGET_PERL_LIB}/ZmEventNotification/"
     for pm_file in ZmEventNotification/*.pm; do
-        install -m 644 "$pm_file" "${TARGET_PERL_LIB}/ZmEventNotification/" &&
-            echo "Installed $(basename $pm_file)" || print_error "Failed to install $(basename $pm_file)"
+        local pm_target="${TARGET_PERL_LIB}/ZmEventNotification/$(basename "$pm_file")"
+        if install -m 644 "$pm_file" "${TARGET_PERL_LIB}/ZmEventNotification/"; then
+            echo "Installed $(basename $pm_file)"
+        elif cp "$pm_file" "$pm_target" && chmod 644 "$pm_target"; then
+            echo "Installed $(basename $pm_file) (in-place copy)"
+        else
+            print_error "Failed to install $(basename $pm_file)"
+        fi
     done
 
     # Update Version.pm with the version from VERSION file
