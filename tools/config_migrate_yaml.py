@@ -27,12 +27,101 @@ LEGACY_KEYS = {'use_sequence', 'detection_sequence', 'detection_mode'}
 # Keys that are Python dict/list literals and need ast.literal_eval
 LITERAL_KEYS = {'ml_sequence', 'stream_sequence', 'pyzm_overrides'}
 
+# Keys that were only used for {{variable}} indirection and should be removed after expansion
+INDIRECTION_ONLY_KEYS = {
+    'my_model_sequence', 'disable_locks', 'match_past_detections',
+    'object_detection_pattern', 'face_detection_pattern', 'alpr_detection_pattern',
+    'tpu_object_weights', 'tpu_object_weights_mobiledet', 'tpu_object_labels',
+    'tpu_min_confidence', 'tpu_object_framework', 'tpu_max_processes', 'tpu_max_lock_wait',
+    'yolo4_object_config', 'yolo4_object_weights', 'yolo4_object_labels',
+    'yolo4_object_framework', 'yolo4_object_processor',
+    'gpu_max_processes', 'gpu_max_lock_wait', 'cpu_max_processes', 'cpu_max_lock_wait',
+    'object_min_confidence', 'max_detection_size',
+    'face_model', 'face_train_model', 'face_recognition_framework',
+    'face_num_jitters', 'face_upsample_times', 'known_images_path', 'unknown_images_path',
+    'unknown_face_name', 'save_unknown_faces', 'save_unknown_faces_leeway_pixels',
+    'alpr_service', 'alpr_url', 'alpr_key', 'alpr_use_after_detection_only',
+    'openalpr_recognize_vehicle', 'openalpr_country', 'openalpr_state',
+    'openalpr_min_confidence', 'platerec_min_dscore', 'platerec_min_score',
+    'platerec_regions', 'platerec_stats', 'platerec_payload', 'platerec_config'
+}
+
 
 def parse_ini(config_path):
     """Read INI file and return ConfigParser object."""
     cp = ConfigParser(interpolation=None, inline_comment_prefixes='#')
     cp.read(config_path)
     return cp
+
+
+def collect_variables(cp):
+    """Collect all flat key-value pairs that can be used as {{variable}} substitutions."""
+    variables = {}
+    for section in cp.sections():
+        for key, value in cp.items(section):
+            # Skip complex values (dicts/lists) - only simple strings can be variable definitions
+            if key not in LITERAL_KEYS and not is_polygon(value):
+                variables[key] = value
+    return variables
+
+
+def expand_variables(obj, variables, expanded_vars=None):
+    """Recursively expand {{variable}} references in an object using collected variables.
+
+    Returns (expanded_obj, set_of_expanded_variable_names).
+    """
+    if expanded_vars is None:
+        expanded_vars = set()
+
+    if isinstance(obj, str):
+        # Find all {{variable}} patterns and expand them
+        def replace_var(m):
+            var_name = m.group(1)
+            if var_name in variables:
+                expanded_vars.add(var_name)
+                return str(variables[var_name])
+            else:
+                # Keep unexpanded if variable not found (will warn later)
+                return m.group(0)
+
+        expanded = re.sub(r'\{\{(\w+)\}\}', replace_var, obj)
+        return expanded, expanded_vars
+    elif isinstance(obj, dict):
+        result = {}
+        for k, v in obj.items():
+            new_v, expanded_vars = expand_variables(v, variables, expanded_vars)
+            result[k] = new_v
+        return result, expanded_vars
+    elif isinstance(obj, list):
+        result = []
+        for item in obj:
+            new_item, expanded_vars = expand_variables(item, variables, expanded_vars)
+            result.append(new_item)
+        return result, expanded_vars
+    elif isinstance(obj, tuple):
+        result = []
+        for item in obj:
+            new_item, expanded_vars = expand_variables(item, variables, expanded_vars)
+            result.append(new_item)
+        return tuple(result), expanded_vars
+    return obj, expanded_vars
+
+
+def find_unexpanded_variables(obj):
+    """Find any remaining {{variable}} patterns that weren't expanded."""
+    unexpanded = set()
+
+    if isinstance(obj, str):
+        for m in re.finditer(r'\{\{(\w+)\}\}', obj):
+            unexpanded.add(m.group(1))
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            unexpanded.update(find_unexpanded_variables(v))
+    elif isinstance(obj, (list, tuple)):
+        for item in obj:
+            unexpanded.update(find_unexpanded_variables(item))
+
+    return unexpanded
 
 
 def safe_eval(value):
@@ -160,8 +249,21 @@ def migrate_monitor(cp, section_name):
     return overrides
 
 
+def remove_indirection_keys(obj, keys_to_remove):
+    """Remove keys that were only used for {{variable}} indirection."""
+    if isinstance(obj, dict):
+        return {k: remove_indirection_keys(v, keys_to_remove)
+                for k, v in obj.items() if k not in keys_to_remove}
+    elif isinstance(obj, list):
+        return [remove_indirection_keys(item, keys_to_remove) for item in obj]
+    return obj
+
+
 def build_yaml(cp):
-    """Build the full YAML dict from a parsed INI ConfigParser."""
+    """Build the full YAML dict from a parsed INI ConfigParser.
+
+    Returns (yaml_dict, expanded_vars, unexpanded_vars).
+    """
     output = {}
 
     for section in KNOWN_SECTIONS:
@@ -183,7 +285,18 @@ def build_yaml(cp):
     if monitors:
         output['monitors'] = monitors
 
-    return output
+    # Collect variables and expand {{variable}} references
+    variables = collect_variables(cp)
+    output, expanded_vars = expand_variables(output, variables)
+
+    # Find any unexpanded variables (missing definitions)
+    unexpanded_vars = find_unexpanded_variables(output)
+
+    # Remove keys that were only used for indirection and have been expanded
+    keys_to_remove = INDIRECTION_ONLY_KEYS & expanded_vars
+    output = remove_indirection_keys(output, keys_to_remove)
+
+    return output, expanded_vars, unexpanded_vars
 
 
 def represent_str(dumper, data):
@@ -200,7 +313,7 @@ def main():
     args = parser.parse_args()
 
     cp = parse_ini(args.config)
-    yaml_data = build_yaml(cp)
+    yaml_data, expanded_vars, unexpanded_vars = build_yaml(cp)
 
     yaml.add_representer(str, represent_str)
 
@@ -210,6 +323,17 @@ def main():
         yaml.dump(yaml_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
     print("Migration complete: {} -> {}".format(args.config, args.output))
+
+    if expanded_vars:
+        print("\nExpanded {{{{variable}}}} references ({} variables):".format(len(expanded_vars)))
+        for var in sorted(expanded_vars):
+            print("  - {{{{{}}}}}".format(var))
+
+    if unexpanded_vars:
+        print("\nWARNING: The following {{{{variable}}}} references could not be expanded")
+        print("(no definition found in config). Please manually fix these in the output:")
+        for var in sorted(unexpanded_vars):
+            print("  - {{{{{}}}}}".format(var))
 
 
 if __name__ == '__main__':
