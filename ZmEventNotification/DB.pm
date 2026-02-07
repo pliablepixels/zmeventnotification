@@ -52,7 +52,7 @@ sub getZmUserId {
     return 0;
   }
 
-  my $username = $secrets->val('secrets', 'ZM_USER');
+  my $username = $secrets->{secrets}{ZM_USER};
   if (!$username) {
     main::Debug(1, 'tagEventObjects: ZM_USER not found in secrets, using uid=0');
     $cached_zm_user_id = 0;
