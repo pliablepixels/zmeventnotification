@@ -383,11 +383,16 @@ install_hook() {
     install -m 755 -o "${WEB_OWNER}" hook/zm_event_start.sh "${TARGET_BIN_HOOK}"
     install -m 755 -o "${WEB_OWNER}" hook/zm_event_end.sh "${TARGET_BIN_HOOK}"
 
-    # Fix config path in hook scripts to match TARGET_CONFIG
-    sed -i "s|CONFIG_FILE=\"/etc/zm/objectconfig.yml\"|CONFIG_FILE=\"${TARGET_CONFIG}/objectconfig.yml\"|" \
-        "${TARGET_BIN_HOOK}/zm_event_start.sh"
     install -m 755 -o "${WEB_OWNER}" hook/zm_detect.py "${TARGET_BIN_HOOK}"
     install -m 755 -o "${WEB_OWNER}" hook/zm_train_faces.py "${TARGET_BIN_HOOK}"
+
+    # Fix hardcoded paths in installed scripts to match TARGET_CONFIG / TARGET_BIN_HOOK
+    sed -i "s|CONFIG_FILE=\"/etc/zm/objectconfig.yml\"|CONFIG_FILE=\"${TARGET_CONFIG}/objectconfig.yml\"|" \
+        "${TARGET_BIN_HOOK}/zm_event_start.sh"
+    sed -i "s|/var/lib/zmeventnotification/bin/zm_detect.py|${TARGET_BIN_HOOK}/zm_detect.py|g" \
+        "${TARGET_BIN_HOOK}/zm_event_start.sh"
+    sed -i "s|default='/etc/zm/objectconfig.yml'|default='${TARGET_CONFIG}/objectconfig.yml'|" \
+        "${TARGET_BIN_HOOK}/zm_train_faces.py"
     #python setup.py install && print_success "Done" || print_error "python setup failed"
 
     echo
