@@ -482,6 +482,12 @@ install_es_config() {
         fi
     fi
 
+    # Fix hardcoded /etc/zm paths in ES config when TARGET_CONFIG differs
+    if [ "${TARGET_CONFIG}" != "/etc/zm" ] && [ -f "${TARGET_CONFIG}/zmeventnotification.yml" ]; then
+        sed -i "s|/etc/zm/|${TARGET_CONFIG}/|g" "${TARGET_CONFIG}/zmeventnotification.yml"
+        print_success "Updated /etc/zm paths to ${TARGET_CONFIG} in zmeventnotification.yml"
+    fi
+
     # Migrate es_rules.json to YAML if needed
     if [ -f "${TARGET_CONFIG}/es_rules.json" ] && [ ! -f "${TARGET_CONFIG}/es_rules.yml" ]; then
         echo "Found existing es_rules.json but no es_rules.yml - converting..."
@@ -546,6 +552,12 @@ install_hook_config() {
             sed -i 's|secrets\.ini|secrets.yml|g' "${TARGET_CONFIG}/objectconfig.yml"
             print_success "Updated secrets path from .ini to .yml in objectconfig.yml"
         fi
+    fi
+
+    # Fix hardcoded /etc/zm paths in hook config when TARGET_CONFIG differs
+    if [ "${TARGET_CONFIG}" != "/etc/zm" ] && [ -f "${TARGET_CONFIG}/objectconfig.yml" ]; then
+        sed -i "s|/etc/zm/|${TARGET_CONFIG}/|g" "${TARGET_CONFIG}/objectconfig.yml"
+        print_success "Updated /etc/zm paths to ${TARGET_CONFIG} in objectconfig.yml"
     fi
 
     echo "====> Remember to fill in the right values in the config files, or your system won't work! <============="
