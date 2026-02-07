@@ -382,6 +382,10 @@ install_hook() {
     echo "*** Installing detection scripts ***"
     install -m 755 -o "${WEB_OWNER}" hook/zm_event_start.sh "${TARGET_BIN_HOOK}"
     install -m 755 -o "${WEB_OWNER}" hook/zm_event_end.sh "${TARGET_BIN_HOOK}"
+
+    # Fix config path in hook scripts to match TARGET_CONFIG
+    sed -i "s|CONFIG_FILE=\"/etc/zm/objectconfig.yml\"|CONFIG_FILE=\"${TARGET_CONFIG}/objectconfig.yml\"|" \
+        "${TARGET_BIN_HOOK}/zm_event_start.sh"
     install -m 755 -o "${WEB_OWNER}" hook/zm_detect.py "${TARGET_BIN_HOOK}"
     install -m 755 -o "${WEB_OWNER}" hook/zm_train_faces.py "${TARGET_BIN_HOOK}"
     #python setup.py install && print_success "Done" || print_error "python setup failed"
@@ -540,7 +544,6 @@ install_hook_config() {
     fi
 
     echo "====> Remember to fill in the right values in the config files, or your system won't work! <============="
-    echo "====> If you changed $TARGET_CONFIG remember to fix  ${TARGET_BIN_HOOK}/zm_event_start.sh! <========"
     echo
 }
 
