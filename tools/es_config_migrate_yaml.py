@@ -25,6 +25,13 @@ def parse_ini(config_path):
     return cp
 
 
+def strip_quotes(value):
+    """Strip matching surrounding quotes that ConfigParser preserves as literals."""
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+        return value[1:-1]
+    return value
+
+
 def migrate_es_config(cp):
     """Build YAML dict from a zmeventnotification.ini ConfigParser."""
     output = {}
@@ -33,6 +40,7 @@ def migrate_es_config(cp):
         for key, value in cp.items(section):
             # Replace {{template}} with ${template}
             value = re.sub(r'\{\{(\w+?)\}\}', r'${\1}', value)
+            value = strip_quotes(value)
             data[key] = value
         if data:
             output[section] = data
@@ -45,7 +53,7 @@ def migrate_secrets(cp):
     if cp.has_section('secrets'):
         secrets = {}
         for key, value in cp.items('secrets'):
-            secrets[key.upper()] = value
+            secrets[key.upper()] = strip_quotes(value)
         output['secrets'] = secrets
     return output
 
