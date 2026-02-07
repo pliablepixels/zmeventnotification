@@ -331,7 +331,7 @@ def main_handler():
     }
 
     zmapi = zmapi.ZMApi(options=api_options)
-    stream = args.get('eventid') or args.get('file')
+    stream = (args.get('eventid') or args.get('file') or '').strip()
     ml_options = {}
     stream_options = {}
     secrets = None 
