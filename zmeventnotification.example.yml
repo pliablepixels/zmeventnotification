@@ -269,7 +269,7 @@ hook:
   # event_start_notify_on_hook_success. If the script returns "1" (fail)
   # then a notification is sent to channels specified in
   # event_start_notify_on_hook_fail
-  event_start_hook: "'${base_data_path}/bin/zm_event_start.sh'"
+  event_start_hook: "${base_data_path}/bin/zm_event_start.sh"
 
   # This script is called after event_start_hook completes. You can do
   # your housekeeping work here
