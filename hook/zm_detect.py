@@ -78,27 +78,6 @@ def remote_detect(stream, stream_options, zm_client, args):
     return matched_data, resp['all_matches']
 
 
-def _get_event_path(zm_client, event_id, retries=5, delay=2):
-    """Look up event path from ZM API, retrying since it may not be set yet at event start."""
-    for attempt in range(retries):
-        try:
-            data = zm_client.api.get('events/{}.json'.format(event_id))
-            ev = data.get('event', {}).get('Event', {})
-            base = data.get('event', {}).get('Storage', {}).get('Path', '')
-            relative = ev.get('RelativePath', '')
-            if base and relative:
-                path = os.path.join(base, relative)
-                if os.path.isdir(path):
-                    g.logger.Debug(1, 'Event path resolved: {}'.format(path))
-                    return path
-        except Exception:
-            pass
-        if attempt < retries - 1:
-            g.logger.Debug(2, 'Event path not ready, retry {}/{}'.format(attempt + 1, retries))
-            time.sleep(delay)
-    g.logger.Debug(1, 'Could not resolve event path after {} retries'.format(retries))
-    return None
-
 
 def main_handler():
     ap = argparse.ArgumentParser()
@@ -235,10 +214,9 @@ def main_handler():
                 cv2.rectangle(debug_image, (_b[0], _b[1]), (_b[2], _b[3]), (0, 0, 255), 1)
             cv2.imwrite(os.path.join(g.config['image_path'], '{}-{}-debug.jpg'.format(os.path.basename(stream), matched_data['frame_id'])), debug_image)
         if g.config['write_image_to_zm'] == 'yes':
-            eventpath = args.get('eventpath')
-            if not eventpath and args.get('eventid'):
-                eventpath = _get_event_path(zm, args['eventid'])
+            eventpath = args.get('eventpath') or (zm.event_path(int(args['eventid'])) if args.get('eventid') else None)
             if eventpath:
+                os.makedirs(eventpath, exist_ok=True)
                 cv2.imwrite(os.path.join(eventpath, 'objdetect.jpg'), debug_image)
                 try:
                     with open(os.path.join(eventpath, 'objects.json'), 'w') as f:
