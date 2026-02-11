@@ -56,6 +56,9 @@ general:
   write_image_to_zm: "yes"
   show_percent: "yes"
 
+  # Write detected object labels as ZM Tags (requires ZM >= 1.37.44)
+  tag_detected_objects: "no"
+
   # Polygon overlay settings
   poly_color: "(255,255,255)"
   poly_thickness: 2
