@@ -68,7 +68,7 @@ def remote_detect(stream, stream_options, zm_client, args):
     elif g.config['write_image_to_zm'] == 'yes' and matched_data.get('frame_id'):
         try:
             url = '{}/index.php?view=image&eid={}&fid={}'.format(g.config['portal'], stream, matched_data['frame_id'])
-            img_resp = zm_client.api._make_request(url=url, type='get')
+            img_resp = zm_client.api.request(url=url)
             img = cv2.imdecode(np.asarray(bytearray(img_resp.content), dtype='uint8'), cv2.IMREAD_COLOR)
             dims = matched_data.get('image_dimensions') or {}
             if dims.get('resized') and img.shape[1] != min(dims['resized'][1], img.shape[1]):
@@ -228,8 +228,8 @@ def main_handler():
     # --- Update ZM event notes ---
     if args.get('notes') and args.get('eventid'):
         try:
-            ev = zm.api.get('events/{}.json'.format(args['eventid']))
-            old = ev.get('event',{}).get('Event',{}).get('Notes','')
+            ev = zm.event(int(args['eventid']))
+            old = ev.notes or ''
             parts = old.split('Motion:') if old else ['']
             zm.update_event_notes(int(args['eventid']), pred + ('Motion:' + parts[1] if len(parts) > 1 else ''))
         except Exception as e: g.logger.Error('Error updating notes: {}'.format(e))
