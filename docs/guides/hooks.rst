@@ -834,54 +834,6 @@ event path (that is where objdetect.jpg/json are stored if an object is found).
 This will print debug logs on the terminal.
 
 
-Performance comparison 
-~~~~~~~~~~~~~~~~~~~~~~~
-
-* CPU: Intel(R) Xeon(R) CPU E5-1660 v3 @ 3.00GHz 8 cores, with 32GB RAM
-* GPU: GeForce 1050Ti
-* TPU: Google Coral USB stick, running on USB 3.0 in 'standard' mode 
-* Environment: I am running using ``pyzm.serve`` (remote ML), so you will see load time only once across multiple runs
-* Image size: 800px
-
-The TPU is running in standard mode, not max. Also note that these figures use pycoral, which is a python
-wrapper around the TPU C++ libraries. 
-You should also look at  Google's Coral `coral benchmark site <https://coral.ai/docs/edgetpu/benchmarks/>`__ for better numbers.
-Note that their performance figures are specific to their C++ code. Python will have 
-additional overheads (as noted on their site)
-Finally, if you are facing data transfter/delegate loading issues considering buying a good quality USB 3.1/10Gbps rated
-cable. I faced intermittent issues with delegate load issues (not always) which seems to have gone away after I ditched 
-Google's cable with a good quality one (I bought `this one <https://www.amazon.com/Anker-Powerline-Certified-Samsung-MacBook/dp/B07213D35X/ref=sr_1_4?dchild=1&keywords=usb+3.1+anker+usb+c&qid=1611410490&sr=8-4>`__)
-
-::
-
-   pp@homeserver:~$ tail -F /var/log/zm/zmesdetect.log | grep "perf:"
-
-  
-   First Run (Model load included):
-
-   01/25/21 14:45:19 zm_mlapi[953841] DBG1 detect_sequence.py:398 [perf: Starting for frame:snapshot]
-   01/25/21 14:45:22 zm_mlapi[953841] DBG1 coral_edgetpu.py:93 [perf: processor:tpu TPU initialization (loading /var/lib/zmeventnotification/models/coral_edgetpu/ssdlite_mobiledet_coco_qat_postprocess_edgetpu.tflite from disk) took: 3086.99 ms]
-   01/25/21 14:45:22 zm_mlapi[953841] DBG1 coral_edgetpu.py:179 [perf: processor:tpu Coral TPU detection took: 39.30 ms]
-   01/25/21 14:45:22 zm_mlapi[953841] DBG1 yolo.py:88 [perf: processor:gpu Yolo initialization (loading /var/lib/zmeventnotification/models/yolov4/yolov4.weights model from disk) took: 182.36 ms]
-   01/25/21 14:45:23 zm_mlapi[953841] DBG1 yolo.py:169 [perf: processor:gpu Yolo detection took: 1249.93 ms]
-   01/25/21 14:45:23 zm_mlapi[953841] DBG2 yolo.py:204 [perf: processor:gpu Yolo NMS filtering took: 0.68 ms]
-   01/25/21 14:45:26 zm_mlapi[953841] DBG1 face.py:40 [perf: processor:gpu Face Recognition library load time took: 0.00 ms ]
-   01/25/21 14:45:30 zm_mlapi[953841] DBG1 face.py:201 [perf: processor:gpu Finding faces took 4418.08 ms]
-   01/25/21 14:45:30 zm_mlapi[953841] DBG1 face.py:213 [perf: processor:gpu Computing face recognition distances took 80.49 ms]
-   01/25/21 14:45:30 zm_mlapi[953841] DBG1 face.py:245 [perf: processor:gpu Matching recognized faces to known faces took 3.13 ms]
-   01/25/21 14:45:30 zm_mlapi[953841] DBG1 detect_sequence.py:398 [perf: Starting for frame:alarm]
-
-   Second Run:
-
-   01/25/21 14:45:35 zm_mlapi[953841] DBG1 detect_sequence.py:398 [perf: Starting for frame:snapshot]
-   01/25/21 14:45:35 zm_mlapi[953841] DBG1 coral_edgetpu.py:179 [perf: processor:tpu Coral TPU detection took: 24.66 ms]
-   01/25/21 14:45:35 zm_mlapi[953841] DBG1 yolo.py:169 [perf: processor:gpu Yolo detection took: 58.06 ms]
-   01/25/21 14:45:35 zm_mlapi[953841] DBG2 yolo.py:204 [perf: processor:gpu Yolo NMS filtering took: 1.35 ms]
-   01/25/21 14:45:35 zm_mlapi[953841] DBG1 face.py:201 [perf: processor:gpu Finding faces took 290.92 ms]
-   01/25/21 14:45:35 zm_mlapi[953841] DBG1 face.py:213 [perf: processor:gpu Computing face recognition distances took 14.51 ms]
-   01/25/21 14:45:35 zm_mlapi[953841] DBG1 face.py:245 [perf: processor:gpu Matching recognized faces to known faces took 2.23 ms]
-
-
 Manually testing if detection is working well
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
