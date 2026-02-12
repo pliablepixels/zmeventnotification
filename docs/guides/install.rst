@@ -4,9 +4,9 @@ Installation of the Event Server (ES)
 
 .. note::
 
-   This page covers **Path 2** — the full Event Server installation (ES + hooks + push
-   notifications). If you only want ML detection without the ES, see
-   :ref:`Path 1 instructions on the hooks page <hooks_install>`.
+   This page covers **Path 2 (full Event Server)** — ES + hooks + push notifications.
+   If you only want ML detection without the ES (**Path 1 — hooks only**), see
+   :ref:`the hooks installation page <hooks_install>`.
 
 Clone the repo
 ~~~~~~~~~~~~~~~~~
