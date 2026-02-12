@@ -3,7 +3,10 @@ Machine Learning Hooks
 
 .. note::
 
-        The machine learning hooks use `pyzm <https://pyzmv2.readthedocs.io/en/latest/>`__ v2
+        This page covers the ML detection pipeline, which is required for **both**
+        :ref:`Path 1 (detection only) <path1_setup>` and
+        :ref:`Path 2 (full ES) <path2_setup>`.
+        The hooks use `pyzm <https://pyzmv2.readthedocs.io/en/latest/>`__ v2
         for detection. Make sure you have ``pyzm`` installed before proceeding.
 
 .. important::
@@ -42,35 +45,83 @@ The main detection script is ``zm_detect.py``. It reads ``objectconfig.yml``,
 connects to ZoneMinder, downloads event frames, runs the ML detection pipeline
 (via pyzm's ``Detector`` API), and returns results.
 
-There are three ways to use ``zm_detect.py``:
+.. _path1_setup:
 
-1. **Via the Event Server hook** — the ES invokes ``zm_event_start.sh``, which calls
-   ``zm_detect.py``. This is the traditional approach when you run the ES alongside ZM.
+Path 1: Detection only (no ES)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2. **Via ZM EventStartCommand** (ZM 1.37+) — ZoneMinder can call ``zm_detect.py``
-   directly, without the ES. Configure in ZM ``Options -> Config -> EventStartCommand``::
+**Requires ZM 1.37+.** ZoneMinder can call ``zm_detect.py`` directly via its
+``EventStartCommand`` feature — no Event Server needed.
 
-      /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
+Configure in ZM ``Options -> Config -> EventStartCommand``::
 
-   ZM substitutes ``%EID%``, ``%MID%``, ``%EC%`` tokens at runtime.
+   /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
 
-3. **Manual invocation** — run ``zm_detect.py`` directly from the command line for
-   testing or one-off detection::
+ZM substitutes ``%EID%``, ``%MID%``, ``%EC%`` tokens at runtime when an event starts.
 
-      sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-          --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+Detection results are:
 
-   You can also detect on a local image file instead of a ZM event::
+- Written to the ZM event notes (``-n`` flag)
+- Saved as ``objdetect.jpg`` and ``objects.json`` in the event folder
+  (if ``write_image_to_zm: "yes"`` in ``objectconfig.yml``)
+- Optionally tagged in ZM (if ``tag_detected_objects: "yes"``, requires ZM >= 1.37.44)
 
-      sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-          --config /etc/zm/objectconfig.yml --file /path/to/image.jpg --debug
+**What you get:** object/face/ALPR detection, annotated images, detection notes in ZM,
+local or remote ML via ``pyzm.serve``.
+
+**What you don't get:** push notifications (FCM), WebSocket notifications, MQTT,
+notification rules/muting, zmNinja push, or the ES control interface.
+
+To set up Path 1, you only need to:
+
+1. Install pyzm and the hooks (see :ref:`hooks_install` below)
+2. Edit ``/etc/zm/objectconfig.yml`` with your ZM portal credentials and desired models
+3. Set the EventStartCommand in ZM as shown above
+4. Optionally, set ``EventEndCommand`` to a similar invocation if you want end-of-event processing
+
+.. _path2_setup:
+
+Path 2: Full Event Server
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ES is a Perl daemon that monitors ZoneMinder's shared memory for new events,
+invokes the ML hooks, and handles push notifications, WebSockets, MQTT, rules, and more.
+
+When an event occurs, the ES invokes ``zm_event_start.sh``, which calls ``zm_detect.py``.
+Based on the detection result and your notification settings, the ES sends alerts via
+FCM (iOS/Android push), WebSockets, MQTT, and/or third-party push APIs.
+
+**What you get (in addition to Path 1):** push notifications to zmNinja and other
+FCM clients, WebSocket notifications, MQTT publishing, notification rules (time-based
+muting, per-monitor controls), per-device monitor filtering via ``tokens.txt``, and the
+ES control interface.
+
+To set up Path 2:
+
+1. Install the ES and its Perl dependencies (see :doc:`install`)
+2. Install pyzm and the hooks (see :ref:`hooks_install` below)
+3. Edit ``/etc/zm/zmeventnotification.yml`` and ``/etc/zm/objectconfig.yml``
+4. Enable ``OPT_USE_EVENTNOTIFICATION`` in ZM ``Options -> Systems``
+
+See :doc:`principles` for a detailed walkthrough of how the ES processes events.
 
 .. note::
 
-   When using EventStartCommand (option 2), you do **not** need the Event Notification
-   Server running. ZM invokes ``zm_detect.py`` directly. Detection results are written
-   to the ZM event notes and (optionally) as ``objdetect.jpg`` / ``objects.json`` in the
-   event path. However, you will not get push notifications without the ES.
+   Do **not** configure both ``EventStartCommand`` (Path 1) and the ES hook (Path 2)
+   for the same monitors — you would end up running detection twice on every event.
+
+Manual testing
+^^^^^^^^^^^^^^^
+
+Regardless of which path you use, you can always test detection manually::
+
+   # Test with a ZM event
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+       --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+
+   # Test with a local image file (no ZM event needed)
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+       --config /etc/zm/objectconfig.yml --file /path/to/image.jpg --debug
 
 
 .. _hooks_install:

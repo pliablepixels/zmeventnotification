@@ -3,41 +3,73 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Event NotificationServer Documentation
+Event Notification Server Documentation
 ========================================
 
 .. toctree::
         :hidden:
-        
+
         guides/breaking
         guides/install
         guides/principles
-        guides/hooks      
+        guides/hooks
         guides/config
         guides/es_faq
         guides/hooks_faq
         guides/developers
         guides/contrib_guidelines
-         
- 
+
 
 `Github Repository <https://github.com/pliablepixels/zmeventnotification>`__
 
+Choose your setup
++++++++++++++++++
 
-:doc:`guides/principles`
-        Key principles of how things work. Read this to understand how everything ties together.
-:doc:`guides/breaking`
-        Breaking changes. Always read this if you are upgrading.
-:doc:`guides/install`
-        How to install the Event Notification Server 
+There are two ways to use ML-powered object detection with ZoneMinder:
+
+**Path 1: Detection only (no ES)** — Wire ``zm_detect.py`` directly to ZoneMinder
+using ``EventStartCommand`` (requires ZM 1.37+). ZM calls the detection script
+automatically when an event starts. Detection results are written to the event notes
+and saved as ``objdetect.jpg`` / ``objects.json`` in the event folder.
+
+*You get:* object/face/ALPR detection, annotated images, detection notes in ZM, local
+or remote ML (via ``pyzm.serve``).
+
+*You don't get:* push notifications (FCM), WebSocket notifications, MQTT publishing,
+notification rules/muting, zmNinja push, monitor-level notification filtering, or
+the ES control interface.
+
+**Path 2: Full Event Server** — Install and run the Event Notification Server alongside
+ZoneMinder. The ES detects new events via shared memory, invokes the ML hooks, and
+handles push notifications, WebSockets, MQTT, rules, and more.
+
+*You get:* everything in Path 1, plus push notifications (iOS/Android via FCM), WebSocket
+notifications, MQTT support, notification rules (time-based muting), zmNinja integration,
+the ES control interface, and per-device monitor filtering.
+
+If you only need detection results written to your ZM events, Path 1 is simpler to set up.
+If you need real-time notifications on your phone or other clients, you need Path 2.
+
+Both paths require :doc:`guides/hooks` to be installed. Path 2 additionally requires the
+ES itself (:doc:`guides/install`).
+
+Documentation
++++++++++++++
+
 :doc:`guides/hooks`
-        How to configure the machine learning hooks *after* you install the Event Server
+        How to install and configure machine learning detection (required for both paths)
+:doc:`guides/install`
+        How to install the Event Notification Server (Path 2 only)
+:doc:`guides/principles`
+        Key principles of how the ES works (Path 2)
 :doc:`guides/config`
         How to use config files
+:doc:`guides/breaking`
+        Breaking changes. Always read this if you are upgrading.
 :doc:`guides/es_faq`
-        Event Notification Server FAQ covering common scenarios/issues
+        Event Notification Server FAQ (Path 2)
 :doc:`guides/hooks_faq`
-        Machine Learning Hooks FAQ covering common scenarios/issues
+        Machine Learning Hooks FAQ
 :doc:`guides/developers`
         If you want to use the Event Notification Server to make your own app/client
 :doc:`guides/contrib_guidelines`
