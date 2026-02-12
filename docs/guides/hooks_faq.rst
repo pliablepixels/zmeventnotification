@@ -120,15 +120,25 @@ See `this comment <https://github.com/tensorflow/tensorflow/issues/32743#issueco
 
 Local vs. Remote server for Machine Learning
 ---------------------------------------------
-As of version 5.0.0, you can now configure an API gateway for remote 
-machine learning by installing `my mlapi server <https://github.com/pliablepixels/mlapi>`__ on a remote server. 
-Once setup, simply point your ``ml_gateway`` inside ``objectconfig.yml`` to the IP/port of your gateway and make sure 
-``ml_user`` and ``ml_password`` are the user/password you set up on the API gateway. That's all.
+You can offload ML inference to a remote server using ``pyzm.serve``, the built-in
+remote ML detection server that replaces the legacy ``mlapi``. On the remote (GPU) box::
 
-The advantage of this is that you don't need to install any ML libraries within
-zoneminder if you are running mlapi on a different server. Further, mlapi loads the model
-only once so it is much faster. In older versions this was kludgy because you still
-had to install ML libraries locally in ZM, but no longer. In fact, I've completely 
-switched to mlapi now for my own use. Note that when you use remote detection, you will
-still need opencv in the host machine (opencv is used for other functions)
+   pip install pyzm[serve]
+   python -m pyzm.serve --models yolov4 --port 5000
+
+Then in ``objectconfig.yml`` on the ZM box, set::
+
+   remote:
+     ml_gateway: "http://gpu-box:5000"
+     ml_fallback_local: "yes"
+     ml_user: "!ML_USER"
+     ml_password: "!ML_PASSWORD"
+     ml_timeout: 60
+
+The advantage: models load once on the server and persist in memory, so subsequent
+detections are fast. You don't need ML libraries on the ZM box (only OpenCV, which is
+used for frame extraction and image writing). If the remote server is down and
+``ml_fallback_local`` is ``yes``, detection falls back to local inference automatically.
+
+See :ref:`remote_ml_config` for full setup details
 

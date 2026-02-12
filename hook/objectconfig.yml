@@ -78,13 +78,15 @@ animation:
   fast_gif: "no"
 
 
-# Remote ML gateway (https://github.com/pliablepixels/mlapi)
+# Remote ML gateway (pyzm.serve -- replaces legacy mlapi)
+# Start server on GPU box: python -m pyzm.serve --models yolov4 --port 5000
+# With auth: python -m pyzm.serve --models yolov4 --port 5000 --auth --auth-user admin --auth-password secret
 remote:
-  #ml_gateway: "http://192.168.1.183:5000/api/v1"
+  #ml_gateway: "http://192.168.1.183:5000"
   #ml_fallback_local: "yes"
   ml_user: "!ML_USER"
   ml_password: "!ML_PASSWORD"
-  ml_timeout: 5
+  ml_timeout: 60
 
 
 ml:

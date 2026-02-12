@@ -255,9 +255,21 @@ To upgrade at a later stage, see :ref:`upgrade_es_hooks`.
 
 Sidebar: Local vs. Remote Machine Learning
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Starting v5.0, you can now choose to run the machine learning code on a separate server. 
-This can free up your local ZM server resources if you have memory/CPU constraints. 
-See :ref:`this FAQ entry <local_remote_ml>`.
+You can run the machine learning code on a separate server using ``pyzm.serve``
+(the built-in remote ML detection server that replaces the legacy ``mlapi``).
+This frees up your ZM server resources and keeps models loaded in memory on the GPU box
+so subsequent detections are fast. See :ref:`this FAQ entry <local_remote_ml>`.
+
+To start the server on your GPU box::
+
+   pip install pyzm[serve]
+   python -m pyzm.serve --models yolov4 --port 5000
+
+Then point ``ml_gateway`` in ``objectconfig.yml`` to that server::
+
+   remote:
+     ml_gateway: "http://gpu-box:5000"
+     ml_fallback_local: "yes"
 
 
 .. _supported_models:
@@ -472,47 +484,56 @@ Like this:
                if detected, use same_model_sequence_strategy to decide if we should try other model configurations
       
 
-.. _mlapi_overrides:
+.. _remote_ml_config:
 
-Exceptions when using mlapi
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If you are using the remote mlapi server, then most of these settings migrate to ``mlapiconfig.ini``
-Specifically, when ``zm_detect.py`` sees ``ml_gateway`` in its ``remote`` section, it passes on
-the detection work to mlapi.
+Using the remote ML detection server (pyzm.serve)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Here are a list of parameters that still need to be in ``objectconfig.yml`` when using mlapi.
-(A simple rule to remember is zm_detect.py uses ``objectconfig.yml`` while mlapi uses ``mlapiconfig.ini``)
+.. note::
 
-- ``ml_gateway`` (obviously, as the *ES* calls *zm_detect*, and zm_detect calls mlapi if this parameter is present in *objectconfig.yml*)
-- ``ml_fallback_local`` (if *mlapi* fails, or is not running, *zm_detect* will switch to local inferencing, so this needs to be in *objectconfig.yml*)
-- ``show_percent`` (*zm_detect* is the one that actually creates the text you see in your object detection (*detected:[s] person:90%*))
-- ``write_image_to_zm`` (zm_detect is the one that actually puts *objdetect.jpg* in the ZM events folder - *mlapi* can't because it can be remote)
-- ``write_debug_image`` (*zm_detect* is the one that creates a debug image to inspect)
-- ``poly_thickness`` (because *zm_detect* is the one that actually writes the image/debug image as described above, makes sense that *poly_thickness* needs to be here)
-- ``image_path`` (related to above - to know where to write the image )
-- ``create_animation`` (*zm_detect* has the code to put the animation of mp4/gif together)
-- ``animation_types`` (same as above)
-- ``show_models`` (if you want to show model names along with text)
+   ``pyzm.serve`` replaces the legacy ``mlapi`` server. It is built into pyzm itself,
+   uses the same ``Detector`` API, and requires no separate configuration file. The old
+   ``mlapiconfig.ini`` is no longer needed.
 
-These need to be present in both mlapiconfig.ini and objectconfig.yml
+**Server setup** (GPU box)::
 
-- ``secrets``
-- ``base_data_path``
-- ``api_portal``
-- ``portal``
-- ``user``
-- ``password``
+   pip install pyzm[serve]
 
+   # Basic usage
+   python -m pyzm.serve --models yolov4 --port 5000
 
-So when using mlapi, migrate configurations that you typically specify in ``objectconfig.yml`` to ``mlapiconfig.ini``. This includes:
+   # With authentication
+   python -m pyzm.serve --models yolov4 --port 5000 \
+       --auth --auth-user admin --auth-password secret
 
-- Monitor specific sections 
-- ml_sequence and stream_sequence 
-- In general, if you see detection with mlapi missing something that worked when using 
-  objectconfig.yml, make sure you have not missed anything specific in mlapiconfig.ini 
-  with respect to related parameters 
+   # Multiple models, GPU inference
+   python -m pyzm.serve --models yolov4 yolo26s --port 5000 --processor gpu
 
-Also note that if you are using ml_fallback, repeat the settings in both configs.
+**Client setup** (``objectconfig.yml`` on the ZM box)::
+
+   remote:
+     ml_gateway: "http://192.168.1.183:5000"
+     ml_fallback_local: "yes"
+     ml_user: "!ML_USER"
+     ml_password: "!ML_PASSWORD"
+     ml_timeout: 60
+
+When ``ml_gateway`` is set, ``zm_detect.py`` creates the ``Detector`` in remote mode.
+Frame extraction still happens locally on the ZM box (it has ZM API access), but each
+frame is JPEG-encoded and POSTed to the remote server for inference. The server keeps
+models loaded in memory so subsequent requests skip the expensive model-load step.
+
+If the remote server is unreachable and ``ml_fallback_local`` is ``yes``, detection
+falls back to running locally on the ZM box.
+
+All other settings (``ml_sequence``, ``stream_sequence``, monitor overrides, animation,
+image writing, etc.) stay in ``objectconfig.yml`` — there is no second config file to manage.
+
+Server endpoints:
+
+- ``GET /health`` — returns ``{"status": "ok", "models_loaded": true}``
+- ``POST /detect`` — accepts multipart ``file`` (JPEG) + optional ``zones`` (JSON), returns detection results
+- ``POST /login`` — (auth mode only) accepts ``{"username": ..., "password": ...}``, returns JWT token
 
 Here is a part of my config, for example:
 

@@ -20,65 +20,6 @@ from zmes_hook_helpers import __version__ as __app_version__
 import zmes_hook_helpers.utils as utils
 
 
-def remote_detect(stream, stream_options, zm_client, args):
-    """Detect via remote mlapi gateway. Returns (matched_data, all_matches)."""
-    import cv2, imutils, numpy as np, requests
-    api_url, ml_timeout = g.config['ml_gateway'], int(g.config.get('ml_timeout', 5))
-    data_file = g.config['base_data_path'] + '/zm_login.json'
-
-    # Token management
-    access_token = None
-    if os.path.exists(data_file):
-        try:
-            with open(data_file) as f: data = json.load(f)
-            if time.time() + 30 - data['time'] < data['expires']: access_token = data['token']
-        except Exception: os.remove(data_file)
-    if not access_token:
-        r = requests.post(api_url + '/login', json={'username': g.config['ml_user'], 'password': g.config['ml_password']},
-                          headers={'content-type': 'application/json'}, timeout=ml_timeout)
-        data = r.json(); access_token = data.get('access_token')
-        if not access_token: raise ValueError('Error getting remote API token: {}'.format(data))
-        with open(data_file, 'w') as f: json.dump({'token': access_token, 'expires': data.get('expires'), 'time': time.time()}, f)
-    auth = {'Authorization': 'Bearer ' + access_token}
-
-    # Build request files
-    files, cmdline_image = {}, None
-    if args.get('file'):
-        image = cv2.imread(args['file'])
-        resize = g.config.get('stream_sequence', {}).get('resize')
-        if resize and str(resize) != 'no': image = imutils.resize(image, width=min(int(resize), image.shape[1]))
-        cmdline_image = image
-        _, jpeg = cv2.imencode('.jpg', image); files = {'file': ('image.jpg', jpeg.tobytes())}
-
-    ml_seq = g.config['ml_sequence']
-    ml_overrides = {'model_sequence': ml_seq.get('general',{}).get('model_sequence'),
-        'object': {'pattern': ml_seq.get('object',{}).get('general',{}).get('pattern')},
-        'face':   {'pattern': ml_seq.get('face',{}).get('general',{}).get('pattern')},
-        'alpr':   {'pattern': ml_seq.get('alpr',{}).get('general',{}).get('pattern')}}
-
-    r = requests.post(api_url + '/detect/object?type=object', headers=auth,
-                      params={'delete': True, 'response_format': 'zm_detect'}, files=files,
-                      json={'version': __app_version__, 'mid': args.get('monitorid'), 'reason': args.get('reason'),
-                            'stream': stream, 'stream_options': stream_options, 'ml_overrides': ml_overrides},
-                      timeout=ml_timeout)
-    r.raise_for_status(); resp = r.json(); matched_data = resp['matched_data']
-
-    if args.get('file'):
-        matched_data['image'] = cmdline_image
-    elif g.config['write_image_to_zm'] == 'yes' and matched_data.get('frame_id'):
-        try:
-            url = '{}/index.php?view=image&eid={}&fid={}'.format(g.config['portal'], stream, matched_data['frame_id'])
-            img_resp = zm_client.api.request(url=url)
-            img = cv2.imdecode(np.asarray(bytearray(img_resp.content), dtype='uint8'), cv2.IMREAD_COLOR)
-            dims = matched_data.get('image_dimensions') or {}
-            if dims.get('resized') and img.shape[1] != min(dims['resized'][1], img.shape[1]):
-                img = imutils.resize(img, width=min(dims['resized'][1], img.shape[1]))
-            matched_data['image'] = img
-        except Exception as e: g.logger.Error('Error grabbing image: {}'.format(e))
-    return matched_data, resp['all_matches']
-
-
-
 def main_handler():
     ap = argparse.ArgumentParser()
     ap.add_argument('-c', '--config', help='config file with path')
@@ -162,25 +103,34 @@ def main_handler():
     zones = [Zone(name=p['name'], points=p['value'], pattern=p.get('pattern')) for p in g.polygons]
     matched_data = None
 
-    if g.config['ml_gateway']:
-        try:
-            so = dict(stream_options); so['api'] = None
-            matched_data, _ = remote_detect(stream, so, zm, args)
-        except Exception as e:
-            g.logger.Error('Remote mlapi error: {}'.format(e)); g.logger.Debug(2, traceback.format_exc())
-            if g.config['ml_fallback_local'] == 'yes':
-                g.logger.Debug(1, 'Falling back to local detection')
-                result = Detector.from_dict(ml_options).detect_event(zm, int(stream), zones=zones, stream_config=stream_cfg)
-                matched_data = result.to_dict(); matched_data['polygons'] = g.polygons
-    else:
-        if not args.get('file') and int(g.config.get('wait', 0)) > 0: time.sleep(g.config['wait'])
-        detector = Detector.from_dict(ml_options)
+    # Inject remote gateway settings into ml_options so Detector.from_dict() picks them up
+    if g.config.get('ml_gateway'):
+        ml_options.setdefault('general', {})['ml_gateway'] = g.config['ml_gateway']
+        ml_options['general']['ml_user'] = g.config.get('ml_user')
+        ml_options['general']['ml_password'] = g.config.get('ml_password')
+        ml_options['general']['ml_timeout'] = g.config.get('ml_timeout', 60)
+
+    if not args.get('file') and int(g.config.get('wait', 0)) > 0: time.sleep(g.config['wait'])
+    detector = Detector.from_dict(ml_options)
+
+    try:
         if args.get('file'):
             result = detector.detect(args['file'], zones=zones)
-            matched_data = result.to_dict(); matched_data['polygons'] = g.polygons
         else:
             result = detector.detect_event(zm, int(stream), zones=zones, stream_config=stream_cfg)
+        matched_data = result.to_dict(); matched_data['polygons'] = g.polygons
+    except Exception as e:
+        if detector._gateway and g.config.get('ml_fallback_local') == 'yes':
+            g.logger.Debug(1, 'Remote failed ({}), falling back to local'.format(e))
+            ml_options['general']['ml_gateway'] = None
+            local = Detector.from_dict(ml_options)
+            if args.get('file'):
+                result = local.detect(args['file'], zones=zones)
+            else:
+                result = local.detect_event(zm, int(stream), zones=zones, stream_config=stream_cfg)
             matched_data = result.to_dict(); matched_data['polygons'] = g.polygons
+        else:
+            raise
 
     if not matched_data: g.logger.Debug(1, 'No detection data'); matched_data = {}
 
