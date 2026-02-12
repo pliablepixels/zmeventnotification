@@ -43,6 +43,10 @@ whilst inside the shell, ``install Module::Name``)
 -  ``Net::WebSocket::Server``
 -  ``YAML::XS`` (via ``libyaml-libyaml-perl`` on Debian/Ubuntu)
 -  ``Crypt::Eksblowfish::Bcrypt``
+-  ``Crypt::OpenSSL::RSA`` (for FCM v1 service account authentication)
+-  ``IO::Socket::SSL``
+-  ``LWP::Protocol::https`` (for FCM push notifications)
+-  ``JSON``
 -  ``Time::Piece`` for parsing ES rules
 
 On Debian/Ubuntu, the ``install.sh`` script will attempt to install most of these automatically.
