@@ -3,48 +3,74 @@ Machine Learning Hooks
 
 .. note::
 
-        Before you install machine learnings hooks, please make sure you have installed
-        the Event Notification Server (:doc:`install`) and have it working properly
+        The machine learning hooks use `pyzm <https://pyzmv2.readthedocs.io/en/latest/>`__ v2
+        for detection. Make sure you have ``pyzm`` installed before proceeding.
 
 .. important::
 
         Please don't ask me basic questions like "pip3 command not found - what do I do?" or
         "cv2 not found, how can I install it?" Hooks require some terminal
         knowledge and familiarity with troubleshooting. I don't plan to
-        provide support for these hooks. They are for reference only
+        provide support for these hooks. They are for reference only.
 
 
-Key Features 
+Key Features
 ~~~~~~~~~~~~~
 
-- Detection: objects, faces 
-- Recognition: faces 
-- Platforms: 
+- Detection: objects, faces
+- Recognition: faces
+- License plate recognition (ALPR) via cloud services
+- Platforms:
 
-   - CPU (object, face detection, face recognition), 
-   - GPU (object, face detection, face recognition), 
+   - CPU (object, face detection, face recognition),
+   - GPU (object, face detection, face recognition),
    - EdgeTPU (object, face detection)
 
-- Machine learning can be installed locally with ZM, or remotely via ``pyzm.serve``
+- Machine learning can run locally or remotely via ``pyzm.serve``
 
-Limitations
-~~~~~~~~~~~
+Requirements
+~~~~~~~~~~~~
 
-- Only tested with ZM 1.32+. May or may not work with older versions
-- Needs Python3 (Python2 is not supported)
+- Python 3.10+
+- OpenCV 4.10+ (for the default YOLOv26 ONNX model)
+- pyzm v2 (``pip install pyzm``)
 
-What
-~~~~
+How it works
+~~~~~~~~~~~~
 
-Kung-fu machine learning goodness.
+The main detection script is ``zm_detect.py``. It reads ``objectconfig.yml``,
+connects to ZoneMinder, downloads event frames, runs the ML detection pipeline
+(via pyzm's ``Detector`` API), and returns results.
 
-This is an example of how you can use the ``hook`` feature of the
-notification server to invoke a custom script on the event before it
-generates an alarm. I currently support object detection and face
-recognition.
+There are three ways to use ``zm_detect.py``:
 
-Please don't ask me questions on how to use them. Please read the
-extensive documentation and ini file configs
+1. **Via the Event Server hook** — the ES invokes ``zm_event_start.sh``, which calls
+   ``zm_detect.py``. This is the traditional approach when you run the ES alongside ZM.
+
+2. **Via ZM EventStartCommand** (ZM 1.37+) — ZoneMinder can call ``zm_detect.py``
+   directly, without the ES. Configure in ZM ``Options -> Config -> EventStartCommand``::
+
+      /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
+
+   ZM substitutes ``%EID%``, ``%MID%``, ``%EC%`` tokens at runtime.
+
+3. **Manual invocation** — run ``zm_detect.py`` directly from the command line for
+   testing or one-off detection::
+
+      sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+          --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+
+   You can also detect on a local image file instead of a ZM event::
+
+      sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+          --config /etc/zm/objectconfig.yml --file /path/to/image.jpg --debug
+
+.. note::
+
+   When using EventStartCommand (option 2), you do **not** need the Event Notification
+   Server running. ZM invokes ``zm_detect.py`` directly. Detection results are written
+   to the ZM event notes and (optionally) as ``objdetect.jpg`` / ``objects.json`` in the
+   event path. However, you will not get push notifications without the ES.
 
 
 .. _hooks_install:
@@ -159,7 +185,8 @@ Will install the ES and hooks, but no configs and will add the coral libraries.
 
   .. important::
 
-    However you choose to install openCV, you need a minimum version of `4.1.1`. Using a version below that will very likely not work.
+    The default YOLOv26 ONNX model requires **OpenCV 4.10+**. If using older models like YOLOv4,
+    a minimum of OpenCV 4.4 is required.
 
 
 Installing OpenCV: Using the pip package (Easy, but not recommended if you plan to use OpenCV ML - example Yolo)
@@ -179,7 +206,7 @@ Installing OpenCV: from source (Recommended if you plan to use OpenCV ML - examp
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 General installation instructions are available at the `official openCV site <https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html>`__. However, see below, if you are looking for GPU support:
 
-If you want to install a version with GPU support, I'd recommend you install OpenCV 4.2.x because it supports a CUDA backend for deep learning. Adrian's blog has a `good howto <https://www.pyimagesearch.com/2020/02/03/how-to-use-opencvs-dnn-module-with-nvidia-gpus-cuda-and-cudnn/>`__ on compiling OpenCV 4.2.x from scratch.
+If you want GPU support (CUDA backend for DNN inference), you will need to compile OpenCV from source with CUDA enabled.
 
 **I would strongly recommend you build from source, if you are able to. Pre built packages are not official from OpenCV and often seem to break/seg fault on different configurations.**
 
@@ -235,16 +262,24 @@ Post install steps
 Test operation
 ~~~~~~~~~~~~~~
 
+You can test detection directly with ``zm_detect.py`` (no need to go through the shell wrapper):
+
 ::
 
-    sudo -u www-data /var/lib/zmeventnotification/bin/zm_event_start.sh <eid> <mid> # replace www-data with apache if needed
+    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+        --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
 
-Replace with your own ``eid`` (Example 123456). This will be an event id for an event that you want to test. Typically,
-open up the ZM console, look for an event you want to run analysis on and select the ID of the event. That is the ``eid``.
-The ``mid`` is the monitor ID for the event. This is optional. If you specify it, any monitor specific settings (such as 
-zones, hook customizations, etc. in ``objectconfig.yml``/``mlapiconfig.ini`` will be used).
+Replace ``<eid>`` with an actual event ID from your ZM console. The ``<mid>`` is the monitor ID
+(optional — if specified, monitor-specific settings from ``objectconfig.yml`` will be used).
 
-The above command will  try and run detection.
+You can also test with a local image file instead of a ZM event::
+
+    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+        --config /etc/zm/objectconfig.yml --file /path/to/test.jpg --debug
+
+If using the ES hook mode, you can also test the full shell wrapper::
+
+    sudo -u www-data /var/lib/zmeventnotification/bin/zm_event_start.sh <eid> <mid>
 
 If it doesn't work, go back and figure out where you have a problem
 
@@ -435,7 +470,7 @@ Take a look at `this article <https://medium.com/zmninja/multi-frame-and-multi-m
 **All options:**
 
 ``ml_sequence`` supports various other attributes. See the
-`pyzm DetectorConfig documentation <https://pyzm.readthedocs.io/en/latest/source/pyzm.html>`__
+`pyzm DetectorConfig documentation <https://pyzmv2.readthedocs.io/en/latest/source/pyzm.html>`__
 for the full list of supported keys (``match_past_detections``, ``past_det_max_diff_area``,
 ``aliases``, ``max_detection_size``, etc.).
 
@@ -471,7 +506,7 @@ Take a look at `this article <https://medium.com/zmninja/multi-frame-and-multi-m
 **All options:**
 
 ``stream_sequence`` supports various other attributes. See the
-`pyzm StreamConfig documentation <https://pyzm.readthedocs.io/en/latest/source/pyzm.html>`__
+`pyzm StreamConfig documentation <https://pyzmv2.readthedocs.io/en/latest/source/pyzm.html>`__
 for the full list (``max_frames``, ``start_frame``, ``frame_skip``, ``save_frames``, etc.).
 
 
@@ -850,35 +885,73 @@ Google's cable with a good quality one (I bought `this one <https://www.amazon.c
 Manually testing if detection is working well
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can manually invoke the detection module to check if it works ok:
+You can manually invoke ``zm_detect.py`` to check if detection works:
 
 .. code:: bash
 
-    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+    # Test with a ZM event
+    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+        --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
 
-The ``--monitorid <mid>`` is optional and is the monitor ID. If you do
-specify it, it will pick up the right mask to apply (if it is in your
-config)
+    # Test with a local image file (no ZM event needed)
+    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+        --config /etc/zm/objectconfig.yml --file /path/to/image.jpg --debug
 
+The ``--monitorid <mid>`` is optional. If specified, monitor-specific settings
+(zones, ml_sequence overrides, etc.) from ``objectconfig.yml`` will be used.
 
-**STEP 1: Make sure the scripts(s) work** 
+The ``--debug`` flag prints detailed logs to the terminal.
 
-- Run the python script manually to see if it works (refer to sections above on how to run them manually) 
-- ``./zm_event_start.sh <eid> <mid>`` --> make sure it
-  downloads a proper image for that eid. Make sure it correctly invokes
-  detect.py If not, fix it. (``<mid>`` is optional and is used to apply a
-  crop mask if specified) 
-- Make sure the ``image_path`` you've chosen in the config file is WRITABLE by www-data (or apache) before you move to step 2
+**Testing with the ES (if using hook mode):**
 
-**STEP 2: run zmeventnotification in MANUAL mode** 
+1. Run ``zm_detect.py`` manually as shown above to verify detection works
+2. Stop the ES: ``sudo zmdc.pl stop zmeventnotification.pl``
+3. Set ``console_logs: "yes"`` in ``zmeventnotification.yml``
+4. Start it manually: ``sudo -u www-data /usr/bin/zmeventnotification.pl --debug``
+5. Force an alarm and check the output
 
-- ``sudo zmdc.pl stop zmeventnotification.pl`` 
-- change console_logs to yes in ``zmeventnotification.yml``
--  ``sudo -u www-data ./zmeventnotification.pl  --config ./zmeventnotification.yml``
--  Force an alarm, look at logs
+zm_detect.py command-line reference
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**STEP 3: integrate with the actual daemon** 
-- You should know how to do this already
+::
+
+    zm_detect.py [-h] [-c CONFIG] [-e EVENTID] [-p EVENTPATH] [-m MONITORID]
+                 [-v] [--bareversion] [-o OUTPUT_PATH] [-f FILE] [-r REASON]
+                 [-n] [-d] [--fakeit LABELS] [--pyzm-debug]
+
+``-c, --config``
+    Path to ``objectconfig.yml`` (required).
+
+``-e, --eventid``
+    ZM event ID to analyze (required unless ``--file`` is given).
+
+``-f, --file``
+    Skip event download, detect on a local image file instead.
+
+``-m, --monitorid``
+    Monitor ID. Enables per-monitor overrides (zones, ml_sequence, etc.) from config.
+
+``-p, --eventpath``
+    Path to store output files (``objdetect.jpg``, ``objects.json``).
+
+``-r, --reason``
+    Reason/cause string for the event (passed by ZM or the ES).
+
+``-n, --notes``
+    Update ZM event notes with detection results.
+
+``-d, --debug``
+    Print debug logs to terminal.
+
+``--fakeit LABELS``
+    Override detection with fake labels for testing (comma-separated).
+    Example: ``--fakeit "dog,person"``
+
+``--pyzm-debug``
+    Route pyzm library internal debug logs through ZMLog.
+
+``-v, --version``
+    Print version and exit.
 
 Questions
 ~~~~~~~~~~~

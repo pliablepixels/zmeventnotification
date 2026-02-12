@@ -21,13 +21,13 @@ Event NotificationServer Documentation
          
  
 
-`Github Repository <https://github.com/zoneminder/zmeventnotification>`__        
+`Github Repository <https://github.com/pliablepixels/zmeventnotification>`__
 
 
 :doc:`guides/principles`
         Key principles of how things work. Read this to understand how everything ties together.
 :doc:`guides/breaking`
-        Breaking changes. Always read this if you are upgrading (for example, lots changed with 3.x and 3.2) 
+        Breaking changes. Always read this if you are upgrading.
 :doc:`guides/install`
         How to install the Event Notification Server 
 :doc:`guides/hooks`

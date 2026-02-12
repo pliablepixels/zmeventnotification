@@ -2,48 +2,14 @@
 Installation of the Event Server (ES)
 --------------------------------------
 
-.. _third_party_dockers:
-
-3rd party dockers 
-~~~~~~~~~~~~~~~~~~
-
-I don't maintain docker images, so please don't ask me any questions about docker environments. There are others who maintain docker images. 
-I have no affiliation with any of them. Feel free to explore the various options below, but please don't ask me about them. I've also not tried any of these 
-dockers.
-
-- Alex's repo (in progress): `Various ZM configurations, currently ZM and ZM+ES (no hooks) <https://github.com/zoneminder-containers>`__ 
-- Vangorra's repo:`A docker container with ZM+ES+hooks+MLAPI <https://github.com/vangorra/zoneminder-zmeventnotification>`__
-- dlandon's repo: `A ZM+ES+hooks container (may not be free/maintained anymore) <https://github.com/dlandon/zoneminder.machine.learning>`__
-- The Moosman's  repo: `A docker container for MLAPI <https://github.com/themoosman/mlapi>`__
-
-If there are other repositories you are aware of that work well, let me know.
-
-If you are using docker images, the next section does not apply.
-
 Clone the repo
 ~~~~~~~~~~~~~~~~~
 
-I'd recommend users download the latest stable release. Starting version 4.5 I have started tagging releases that are rested. The master branch will always be 'cutting-edge'. NOTE: Pick the MASTER option, as the latest tag will not work out of the box.  There has been many untagged fixes.
-
-To clone the latest stable release:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 ::
 
-  git clone https://github.com/zoneminder/zmeventnotification.git
+  git clone https://github.com/pliablepixels/zmeventnotification.git
   cd zmeventnotification
-  # repeat these two steps each time you want to update to the latest stable
-  git fetch --tags
-  git checkout $(git describe --tags $(git rev-list --tags --max-count=1))
-
-To clone master:
-^^^^^^^^^^^^^^^^^
-
-::
-
-  git clone https://github.com/zoneminder/zmeventnotification.git
-  # repeat these two steps each time you want to update
-  git checkout master # only needed if you are on some other branch later
+  # to update later
   git pull
 
 
@@ -74,10 +40,9 @@ to get into the CPAN shell and install it from the shell as a 2 step
 process. You'd do that using ``sudo perl -MCPAN -e shell`` and then
 whilst inside the shell, ``install Module::Name``)
 
--  ``Crypt::MySQL`` (if you have updated to ZM 1.34, this is no longer needed)
 -  ``Net::WebSocket::Server``
 -  ``YAML::XS`` (via ``libyaml-libyaml-perl`` on Debian/Ubuntu)
--  ``Crypt::Eksblowfish::Bcrypt`` (if you have updated to ZM 1.34, you will already have this)
+-  ``Crypt::Eksblowfish::Bcrypt``
 -  ``Time::Piece`` for parsing ES rules
 
 On Debian/Ubuntu, the ``install.sh`` script will attempt to install most of these automatically.
@@ -85,7 +50,7 @@ You can also install them manually:
 
 ::
 
-    sudo apt-get install libyaml-libyaml-perl libcrypt-mysql-perl libcrypt-eksblowfish-perl \
+    sudo apt-get install libyaml-libyaml-perl libcrypt-eksblowfish-perl \
         libcrypt-openssl-rsa-perl libmodule-build-perl libyaml-perl libjson-perl \
         liblwp-protocol-https-perl libio-socket-ssl-perl liburi-perl libdbi-perl
 
@@ -97,14 +62,7 @@ You can also install them manually:
 If after installing them you still see errors about these libraries
 missing, please launch a CPAN shell - see General Note above.
 
-If you face issues installing Crypt::MySQL try this instead: (Thanks to
-aaronl)
-
-::
-
-    sudo apt-get install libcrypt-mysql-perl
-
-If you face issues installing Crypt::Eksblowfish::Bcrypt, this this instead:
+If you face issues installing Crypt::Eksblowfish::Bcrypt, try this instead:
 
 ::
 
@@ -288,9 +246,6 @@ Making sure the ES gets auto-started when ZM starts
    ``Options->Systems`` and enable ``OPT_USE_EVENTNOTIFICATION`` and you
    are all set.
 - If you plan on using the machine learning hooks, there is more work to do. Please refer to :ref:`hooks_install`.
-
-**The rest of this section is NOT NEEDED for 1.32.0 and above!**
-
 
 Set up logging correctly for troubleshooting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

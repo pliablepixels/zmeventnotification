@@ -15,7 +15,7 @@ The ES is a perl process (typically ``/usr/bin/zmeventnotification.pl``) that ac
 
 .. sidebar:: Configuration files
     
-    This may be a good place to talk about configuration files. The ES has many customizations that are controlled by ``/etc/zm/zmeventnotification.yml``. If you are using hooks, they are controlled by ``/etc/zm/objectconfig.yml``. Both these files use ``/etc/zm/secrets.yml`` to move personal information away from config files. Study both these ini files well. They are heavily commented for your benefit.
+    This may be a good place to talk about configuration files. The ES has many customizations that are controlled by ``/etc/zm/zmeventnotification.yml``. If you are using hooks, they are controlled by ``/etc/zm/objectconfig.yml``. Both these files use ``/etc/zm/secrets.yml`` to move personal information away from config files. Study both these config files well. They are heavily commented for your benefit.
 
 2: Detecting New Events
 -----------------------------
@@ -249,7 +249,7 @@ That is what the "ES control interface" does. It is a websocket based interface 
 Just remember:
   
   - admin override via this channel takes precedence over config file
-  - admin overrides are stored in a different file ``/var/lib/zmeventnotification/misc/escontrol_interface.dat`` and are encoded. So if you are confused why your config changes to the ini file are not working, and you have enabled this control interface, check for that dat file and remove it to start from scratch.
+  - admin overrides are stored in a different file ``/var/lib/zmeventnotification/misc/escontrol_interface.dat`` and are encoded. So if you are confused why your config changes are not working, and you have enabled this control interface, check for that dat file and remove it to start from scratch.
 
 How Machine Learning works
 +++++++++++++++++++++++++++

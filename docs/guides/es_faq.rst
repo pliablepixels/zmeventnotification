@@ -357,7 +357,7 @@ the following conditions must be met:
 - There is a 1MB limit to image size
 - You can't use self signed certs 
 - The IP/hostname needs to be accessible by zmNinja on the mobile device you are receiving pushes on
-- You need ZM 1.32.3 or above
+- You need a recent version of ZM
 - A good way to isolate if its a URL problem or something else is replace the ``picture_url`` in ``/etc/zm/secrets.yml`` 
   with a knows HTTPS url like `this <https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/A_small_bird.jpg/800px-A_small_bird.jpg>`__
   Note that when you use a test image, comment out ``picture_portal_username`` and
@@ -505,16 +505,15 @@ How do I reduce the time of delay from an alarm occurring in ZM to the notificat
 
    - One an alarm is detected, depending on whether you configured hooks or not, it will invoke 
      object detection. Based on your server/desktop configuration, this can take just a few milliseconds 
-     to several seconds. If you are using machine learning hooks, consider using `mlapi <https://github.com/pliablepixels/mlapi>`__
-     as it preloads models into memory only once. Loading a model can take a few seconds, while detection, if you are on 
+     to several seconds. If you are using machine learning hooks, consider using ``pyzm.serve`` (the remote ML detection server)
+     as it preloads models into memory only once. Loading a model can take a few seconds, while detection, if you are on
      a GPU or TPU takes milliseconds. If you don't use hooks, turn it off in config.
 
-   - Again, if you are using hooks, there is a ``wait`` attribute in ``objectconfig.yml`` that waits for 
-     a few seconds before downloading the image from ZM. This was done because sometimes the ES may be asking 
+   - Again, if you are using hooks, there is a ``wait`` attribute in ``objectconfig.yml`` that waits for
+     a few seconds before downloading the image from ZM. This was done because sometimes the ES may be asking
      to download an image that ZM hasn't written to disk yet (remember, ES is triggered when an alarm starts).
-     This is really no longer needed, if you are using it. Starting ES 6.1.0, you can instead just use the 
-     `much more powerful  `stream_sequence <https://pyzm.readthedocs.io/en/latest/source/pyzm.html#pyzm.ml.detect_sequence.DetectSequence.detect_stream>`__ 
-     construct to specify retries.
+     This is really no longer needed, if you are using it. You can instead use the
+     ``stream_sequence`` construct in ``objectconfig.yml`` to specify retries.
 
 This is really what comes to mind. If you are seeing unusual delays, please create a github issue and post 
 debug logs (again, NOT info logs please) 
@@ -669,11 +668,7 @@ Here is how to debug and report:
 **When you send ES/detection logs:**
 
 
-::
-
-  03/19/20 06:45:03 zmesdetect_m2[21409] INF zm_detect.py:160 [---------| hook version: 5.10.1, ES version: 5.10 |------------]
-
-This shows my ES version is ``5.10`` and hooks version  is ``5.10.1``, which is good. If you saw ``5.9.4`` and ``5.10``, for example, we have a problem. Upgrade again and please upgrade both hooks and ES.
+When ``zm_detect.py`` starts, it logs both its own version and the pyzm library version. Make sure both are current. If the versions are mismatched, re-run ``install.sh`` to bring everything up to date.
 
 
 - Make sure you see ``DBG`` logs (Debug). If you only see ``INF`` logs, you haven't followed the instructions above to enable debug logs. Read :ref:`es-hooks-logging` again.
@@ -750,7 +745,7 @@ from the source when accessing another URL via the Referral header
 **So it's encrypted, but passing password is a bad idea. Why not some
 token?**
 
--  Well, now that ZM supports login tokens (starting 1.33), I'll get to supporting it, eventually.
+-  ZM supports login tokens and pyzm uses them automatically.
 
 **Why WSS and not WS?**
 
