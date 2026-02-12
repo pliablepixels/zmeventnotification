@@ -109,6 +109,7 @@ def main_handler():
         ml_options['general']['ml_user'] = g.config.get('ml_user')
         ml_options['general']['ml_password'] = g.config.get('ml_password')
         ml_options['general']['ml_timeout'] = g.config.get('ml_timeout', 60)
+        ml_options['general']['ml_gateway_mode'] = g.config.get('ml_gateway_mode', 'image')
 
     if not args.get('file') and int(g.config.get('wait', 0)) > 0: time.sleep(g.config['wait'])
     detector = Detector.from_dict(ml_options)

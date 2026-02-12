@@ -25,7 +25,7 @@ Key Features
    - GPU (object, face detection, face recognition), 
    - EdgeTPU (object, face detection)
 
-- Machine learning can be installed locally with ZM, or remotely via mlapi 
+- Machine learning can be installed locally with ZM, or remotely via ``pyzm.serve``
 
 Limitations
 ~~~~~~~~~~~
@@ -269,7 +269,12 @@ Then point ``ml_gateway`` in ``objectconfig.yml`` to that server::
 
    remote:
      ml_gateway: "http://gpu-box:5000"
+     ml_gateway_mode: "url"          # let the server fetch images directly from ZM
      ml_fallback_local: "yes"
+
+Use ``ml_gateway_mode: "url"`` if your GPU box can reach ZoneMinder directly (recommended
+for best performance). Use ``"image"`` (default) if the GPU box is on a different network
+and can't reach ZM. See :ref:`remote_ml_config` for full details.
 
 
 .. _supported_models:
@@ -399,8 +404,8 @@ Here is a concrete example from the default ``objectconfig.yml``:
 - For each detection type in ``model_sequence``, you specify model configurations in the ``sequence`` list.
   Each entry in the sequence is a model configuration with a ``name`` and ``enabled`` flag.
 
-  **Note**: If you are using mlapi, there are certain parameters that get overridden by ``objectconfig.yml``
-  See :ref:`mlapi_overrides`
+  **Note**: When using ``pyzm.serve`` (remote ML), the ``ml_sequence`` and zone settings from
+  ``objectconfig.yml`` are sent along with each detection request.
 
 Leveraging same_model_sequence_strategy and frame_strategy effectively
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -429,8 +434,10 @@ Take a look at `this article <https://medium.com/zmninja/multi-frame-and-multi-m
 
 **All options:**
 
-``ml_sequence`` supports various other attributes. Please see `the pyzm API documentation <https://pyzm.readthedocs.io/en/latest/source/pyzm.html#pyzm.ml.detect_sequence.DetectSequence>`__
-that describes all options. The ``options`` parameter is what you are looking for.
+``ml_sequence`` supports various other attributes. See the
+`pyzm DetectorConfig documentation <https://pyzm.readthedocs.io/en/latest/source/pyzm.html>`__
+for the full list of supported keys (``match_past_detections``, ``past_det_max_diff_area``,
+``aliases``, ``max_detection_size``, etc.).
 
 Understanding stream_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -463,8 +470,9 @@ Take a look at `this article <https://medium.com/zmninja/multi-frame-and-multi-m
 
 **All options:**
 
-``stream_sequence`` supports various other attributes. Please see `the pyzm API documentation <https://pyzm.readthedocs.io/en/latest/source/pyzm.html#pyzm.ml.detect_sequence.DetectSequence.detect_stream>`__
-that describes all options. The ``options`` parameter is what you are looking for.
+``stream_sequence`` supports various other attributes. See the
+`pyzm StreamConfig documentation <https://pyzm.readthedocs.io/en/latest/source/pyzm.html>`__
+for the full list (``max_frames``, ``start_frame``, ``frame_skip``, ``save_frames``, etc.).
 
 
 How ml_sequence and stream_sequence work together
@@ -513,15 +521,15 @@ Using the remote ML detection server (pyzm.serve)
 
    remote:
      ml_gateway: "http://192.168.1.183:5000"
+     ml_gateway_mode: "image"       # "image" (default) or "url"
      ml_fallback_local: "yes"
      ml_user: "!ML_USER"
      ml_password: "!ML_PASSWORD"
      ml_timeout: 60
 
 When ``ml_gateway`` is set, ``zm_detect.py`` creates the ``Detector`` in remote mode.
-Frame extraction still happens locally on the ZM box (it has ZM API access), but each
-frame is JPEG-encoded and POSTed to the remote server for inference. The server keeps
-models loaded in memory so subsequent requests skip the expensive model-load step.
+The server keeps models loaded in memory so subsequent requests skip the expensive
+model-load step.
 
 If the remote server is unreachable and ``ml_fallback_local`` is ``yes``, detection
 falls back to running locally on the ZM box.
@@ -529,10 +537,27 @@ falls back to running locally on the ZM box.
 All other settings (``ml_sequence``, ``stream_sequence``, monitor overrides, animation,
 image writing, etc.) stay in ``objectconfig.yml`` — there is no second config file to manage.
 
-Server endpoints:
+**Two detection modes:**
+
+Image mode (``ml_gateway_mode: "image"``, default)
+   Frame extraction happens locally on the ZM box, then each frame is JPEG-encoded and
+   uploaded to the server's ``/detect`` endpoint. This works universally but transfers
+   every frame through the ZM box.
+
+URL mode (``ml_gateway_mode: "url"``)
+   The ZM box sends frame URLs (e.g. ``https://zm/index.php?view=image&eid=123&fid=snapshot``)
+   and ZM auth credentials to the server's ``/detect_urls`` endpoint. The **server** fetches
+   images directly from ZoneMinder and runs detection. This is more efficient when the GPU box
+   has fast/direct network access to ZM, since frames don't have to pass through the ZM box
+   as an intermediary.
+
+   To use URL mode, the server must be able to reach your ZM web portal over HTTP/HTTPS.
+
+**Server endpoints:**
 
 - ``GET /health`` — returns ``{"status": "ok", "models_loaded": true}``
-- ``POST /detect`` — accepts multipart ``file`` (JPEG) + optional ``zones`` (JSON), returns detection results
+- ``POST /detect`` — (image mode) accepts multipart ``file`` (JPEG) + optional ``zones`` (JSON)
+- ``POST /detect_urls`` — (URL mode) accepts JSON with frame URLs, auth token, and optional zones
 - ``POST /login`` — (auth mode only) accepts ``{"username": ..., "password": ...}``, returns JWT token
 
 Here is a part of my config, for example:
@@ -780,7 +805,7 @@ Performance comparison
 * CPU: Intel(R) Xeon(R) CPU E5-1660 v3 @ 3.00GHz 8 cores, with 32GB RAM
 * GPU: GeForce 1050Ti
 * TPU: Google Coral USB stick, running on USB 3.0 in 'standard' mode 
-* Environment: I am running using mlapi, so you will see load time only once across multiple runs 
+* Environment: I am running using ``pyzm.serve`` (remote ML), so you will see load time only once across multiple runs
 * Image size: 800px
 
 The TPU is running in standard mode, not max. Also note that these figures use pycoral, which is a python
@@ -794,7 +819,7 @@ Google's cable with a good quality one (I bought `this one <https://www.amazon.c
 
 ::
 
-   pp@homeserver:/var/lib/zmeventnotification/mlapi$ tail -F /var/log/zm/zm_mlapi.log | grep "perf:"
+   pp@homeserver:~$ tail -F /var/log/zm/zmesdetect.log | grep "perf:"
 
   
    First Run (Model load included):

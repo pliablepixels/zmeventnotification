@@ -130,15 +130,28 @@ Then in ``objectconfig.yml`` on the ZM box, set::
 
    remote:
      ml_gateway: "http://gpu-box:5000"
+     ml_gateway_mode: "url"
      ml_fallback_local: "yes"
      ml_user: "!ML_USER"
      ml_password: "!ML_PASSWORD"
      ml_timeout: 60
 
 The advantage: models load once on the server and persist in memory, so subsequent
-detections are fast. You don't need ML libraries on the ZM box (only OpenCV, which is
-used for frame extraction and image writing). If the remote server is down and
-``ml_fallback_local`` is ``yes``, detection falls back to local inference automatically.
+detections are fast. If the remote server is down and ``ml_fallback_local`` is ``yes``,
+detection falls back to local inference automatically.
+
+**Choosing a gateway mode:**
+
+- ``ml_gateway_mode: "image"`` (default) — the ZM box fetches frames locally, JPEG-encodes
+  them, and uploads to the server. Works even if the GPU box can't reach ZM directly.
+  You still need OpenCV on the ZM box for frame extraction.
+
+- ``ml_gateway_mode: "url"`` (recommended) — the ZM box sends frame URLs to the server,
+  and the **server** fetches images directly from ZoneMinder. More efficient because frames
+  don't pass through the ZM box as an intermediary. Requires that the GPU box can reach
+  your ZM web portal over the network. With this mode, you don't need ML libraries *or*
+  OpenCV on the ZM box for the detection itself (OpenCV is still needed if you use
+  ``write_image_to_zm`` or ``write_debug_image``).
 
 See :ref:`remote_ml_config` for full setup details
 

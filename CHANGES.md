@@ -7,6 +7,9 @@
 - No more `mlapiconfig.ini` — all config stays in `objectconfig.yml`
 - Optional JWT authentication (`--auth` flag on server)
 - `zm_detect.py` simplified: `remote_detect()` function removed, `Detector` handles remote mode transparently
+- **NEW: URL-mode remote detection** (`ml_gateway_mode: "url"`) — the server fetches frames
+  directly from ZoneMinder instead of having the client upload JPEG data. More efficient when
+  the GPU box has direct network access to ZM. Falls back gracefully to image mode.
 
 ## Key Changes: ES 7.0 vs ES 6.x
 
