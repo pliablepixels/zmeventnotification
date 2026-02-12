@@ -2,6 +2,12 @@
 Installation of the Event Server (ES)
 --------------------------------------
 
+.. note::
+
+   This page covers **Path 2** — the full Event Server installation (ES + hooks + push
+   notifications). If you only want ML detection without the ES, see
+   :ref:`Path 1 instructions on the hooks page <hooks_install>`.
+
 Clone the repo
 ~~~~~~~~~~~~~~~~~
 
@@ -166,17 +172,18 @@ HTTPS is a mystery to me. The alternative is to run the eventserver in
 WS mode by disabling SSL.
 
 
-Install the server (optionally along with hooks) 
+Install the server (optionally along with hooks)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**NOTE** : By default ``install.sh`` moves the ES script to ``/usr/bin``. 
+**NOTE** : By default ``install.sh`` moves the ES script to ``/usr/bin``.
 If your ZM install is elsewhere, like ``/usr/local/bin`` please modify the ``TARGET_BIN`` variable
 in ``install.sh`` before executing it.
 
--  You can now move the ES to the right place by simply doing
-   ``sudo ./install.sh`` and following prompts. Other options are below:
--  Execute ``sudo ./install.sh --no-install-hook`` to move the ES to the
-   right place without installing machine learning hooks
+-  Install everything (ES + hooks + configs): ``sudo -H ./install.sh --install-es --install-hook --install-config``
+-  Or run interactively and say Yes to all prompts: ``sudo -H ./install.sh``
+-  Install ES only (no ML hooks): ``sudo -H ./install.sh --install-es --no-install-hook --install-config``
+
+For hook-specific details (models, OpenCV, face recognition), see :ref:`hooks_install`.
 
 
 

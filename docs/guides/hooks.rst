@@ -131,18 +131,17 @@ Regardless of which path you use, you can always test detection manually::
 Installation
 ~~~~~~~~~~~~
 
-Automatic install
+Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  You need to have ``pip3`` installed. On ubuntu, it is
    ``sudo apt install python3-pip``, or see
    `this <https://pip.pypa.io/en/stable/installing/>`__
--  Clone the event server and go to the ``hook`` directory
+-  Clone the event server repo:
 
 .. code:: bash
 
     git clone https://github.com/pliablepixels/zmeventnotification # if you don't already have it downloaded
-
     cd zmeventnotification
 
 -  (OPTIONAL) Edit ``hook/zm_event_start.sh`` and change:
@@ -150,9 +149,37 @@ Automatic install
    -  ``CONFIG_FILE`` to point to the right config file, if you changed
       paths
 
-::
+Path 1: Install hooks only (no ES)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   sudo -H ./install.sh # and follow the prompts
+If you only want ML detection via ZM's ``EventStartCommand`` (no push notifications,
+no WebSockets), install just the hooks and hook config:
+
+.. code:: bash
+
+   # Non-interactive (recommended)
+   sudo -H ./install.sh --no-install-es --install-hook --install-config
+
+   # Or interactive: run install.sh and say No to ES, No to ES config,
+   # Yes to hooks, Yes to hook config
+   sudo -H ./install.sh
+
+After installation, configure ``/etc/zm/objectconfig.yml`` and set up the
+``EventStartCommand`` in each monitor as described in :ref:`path1_setup`.
+
+Path 2: Install ES + hooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want the full Event Server (push notifications, WebSockets, MQTT, rules),
+install everything. See :doc:`install` for ES dependencies first, then:
+
+.. code:: bash
+
+   # Non-interactive
+   sudo -H ./install.sh --install-es --install-hook --install-config
+
+   # Or interactive (say Yes to all prompts)
+   sudo -H ./install.sh
 
 I use a library called `Shapely <https://github.com/Toblerity/Shapely>`__ for polygon intersection checks.
 Shapely requires a library called GeOS. If you see errors related to ``Failed `CDLL(libgeos_c.so)``` 

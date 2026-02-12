@@ -201,7 +201,7 @@ verify_config() {
 install_es() {
     echo '*** Installing ES Dependencies ***'
     if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" ]]; then
-      $INSTALLER install -y libyaml-libyaml-perl libcrypt-mysql-perl libcrypt-eksblowfish-perl \
+      $INSTALLER install -y libyaml-libyaml-perl libcrypt-eksblowfish-perl \
           libcrypt-openssl-rsa-perl libmodule-build-perl libyaml-perl libjson-perl \
           liblwp-protocol-https-perl libio-socket-ssl-perl liburi-perl libdbi-perl \
           libtest-warn-perl
@@ -828,21 +828,26 @@ check_deps
 echo
 echo
 
-[[ ${INSTALL_ES} == 'yes' ]] && install_es
+ES_INSTALLED='no'
+[[ ${INSTALL_ES} == 'yes' ]] && { install_es; ES_INSTALLED='yes'; }
 [[ ${INSTALL_ES} == 'no' ]] && echo 'Skipping Event Server install'
-if [[ ${INSTALL_ES} == 'prompt' ]] 
+if [[ ${INSTALL_ES} == 'prompt' ]]
 then
-    confirm 'Install Event Server' 'y/N' && install_es || echo 'Skipping Event Server install'
+    confirm 'Install Event Server' 'y/N' && { install_es; ES_INSTALLED='yes'; } || echo 'Skipping Event Server install'
 fi
 
 echo
 echo
 
-[[ ${INSTALL_ES_CONFIG} == 'yes' ]] && install_es_config
-[[ ${INSTALL_ES_CONFIG} == 'no' ]] && echo 'Skipping Event Server config install'
-if [[ ${INSTALL_ES_CONFIG} == 'prompt' ]] 
-then
-    confirm 'Install Event Server Config' 'y/N' && install_es_config || echo 'Skipping Event Server config install'
+if [[ ${ES_INSTALLED} == 'no' ]]; then
+    echo 'Skipping Event Server config (ES was not installed)'
+else
+    [[ ${INSTALL_ES_CONFIG} == 'yes' ]] && install_es_config
+    [[ ${INSTALL_ES_CONFIG} == 'no' ]] && echo 'Skipping Event Server config install'
+    if [[ ${INSTALL_ES_CONFIG} == 'prompt' ]]
+    then
+        confirm 'Install Event Server Config' 'y/N' && install_es_config || echo 'Skipping Event Server config install'
+    fi
 fi
 
 echo
@@ -914,4 +919,8 @@ fi
 run_doctor_checks
 
 echo
-echo "*** Please remember to start the Event Server after this update ***"
+if [[ ${ES_INSTALLED} == 'yes' ]]; then
+    echo "*** Please remember to start the Event Server after this update ***"
+else
+    echo "*** Hook installation complete. Configure objectconfig.yml and set up EventStartCommand in ZM. ***"
+fi
