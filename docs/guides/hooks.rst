@@ -51,11 +51,13 @@ Path 1: Detection only (no ES)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Requires ZM 1.37+.** ZoneMinder can call ``zm_detect.py`` directly via its
-``EventStartCommand`` feature — no Event Server needed.
+Event Start Command feature — no Event Server needed.
 
-Configure in ZM ``Options -> Config -> EventStartCommand``::
+Configure per monitor in ZM: go to the monitor's **Config -> Recording** tab and set:
 
-   /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
+- **Event Start Command**::
+
+     /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
 
 ZM substitutes ``%EID%``, ``%MID%``, ``%EC%`` tokens at runtime when an event starts.
 
@@ -76,8 +78,8 @@ To set up Path 1, you only need to:
 
 1. Install pyzm and the hooks (see :ref:`hooks_install` below)
 2. Edit ``/etc/zm/objectconfig.yml`` with your ZM portal credentials and desired models
-3. Set the EventStartCommand in ZM as shown above
-4. Optionally, set ``EventEndCommand`` to a similar invocation if you want end-of-event processing
+3. Set the **Event Start Command** in the monitor's Config -> Recording tab as shown above
+4. Optionally, set **Event End Command** (same tab) to a similar invocation if you want end-of-event processing
 
 .. _path2_setup:
 
