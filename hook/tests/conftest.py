@@ -18,6 +18,28 @@ import yaml
 _mock_pyzm = types.ModuleType("pyzm")
 _mock_pyzm.__version__ = "0.0.0_stub"
 
+# Stub classes for pyzm v2 imports used by zm_detect.py
+class _StubDetector:
+    _gateway = None
+    @classmethod
+    def from_dict(cls, *a, **kw): return cls()
+    def detect(self, *a, **kw): return type("R", (), {"to_dict": lambda s: {}})()
+    def detect_event(self, *a, **kw): return type("R", (), {"to_dict": lambda s: {}})()
+
+class _StubZMClient:
+    api = None
+    def __init__(self, *a, **kw): pass
+
+class _StubStreamConfig:
+    @classmethod
+    def from_dict(cls, d): return cls()
+
+class _StubZone:
+    def __init__(self, *a, **kw): pass
+
+_mock_pyzm.Detector = _StubDetector
+_mock_pyzm.ZMClient = _StubZMClient
+
 _mock_zmlog = types.ModuleType("pyzm.ZMLog")
 _mock_zmlog.init = lambda *a, **kw: None
 _mock_zmlog.close = lambda *a, **kw: None
@@ -27,10 +49,19 @@ _mock_helpers_utils = types.ModuleType("pyzm.helpers.utils")
 _mock_helpers_utils.read_config = lambda f: yaml.safe_load(open(f)) if os.path.isfile(f) else {}
 _mock_helpers_utils.template_fill = lambda input_str, config=None, secrets=None: input_str
 
+_mock_models = types.ModuleType("pyzm.models")
+_mock_models_config = types.ModuleType("pyzm.models.config")
+_mock_models_config.StreamConfig = _StubStreamConfig
+_mock_models_zm = types.ModuleType("pyzm.models.zm")
+_mock_models_zm.Zone = _StubZone
+
 sys.modules.setdefault("pyzm", _mock_pyzm)
 sys.modules.setdefault("pyzm.ZMLog", _mock_zmlog)
 sys.modules.setdefault("pyzm.helpers", _mock_helpers)
 sys.modules.setdefault("pyzm.helpers.utils", _mock_helpers_utils)
+sys.modules.setdefault("pyzm.models", _mock_models)
+sys.modules.setdefault("pyzm.models.config", _mock_models_config)
+sys.modules.setdefault("pyzm.models.zm", _mock_models_zm)
 
 # ---------------------------------------------------------------------------
 # Ensure hook/ is on sys.path so `import zmes_hook_helpers` works
