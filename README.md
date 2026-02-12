@@ -75,7 +75,7 @@ Running the Event Server
 sudo -u www-data ./zmeventnotification.pl --config /etc/zm/zmeventnotification.yml
 ```
 
-Refer to the full [installation guide](https://zmeventnotification.readthedocs.io/en/latest/guides/install.html) for production setup.
+Refer to the full [installation guide](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/install.html) for production setup.
 
 Requirements
 -------------
