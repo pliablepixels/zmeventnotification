@@ -104,7 +104,16 @@ If you are behind a firewall, open port ``9000`` (TCP, bi-directional).
 Step 6: Test manually
 ~~~~~~~~~~~~~~~~~~~~~
 
-Always test manually before enabling daemon mode:
+First, verify you have the right versions installed:
+
+.. code:: bash
+
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --version
+
+You should see **app:7.0.0** (or above) and **pyzm:2.0.0** (or above).
+If either version is lower, update the corresponding package before continuing.
+
+Then test the ES manually before enabling daemon mode:
 
 .. code:: bash
 

@@ -89,6 +89,17 @@ For each monitor, go to **Config -> Recording** and set:
 Step 6: Test
 ~~~~~~~~~~~~
 
+First, verify you have the right versions installed:
+
+.. code:: bash
+
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --version
+
+You should see **app:7.0.0** (or above) and **pyzm:2.0.0** (or above).
+If either version is lower, update the corresponding package before continuing.
+
+Then test detection:
+
 .. code:: bash
 
    # Test with a real ZM event
