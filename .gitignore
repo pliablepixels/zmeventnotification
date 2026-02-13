@@ -12,6 +12,9 @@ __pycache__/
 *~
 .vscode/
 
+# sphinx build output
+docs/_build/
+
 # due to using tox and pytest
 .tox
 .cache
