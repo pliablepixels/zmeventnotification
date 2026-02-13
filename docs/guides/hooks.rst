@@ -4,8 +4,8 @@ Machine Learning Hooks
 .. note::
 
         This page covers the ML detection pipeline, which is required for **both**
-        :ref:`Path 1 (detection only) <path1_setup>` and
-        :ref:`Path 2 (full ES) <path2_setup>`.
+        Path 1 (detection only) and Path 2 (full ES).
+        For installation instructions, see :doc:`installation`.
         The hooks use `pyzm <https://pyzmv2.readthedocs.io/en/latest/>`__ v2
         for detection. Make sure you have ``pyzm`` installed before proceeding.
 
@@ -76,7 +76,7 @@ notification rules/muting, zmNinja push, or the ES control interface.
 
 To set up Path 1, you only need to:
 
-1. Install pyzm and the hooks (see :ref:`hooks_install` below)
+1. Install pyzm and the hooks (see :doc:`install_path1`)
 2. Edit ``/etc/zm/objectconfig.yml`` with your ZM portal credentials and desired models
 3. Set the **Event Start Command** in the monitor's Config -> Recording tab as shown above
 4. Optionally, set **Event End Command** (same tab) to a similar invocation if you want end-of-event processing
@@ -100,8 +100,8 @@ ES control interface.
 
 To set up Path 2:
 
-1. Install the ES and its Perl dependencies (see :doc:`install`)
-2. Install pyzm and the hooks (see :ref:`hooks_install` below)
+1. Install the ES and its Perl dependencies (see :doc:`install_path2`)
+2. Install pyzm and the hooks (see :doc:`install_path1`)
 3. Edit ``/etc/zm/zmeventnotification.yml`` and ``/etc/zm/objectconfig.yml``
 4. Enable ``OPT_USE_EVENTNOTIFICATION`` in ZM ``Options -> Systems``
 
@@ -124,209 +124,6 @@ Regardless of which path you use, you can always test detection manually::
    # Test with a local image file (no ZM event needed)
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
        --config /etc/zm/objectconfig.yml --file /path/to/image.jpg --debug
-
-
-.. _hooks_install:
-
-Installation
-~~~~~~~~~~~~
-
-Prerequisites
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
--  You need to have ``pip3`` installed. On ubuntu, it is
-   ``sudo apt install python3-pip``, or see
-   `this <https://pip.pypa.io/en/stable/installing/>`__
--  Clone the event server repo:
-
-.. code:: bash
-
-    git clone https://github.com/pliablepixels/zmeventnotification # if you don't already have it downloaded
-    cd zmeventnotification
-
--  (OPTIONAL) Edit ``hook/zm_event_start.sh`` and change:
-
-   -  ``CONFIG_FILE`` to point to the right config file, if you changed
-      paths
-
-Path 1: Install hooks only (no ES)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you only want ML detection via ZM's ``EventStartCommand`` (no push notifications,
-no WebSockets), install just the hooks and hook config:
-
-.. code:: bash
-
-   # Non-interactive (recommended)
-   sudo -H ./install.sh --no-install-es --install-hook --install-config
-
-   # Or interactive: run install.sh and say No to ES, No to ES config,
-   # Yes to hooks, Yes to hook config
-   sudo -H ./install.sh
-
-After installation, configure ``/etc/zm/objectconfig.yml`` and set up the
-``EventStartCommand`` in each monitor as described in :ref:`path1_setup`.
-
-Path 2: Install ES + hooks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want the full Event Server (push notifications, WebSockets, MQTT, rules),
-install everything. See :doc:`install` for ES dependencies first, then:
-
-.. code:: bash
-
-   # Non-interactive
-   sudo -H ./install.sh --install-es --install-hook --install-config
-
-   # Or interactive (say Yes to all prompts)
-   sudo -H ./install.sh
-
-I use a library called `Shapely <https://github.com/Toblerity/Shapely>`__ for polygon intersection checks.
-Shapely requires a library called GeOS. If you see errors related to ``Failed `CDLL(libgeos_c.so)``` 
-you may manually need to install libgeos  like so:
-
-::
-
-   sudo apt-get install libgeos-dev
-
-**Google TPU**:
-If you are planning on using Google EdgeTPU support,
-you'll have to invoke the script using:
-
-::
-
-   sudo -H INSTALL_CORAL_EDGETPU=yes ./install.sh # and follow the prompts
-
-EdgeTPU models/underlying libraries are not downloaded automatically.
-
-For EdgeTPU, the expectation is  that you have followed all the instructions 
-at `the coral site <https://coral.ai/docs/accelerator/get-started/>`__ first. 
-Specifically, you need to make sure you have:
-
-   1. Installed the right libedgetpu library (max or std)
-   2. Installed the right tensorflow-lite library 
-   3. Installed pycoral APIs as per `the instructions <https://coral.ai/software/#pycoral-api>`__.
-
-
-If you don't, things will break. Further, you also need to make sure your 
-web user has access to the coral device.
-
-On my ubuntu system, I needed to do:
-
-::
-
-   sudo usermod -a -G plugdev www-data
-
-**Very important**: You need to reboot after this, otherwise, you may notice that the TPU
-code crashes when you run the ES in daemon mode (may work fine in manual mode). Replace 'plugdev' with 'apex' for the Coral PCIe accelerator.
-
-
-.._install-specific-models:
-
-You can *optionally* choose to only install specific models by passing them as variables to the install script. The variables are labelled as ``INSTALL_<model>`` with possible values of ``yes`` or ``no``. ``<model>`` is the specific model.
-
-Current model flags and their defaults:
-
-- ``INSTALL_YOLOV3``: ``no``
-- ``INSTALL_TINYYOLOV3``: ``no``
-- ``INSTALL_YOLOV4``: ``yes``
-- ``INSTALL_TINYYOLOV4``: ``yes``
-- ``INSTALL_CORAL_EDGETPU``: ``no``
-- ``INSTALL_YOLOV26``: ``yes`` (requires OpenCV 4.10+)
-
-So for example:
-
-::
-
-  sudo INSTALL_YOLOV4=no INSTALL_YOLOV26=yes ./install.sh
-
-Will install the ``YOLOv26 ONNX`` models but will skip ``YOLOv4``.
-
-Another example:
-
-::
-
-   sudo -H INSTALL_CORAL_EDGETPU=yes ./install.sh --install-es --no-install-config --install-hook
-
-Will install the ES and hooks, but no configs and will add the coral libraries.
-
-.. note::
-
-   The default object detection model is now **YOLOv26 ONNX** (via OpenCV DNN). This requires
-   OpenCV 4.10 or above. Direct Ultralytics/PyTorch support has been removed in favor of ONNX
-   inference through OpenCV's DNN module.
-
-.. _opencv_install:
-
-**Note:**: If you plan on using object detection, starting v5.0.0 of the ES, the setup script no longer installs opencv for you. This is because you may want to install your own version with GPU acceleration or other options. There are two options to install OpenCV:
-
-  - You install a pip package. Very easy, but you don't get GPU support
-  - You compile from source. Takes longer, but you get all the right modules as well as GPU support. Instructions are simple, if you follow them well.
-
-  .. important::
-
-    The default YOLOv26 ONNX model requires **OpenCV 4.10+**. If using older models like YOLOv4,
-    a minimum of OpenCV 4.4 is required.
-
-
-Installing OpenCV: Using the pip package (Easy, but not recommended if you plan to use OpenCV ML - example Yolo)
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-::
-
-  # Note this does NOT enable GPU support
-  # It also seems to miss modules like bgsem etc
-
-  sudo -H pip3 install opencv-contrib-python
-
-  # NOTE: Do NOT install both opencv-contrib-python and opencv packages via pip. The contrib package includes opencv+extras
-
-
-Installing OpenCV: from source (Recommended if you plan to use OpenCV ML - example Yolo)
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-General installation instructions are available at the `official openCV site <https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html>`__. However, see below, if you are looking for GPU support:
-
-If you want GPU support (CUDA backend for DNN inference), you will need to compile OpenCV from source with CUDA enabled.
-
-**I would strongly recommend you build from source, if you are able to. Pre built packages are not official from OpenCV and often seem to break/seg fault on different configurations.**
-
-.. _opencv_seg_fault:
-
-Make sure OpenCV works
-+++++++++++++++++++++++
-
-.. important::
-
-  After you install opencv, make sure it works. Start python3 and inside the interpreter, do a ``import cv2``. If it seg faults, you have a problem with the package you installed. Like I said, I've never had issues after building from source.
-
-  Note that if you get an error saying ``cv2 not found`` that means you did not install it in a place python3 can find it (you might have installed it for python2 by mistake)
-
-
-
-**Note 3:** if you want to add "face recognition" you also need to do the following: (Note that if you are using Google Coral,
-you can do face detection [not recognition] by using the coral libraries as well. You can skip this section if you want to use TPU based face detection)
-
-::
-
-    sudo apt-get install libopenblas-dev liblapack-dev libblas-dev  # not mandatory, but gives a good speed boost!
-    sudo -H pip3 install face_recognition # mandatory
-
-Takes a while and installs a gob of stuff, which is why I did not add it
-automatically, especially if you don't need face recognition.
-
-Note, if you installed ``face_recognition`` earlier without blas, do this:
-
-.. code:: bash
-
-  sudo -H pip3 uninstall dlib
-  sudo -H pip3 uninstall face-recognition
-  sudo apt-get install libopenblas-dev liblapack-dev libblas-dev # this is the important part
-  sudo -H pip3 install dlib --verbose --no-cache-dir # make sure it finds openblas
-  sudo -H pip3 install face_recognition
-
-Option 2: Manual install
-^^^^^^^^^^^^^^^^^^^^^^^^
-If automatic install fails for you, or you like to be in control, take a look at what ``install.sh`` does. I used to maintain explicit instructions on manual install, but its painful to keep this section in sync with ``install.sh``
 
 
 Post install steps

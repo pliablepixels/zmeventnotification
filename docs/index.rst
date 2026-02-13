@@ -10,7 +10,7 @@ Event Notification Server v7+ Documentation
         :hidden:
 
         guides/breaking
-        guides/install
+        guides/installation
         guides/principles
         guides/hooks
         guides/config
@@ -78,16 +78,15 @@ the ES control interface, and per-device monitor filtering.
 If you only need detection results written to your ZM events, Path 1 is simpler to set up.
 If you need real-time notifications on your phone or other clients, you need Path 2.
 
-Both paths require :doc:`guides/hooks` to be installed. Path 2 additionally requires the
-ES itself (:doc:`guides/install`).
+See the :doc:`guides/installation` page for step-by-step setup instructions for either path.
 
 Documentation
 +++++++++++++
 
+:doc:`guides/installation`
+        How to install the hooks and/or the Event Server (Path 1 and Path 2)
 :doc:`guides/hooks`
-        How to install and configure machine learning detection (required for both paths)
-:doc:`guides/install`
-        How to install the Event Notification Server (Path 2 only)
+        How machine learning detection works, configuration reference
 :doc:`guides/principles`
         Key principles of how the ES works (Path 2)
 :doc:`guides/config`
