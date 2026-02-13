@@ -53,6 +53,61 @@ How To Debug Issues
 ---------------------
 * Refer to :ref:`es-hooks-logging`
 
+Triaging "No Detection" Problems
+----------------------------------
+
+If your events are not getting detection results, follow these steps to isolate the problem.
+
+**Step 1: Find the hook invocation in ES logs**
+
+Look at your ``zmeventnotification.log`` for lines like::
+
+   FORK:DoorBell (2), eid:12345 Invoking hook on event start:'/var/lib/zmeventnotification/bin/zm_event_start.sh' 12345 2 "DoorBell" "Motion" "/var/cache/zoneminder/events/2/2026-02-14/12345"
+
+This tells you the exact arguments the ES passed to the hook script:
+``<eid> <mid> "<MonitorName>" "<Cause>" "<EventPath>"``.
+
+**Step 2: Run zm_detect manually with debug flags**
+
+Translate the hook invocation into a direct ``zm_detect.py`` call and add
+``--debug`` and ``--pyzm-debug`` for full diagnostic output::
+
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+     --eventid <eid> \
+     --monitorid <mid> \
+     --config /etc/zm/objectconfig.yml \
+     --eventpath "<EventPath>" \
+     --reason "<Cause>" \
+     --debug \
+     --pyzm-debug
+
+Replace ``<eid>``, ``<mid>``, ``<EventPath>``, and ``<Cause>`` with the values
+from your log line. The ``sudo -u www-data``
+is important — it runs the script as the same user the ES uses, so file permissions
+and library paths match.
+
+- ``--debug`` enables verbose console output from zm_detect itself.
+- ``--pyzm-debug`` routes the pyzm library's internal debug logs (model loading,
+  frame download, inference) through the same log, so you can see exactly what
+  the ML pipeline is doing.
+
+**Step 3: Read the output**
+
+Common things to look for:
+
+- **Import errors** (e.g. ``cv2``, ``numpy``, ``pyzm``) — a library is not installed
+  globally or not visible to the ``www-data`` user.
+- **Config errors** — bad YAML syntax, missing model files, wrong paths in
+  ``objectconfig.yml``.
+- **Frame download failures** — ZM API unreachable, authentication issues, or the
+  event frames haven't been written to disk yet (see the snapshot/alarm timing
+  section below).
+- **Model loading failures** — missing weight files, incompatible OpenCV version,
+  Coral TPU not accessible.
+- **No detections** — the model ran successfully but didn't find any objects in the
+  frame. Try ``write_debug_image: yes`` in ``objectconfig.yml`` to save the frame
+  that was actually analyzed.
+
 
 It looks like when ES invokes the hooks, it misses objects, but when I run it manually, it detects it just fine
 ------------------------------------------------------------------------------------------------------------------
