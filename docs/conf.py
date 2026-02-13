@@ -47,7 +47,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Event Notification Server'
-copyright = '2019, Pliable Pixels'
+from datetime import datetime
+copyright = f'2019-{datetime.now().year}, Pliable Pixels'
 author = 'Pliable Pixels'
 
 # The version info for the project you're documenting, acts as replacement for
