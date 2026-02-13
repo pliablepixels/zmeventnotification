@@ -23,6 +23,26 @@ Event Notification Server v7+ Documentation
 
 `Github Repository <https://github.com/pliablepixels/zmeventnotification>`__
 
+What is the Event Server and the ML Ecosystem?
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+The **Event Notification Server (ES)** is a companion daemon for
+`ZoneMinder <https://zoneminder.com>`__. It monitors ZoneMinder's shared
+memory for new events and can push real-time notifications to clients via
+WebSockets, FCM (push to iOS/Android), and MQTT. It also supports
+per-monitor notification rules, time-based muting, and integration with
+`zmNinja <https://zmninja.readthedocs.io/en/latest/index.html>`__ and
+`zmNg <https://github.com/pliablepixels/zmNg>`__ (the newer-generation
+app for ZoneMinder).
+
+The **ML Ecosystem** (``zm_detect.py + pyzm``) is the machine learning detection
+framework. They take a ZoneMinder event and runs it through one or more
+ML pipelines — supporting multiple model types (object, face, ALPR, etc.).
+The ML hook is powered by `pyzm <https://pyzmv2.readthedocs.io/en/latest/#>`__,
+a standalone ML detection library that can also be used independently.
+
+The ES and the hook can be used together or separately, as described below.
+
 Choose your setup
 +++++++++++++++++
 
