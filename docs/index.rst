@@ -20,6 +20,13 @@ Event Notification Server v7+ Documentation
         guides/developers
         guides/contrib_guidelines
 
+.. toctree::
+        :hidden:
+        :caption: Related Projects
+
+        pyzm Documentation <https://pyzmv2.readthedocs.io/en/latest/>
+        zmNg <https://github.com/pliablepixels/zmNg>
+
 
 `Github Repository <https://github.com/pliablepixels/zmeventnotification>`__
 
