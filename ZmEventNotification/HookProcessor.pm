@@ -140,9 +140,9 @@ sub sendEvent {
   }
 
   print main::WRITER 'timestamp--TYPE--'
-    . $ac->{id}
+    . ($ac->{id} // '')
     . '--SPLIT--'
-    . $alarm->{MonitorId}
+    . ($alarm->{MonitorId} // '')
     . '--SPLIT--'
     . $t . "\n";
 

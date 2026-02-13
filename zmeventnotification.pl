@@ -594,6 +594,7 @@ sub processJobs {
         my ( $token, $badge, $count, $at ) = split( '--SPLIT--', $msg );
         Debug(2, "GOT JOB==> update badge to $badge, count to $count for: $token, at: $at");
         foreach (@active_connections) {
+          next unless defined $_->{token};
           if ( $_->{token} eq $token ) {
             $_->{badge} = $badge;
             $_->{invocations} = {count=>$count, at=>$at};
@@ -613,6 +614,7 @@ sub processJobs {
             . ' for id:'
             . $id);
         foreach (@active_connections) {
+          next unless defined $_->{id};
           if ( $_->{id} eq $id ) {
             $_->{last_sent}->{$mid} = $timeval;
           }
