@@ -217,17 +217,19 @@ ml:
 
 
 # Monitor-specific overrides
+# Settings here are deep-merged into the global config, so you only
+# need to specify the keys you want to override.
 # Example for monitor ID 999:
 monitors:
   999:
-    match_past_detections: "no"
     wait: 5
     resize: "no"
 
-    # Override ml_sequence for this monitor
+    # Override ml_sequence for this monitor (deep-merged with global ml_sequence)
     ml_sequence:
       general:
         model_sequence: "object,alpr"
+        match_past_detections: "yes"
       object:
         general:
           pattern: "(person)"

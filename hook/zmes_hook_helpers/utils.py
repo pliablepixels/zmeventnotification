@@ -22,6 +22,22 @@ import zmes_hook_helpers.common_params as g
 from urllib.error import HTTPError
 
 
+def _deep_merge(base, override):
+    """Recursively merge *override* into *base* (both dicts).
+
+    - Dict values are merged recursively.
+    - All other types in *override* replace the corresponding key in *base*.
+    Returns a new dict; neither input is mutated.
+    """
+    merged = dict(base)
+    for k, v in override.items():
+        if k in merged and isinstance(merged[k], dict) and isinstance(v, dict):
+            merged[k] = _deep_merge(merged[k], v)
+        else:
+            merged[k] = v
+    return merged
+
+
 def format_detection_output(matched_data, config=None):
     """Format detection results into PREFIX detected:labels--SPLIT--JSON.
 
@@ -334,17 +350,19 @@ def process_config(args, ctx):
                         else:
                             g.logger.Debug(2, 'ignoring polygon: {} as only_triggered_zm_zones is true'.format(zone_name))
 
-                # Apply config overrides from monitor section
+                # Apply config overrides from monitor section (deep-merge dicts)
                 for k, v in monitor_cfg.items():
                     if k in ('zones',):
                         continue
                     v = _resolve_secret(v)
-                    if k in g.config_vals:
+                    if isinstance(v, dict) and isinstance(g.config.get(k), dict):
+                        g.config[k] = _deep_merge(g.config[k], v)
+                        g.logger.Debug(3, '[monitor-{}] deep-merged key:{} result:{}'.format(mid, k, g.config[k]))
+                    elif k in g.config_vals:
                         g.logger.Debug(3, '[monitor-{}] overrides key:{} with value:{}'.format(mid, k, v))
                         g.config[k] = _correct_type(v, g.config_vals[k]['type'])
-                    elif k in ('ml_sequence', 'stream_sequence'):
-                        g.config[k] = v
                     else:
+                        g.logger.Debug(3, '[monitor-{}] overrides key:{} with value:{}'.format(mid, k, v))
                         g.config[k] = v
 
             # Import ZM zones if needed
@@ -391,9 +409,8 @@ def process_config(args, ctx):
 
     # Now munge config if testing args provide
     if args.get('file'):
-        g.config['wait'] = 0
         g.config['write_image_to_zm'] = 'no'
-        g.polygons = []
+        g.logger.Debug(1, '--file mode: disabled write_image_to_zm')
 
     if args.get('output_path'):
         g.logger.Debug(1, 'Output path modified to {}'.format(args.get('output_path')))

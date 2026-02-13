@@ -111,7 +111,10 @@ def main_handler():
         ml_options['general']['ml_timeout'] = g.config.get('ml_timeout', 60)
         ml_options['general']['ml_gateway_mode'] = g.config.get('ml_gateway_mode', 'image')
 
-    if not args.get('file') and int(g.config.get('wait', 0)) > 0: time.sleep(g.config['wait'])
+    wait_secs = int(g.config.get('wait', 0))
+    if wait_secs > 0:
+        g.logger.Debug(1, 'Waiting {} seconds before detection...'.format(wait_secs))
+        time.sleep(wait_secs)
     detector = Detector.from_dict(ml_options)
 
     try:
