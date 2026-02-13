@@ -104,16 +104,7 @@ If you are behind a firewall, open port ``9000`` (TCP, bi-directional).
 Step 6: Test manually
 ~~~~~~~~~~~~~~~~~~~~~
 
-First, verify you have the right versions installed:
-
-.. code:: bash
-
-   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --version
-
-You should see **app:7.0.0** (or above) and **pyzm:2.0.0** (or above).
-If either version is lower, update the corresponding package before continuing.
-
-Then test the ES manually before enabling daemon mode:
+Always test manually before enabling daemon mode:
 
 .. code:: bash
 
@@ -134,8 +125,8 @@ In the ZoneMinder web interface, go to **Options -> Systems** and enable
 Step 8: Set up ML hooks
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Follow **Steps 4–6** from :doc:`install_path1` to configure ``objectconfig.yml``
-and test detection.
+Follow **Steps 4–6** from :doc:`install_path1` to configure ``objectconfig.yml``,
+verify versions, and test detection.
 
 .. note::
 

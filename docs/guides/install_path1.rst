@@ -86,8 +86,8 @@ For each monitor, go to **Config -> Recording** and set:
 
    /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
 
-Step 6: Test
-~~~~~~~~~~~~
+Step 6: Test manually
+~~~~~~~~~~~~~~~~~~~~~
 
 First, verify you have the right versions installed:
 
