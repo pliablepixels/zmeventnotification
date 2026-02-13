@@ -24,7 +24,7 @@ Event Notification Server v7+ Documentation
         :hidden:
         :caption: Related Projects
 
-        pyzm Documentation <https://pyzmv2.readthedocs.io/en/latest/>
+        pyzmv2+ <https://pyzmv2.readthedocs.io/en/latest/>
         zmNg <https://github.com/pliablepixels/zmNg>
 
 
@@ -104,7 +104,7 @@ Documentation
         If you want to use the Event Notification Server to make your own app/client
 :doc:`guides/contrib_guidelines`
         If you want to contribute hook scripts to the ES
-`pyzm Documentation <https://pyzmv2.readthedocs.io/en/latest/>`__
+`pyzmv2+ <https://pyzmv2.readthedocs.io/en/latest/>`__
         Documentation for pyzm, the ML detection library
 `zmNinja Documentation <https://zmninja.readthedocs.io/en/latest/index.html>`__
         Documentation for zmNinja
