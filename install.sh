@@ -876,23 +876,28 @@ chown -R ${WEB_OWNER}:${WEB_GROUP} "${TARGET_DATA}"
 
 if [ "${INSTALL_CORAL_EDGETPU}" == "yes" ]
 then
-    cat << EOF
-    -------------------------- EdgeTPU note ---------------------------- 
-
-    Note that while edgetpu support has been added, the expectation is 
-    that you have followed all the instructions at:
-    https://coral.ai/docs/accelerator/get-started/ first. Specifically,
-    you need to make sure you have:
-    1. Installed the right libedgetpu library (max or std)
-    2. Installed the right tensorflow-lite library 
-    3. Installed pycoral APIs as per https://coral.ai/software/#pycoral-api
-
-    If you don't, things will break. Further, you also need to make sure 
-    your web user (${WEB_OWNER}) has access to the coral device.
-    On my ubuntu system, I needed to do:
-        sudo usermod -a -G plugdev www-data
-    --------------------------------------------------------------------
-EOF
+    echo
+    echo "========================================================================"
+    print_important " Google Coral Edge TPU — MANUAL STEPS REQUIRED"
+    echo "========================================================================"
+    print_warning " This installer downloads TPU model files but does NOT install"
+    print_warning " the TPU runtime libraries. You MUST install them yourself or"
+    print_warning " you will get: ModuleNotFoundError: No module named 'pycoral'"
+    echo
+    echo "    Follow the instructions at:"
+    echo "      https://coral.ai/docs/accelerator/get-started/"
+    echo
+    echo "    Specifically, you need to:"
+    echo "      1. Install the right libedgetpu library (max or std)"
+    echo "      2. Install the pycoral API:"
+    echo "           pip3 install pycoral"
+    echo "         or follow https://coral.ai/software/#pycoral-api"
+    echo
+    echo "    You also need to make sure your web user (${WEB_OWNER}) has"
+    echo "    access to the Coral USB device:"
+    echo "      sudo usermod -a -G plugdev ${WEB_OWNER}"
+    echo "========================================================================"
+    echo
 fi
 
 if [ "${HOOK_CONFIG_UPGRADE}" == "yes" ]

@@ -154,7 +154,20 @@ I'm having issues with accuracy of Face Recognition
 -  Experiment. Read the `accuracy wiki <https://github.com/ageitgey/face_recognition/wiki/Face-Recognition-Accuracy-Problems>`__ link.
 
 
-I am using a Coral TPU and while it works fine, at times it fails loading 
+I get ``ModuleNotFoundError: No module named 'pycoral'`` when using the Coral TPU
+----------------------------------------------------------------------------------
+The ``pycoral`` library is **not** installed by the ES installer — it only downloads
+the TPU model files. You must install the Coral runtime and Python API yourself:
+
+1. Follow the setup guide at https://coral.ai/docs/accelerator/get-started/
+2. Install the correct ``libedgetpu`` library (max or standard performance)
+3. Install the pycoral API: ``pip3 install pycoral``
+   (or see https://coral.ai/software/#pycoral-api)
+4. Make sure your web user has access to the Coral USB device::
+
+      sudo usermod -a -G plugdev www-data
+
+I am using a Coral TPU and while it works fine, at times it fails loading
 --------------------------------------------------------------------------
 If you have configured the TPU properly, and on occasion you see an error like:
 
