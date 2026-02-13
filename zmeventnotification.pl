@@ -130,7 +130,7 @@ if ( !try_use('Net::WebSocket::Server') ) {
 
 Info("Running on WebSocket library version:$Net::WebSocket::Server::VERSION");
 if (version->parse($Net::WebSocket::Server::VERSION) < version->parse('0.004000')) {
-  Warning("You are using an old version of Net::WebSocket::Server which can cause lockups. Please upgrade. For more information please see https://zmeventnotification.readthedocs.io/en/latest/guides/es_faq.html#the-es-randomly-hangs");
+  Warning("You are using an old version of Net::WebSocket::Server which can cause lockups. Please upgrade. For more information please see https://zmeventnotificationv7.readthedocs.io/en/latest/guides/es_faq.html#the-es-randomly-hangs");
 }
 
 if ( !try_use('IO::Socket::SSL') )  { Fatal('IO::Socket::SSL missing'); }

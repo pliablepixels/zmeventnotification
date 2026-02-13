@@ -215,7 +215,7 @@ install_es() {
     mkdir -p "${TARGET_DATA}/push" 2>/dev/null
     local es_target="${TARGET_BIN_ES}/zmeventnotification.pl"
     if install -m 755 -o "${WEB_OWNER}" -g "${WEB_GROUP}" zmeventnotification.pl "${TARGET_BIN_ES}"; then
-        print_success "Completed, but you will still have to install ES dependencies as per https://zmeventnotification.readthedocs.io/en/latest/guides/install.html#install-dependencies"
+        print_success "Completed, but you will still have to install ES dependencies as per https://zmeventnotificationv7.readthedocs.io/en/latest/guides/install.html#install-dependencies"
     elif [ -f "$es_target" ]; then
         # install(1) unlinks the target first, which fails on bind mounts.
         # Fall back to in-place copy which overwrites contents without unlinking.
@@ -596,7 +596,7 @@ print_opencv_message() {
      of OpenCV installed. ONNX YOLOv26 models require OpenCV 4.13+.
      I recommend removing any pip packages you may have installed of
      opencv* and compiling OpenCV 4.13+ from source.
-     See https://zmeventnotification.readthedocs.io/en/latest/guides/hooks.html#opencv-install
+     See https://zmeventnotificationv7.readthedocs.io/en/latest/guides/hooks.html#opencv-install
 
     |----------------------------------------------------------------------|
 

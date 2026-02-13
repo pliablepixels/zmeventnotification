@@ -16,6 +16,7 @@ Event Notification Server v7+ Documentation
         guides/config
         guides/es_faq
         guides/hooks_faq
+        guides/testing
         guides/developers
         guides/contrib_guidelines
 
@@ -70,6 +71,8 @@ Documentation
         Event Notification Server FAQ (Path 2)
 :doc:`guides/hooks_faq`
         Machine Learning Hooks FAQ
+:doc:`guides/testing`
+        How to run the unit and e2e test suites
 :doc:`guides/developers`
         If you want to use the Event Notification Server to make your own app/client
 :doc:`guides/contrib_guidelines`

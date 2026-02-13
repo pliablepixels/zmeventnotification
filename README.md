@@ -45,9 +45,10 @@ The installer handles Perl dependencies, hook helper setup, config file placemen
 
 Testing (Development)
 ----------------------
-### 1. Run the test suites
 
 Tests do **not** require a running ZoneMinder installation.
+
+### Unit / integration tests
 
 ```bash
 cd zmeventnotification
@@ -55,18 +56,47 @@ cd zmeventnotification
 # Perl tests
 prove -I t/lib -I . -r t/
 
-# Python tests
+# Python hook tests (mocks pyzm, no ML models needed)
 pip install pytest pyyaml
-cd hook && python3 -m pytest tests/ -v && cd ..
+cd hook && python3 -m pytest tests/ -m "not e2e" -v && cd ..
 
 # Both in one shot
-prove -I t/lib -I . -r t/ && (cd hook && python3 -m pytest tests/ -v)
+prove -I t/lib -I . -r t/ && (cd hook && python3 -m pytest tests/ -m "not e2e" -v)
 ```
 
-### 2. Test Dependencies
+### End-to-end tests
+
+The `hook/tests/test_e2e/` directory contains 26 tests that exercise the full
+config → pyzm detection → output chain using real YOLO models and a real test
+image (`bird.jpg`, included in the repo). These require **pyzm installed** as a
+system library (not mocked).
+
+**Prerequisites:**
+- pyzm installed (`pip install pyzm` or from source)
+- ML models at `/var/lib/zmeventnotification/models/` (at least one YOLO model)
+- Python packages: `opencv-python`, `numpy`, `shapely`
+
+```bash
+cd zmeventnotification/hook
+
+# Run all e2e tests
+python3 -m pytest tests/test_e2e/ -v
+
+# Run all tests (unit + e2e)
+python3 -m pytest tests/ -v
+```
+
+The e2e suite covers: objectconfig YAML parsing, `${base_data_path}` substitution,
+`!TOKEN` secret resolution, `Detector.from_dict()`, real YOLO detection, pattern
+filtering, zone/polygon filtering, min_confidence, disabled models, match strategies
+(FIRST/UNION), per-monitor overrides, multi-model pipelines, and
+`format_detection_output()`.
+
+### Test dependencies
 
 - **Perl**: `Test::More`, `YAML::XS`, `JSON`, `Time::Piece` (typically included with Perl)
-- **Python**: `pytest`, `pyyaml`
+- **Python (unit)**: `pytest`, `pyyaml`
+- **Python (e2e)**: all of the above plus `pyzm`, `opencv-python`, `numpy`, `shapely`
 
 Running the Event Server
 ------------------------
