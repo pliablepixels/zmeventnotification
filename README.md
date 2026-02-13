@@ -12,100 +12,20 @@ As of today, it supports:
 * face recognition
 * deep license plate recognition
 
-Getting Started (Development)
------------------------------
+Documentation
+--------------
 
-ES 7.0 is in development stage at the moment, expect breakages. You may also need to manually fix some configurations after installations. The `install.sh` script attempts to migrate automatically but you should check. Given it is in development stage, it is not yet merged into mainstream ZM repos. If you find issues, please post them to this repo, and NOT ZM repos.
+Full documentation — installation, configuration, testing, and more — is on **Read the Docs**:
 
-Both this repo and the [updated pyzm](https://github.com/pliablepixels/pyzm) library are needed. `pyzm` provides the ZoneMinder Python API, ML detection pipeline, and helper utilities that the hooks depend on.
+**[zmeventnotificationv7.readthedocs.io](https://zmeventnotificationv7.readthedocs.io/en/latest/)**
 
-### 1. Clone both repos
+Key pages:
+- [Installation](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/install.html)
+- [Configuration](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/config.html)
+- [Testing](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/testing.html)
+- [Hooks & ML](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/hooks.html)
 
-```bash
-git clone https://github.com/pliablepixels/zmeventnotification.git
-git clone https://github.com/pliablepixels/pyzm.git
-```
-
-### 2. Install pyzm
-
-```bash
-# do this from the directory you cloned pyzm into, don't change into pyzm/
-sudo -H pip install pyzm/ --break-system-packages
-```
-
-### 3. Install the Event Server and hook helpers
-
-```bash
-cd zmeventnotification
-sudo -H ./install.sh
-cd ..
-```
-
-The installer handles Perl dependencies, hook helper setup, config file placement, model downloads, and automatic migration from older `.ini` configs to YAML.
-
-Testing (Development)
-----------------------
-
-Tests do **not** require a running ZoneMinder installation.
-
-### Unit / integration tests
-
-```bash
-cd zmeventnotification
-
-# Perl tests
-prove -I t/lib -I . -r t/
-
-# Python hook tests (mocks pyzm, no ML models needed)
-pip install pytest pyyaml
-cd hook && python3 -m pytest tests/ -m "not e2e" -v && cd ..
-
-# Both in one shot
-prove -I t/lib -I . -r t/ && (cd hook && python3 -m pytest tests/ -m "not e2e" -v)
-```
-
-### End-to-end tests
-
-The `hook/tests/test_e2e/` directory contains 26 tests that exercise the full
-config → pyzm detection → output chain using real YOLO models and a real test
-image (`bird.jpg`, included in the repo). These require **pyzm installed** as a
-system library (not mocked).
-
-**Prerequisites:**
-- pyzm installed (`pip install pyzm` or from source)
-- ML models at `/var/lib/zmeventnotification/models/` (at least one YOLO model)
-- Python packages: `opencv-python`, `numpy`, `shapely`
-
-```bash
-cd zmeventnotification/hook
-
-# Run all e2e tests
-python3 -m pytest tests/test_e2e/ -v
-
-# Run all tests (unit + e2e)
-python3 -m pytest tests/ -v
-```
-
-The e2e suite covers: objectconfig YAML parsing, `${base_data_path}` substitution,
-`!TOKEN` secret resolution, `Detector.from_dict()`, real YOLO detection, pattern
-filtering, zone/polygon filtering, min_confidence, disabled models, match strategies
-(FIRST/UNION), per-monitor overrides, multi-model pipelines, and
-`format_detection_output()`.
-
-### Test dependencies
-
-- **Perl**: `Test::More`, `YAML::XS`, `JSON`, `Time::Piece` (typically included with Perl)
-- **Python (unit)**: `pytest`, `pyyaml`
-- **Python (e2e)**: all of the above plus `pyzm`, `opencv-python`, `numpy`, `shapely`
-
-Running the Event Server
-------------------------
-
-```bash
-sudo -u www-data ./zmeventnotification.pl --config /etc/zm/zmeventnotification.yml
-```
-
-Refer to the full [installation guide](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/install.html) for production setup.
+ES 7.0 is in development — expect breakages. If you find issues, please post them to this repo, not ZM repos.
 
 Requirements
 -------------
