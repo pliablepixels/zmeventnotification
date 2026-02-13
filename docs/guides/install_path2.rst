@@ -104,7 +104,15 @@ If you are behind a firewall, open port ``9000`` (TCP, bi-directional).
 Step 6: Test manually
 ~~~~~~~~~~~~~~~~~~~~~
 
-Always test manually before enabling daemon mode:
+First, verify the ES version:
+
+.. code:: bash
+
+   sudo -u www-data /usr/bin/zmeventnotification.pl --version
+
+You should see **7.0.0** or above. If not, re-run the installer to update.
+
+Then test manually before enabling daemon mode:
 
 .. code:: bash
 
