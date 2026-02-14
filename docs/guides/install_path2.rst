@@ -35,6 +35,12 @@ Step 3: Run the installer
    cd zmeventnotification
    sudo -H ./install.sh    # say Yes to everything
 
+Or, to run non-interactively:
+
+.. code:: bash
+
+   sudo -H ./install.sh --install-es --install-es-config --install-hook --install-hook-config --no-interactive
+
 This installs the ES, hooks, ML models, Perl dependencies (via apt), config files,
 and sets up the directory structure.
 
@@ -63,7 +69,7 @@ If you already use SSL for ZoneMinder, just point the ES to those same certs.
    Set the **Common Name** to the hostname or IP you'll use to access the server
    (e.g. ``myserver.ddns.net``).
 
-For zmNinja picture messaging, you need a real certificate (e.g. `LetsEncrypt <https://letsencrypt.org>`__) —
+For zmNg/zmNinja picture messaging, you need a real certificate (e.g. `LetsEncrypt <https://letsencrypt.org>`__) —
 self-signed won't work for that.
 
 Step 5: Configure

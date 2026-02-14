@@ -18,10 +18,10 @@ How do I talk to it?
    server will close your connection
 -  As of today, there are 2 categories of messages:
 
-  - 'normal' messages that are exchanged between a client (like zmNinja) and the ES. These messages are the following types:
+  - 'normal' messages that are exchanged between a client (like zmNg/zmNinja) and the ES. These messages are the following types:
     - auth (from client to server)
     - control (from client to server)
-    - push (only applicable for zmNinja)
+    - push (only applicable for zmNg/zmNinja)
     - alarm notifications (from server to client)
 
   - 'escontrol' messages. This allows the client to change the behaviour of the ES dynamically. The changes are stored persistently in ``/var/lib/zmeventnotification/misc/admin_interface.txt``.
@@ -148,13 +148,17 @@ Alarms are events sent from the Server to the Client
 Push Notifications (for both iOS and Android)
 ''''''''''''''''''''''''''''''''''''''''''''''''''
 
+.. note::
+
+   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
+
 To make Push Notifications work, please make sure you read the `section
 on enabling
 Push <https://github.com/pliablepixels/zmeventnotification#44-apnsgcm-howto---only-applicable-for-zmninja-not-for-other-consumers>`__
 for the event server.
 
-Concepts of Push and why it is only for zmNinja
-++++++++++++++++++++++++++++++++++++++++++++++++
+Concepts of Push and why it is only for zmNg/zmNinja
+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Both Apple and Google ensure that a "trusted" application server can
 send push notifications to a specific app running in a device. If they

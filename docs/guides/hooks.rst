@@ -11,10 +11,10 @@ Machine Learning Hooks
 
 .. important::
 
-        Please don't ask me basic questions like "pip3 command not found - what do I do?" or
-        "cv2 not found, how can I install it?" Hooks require some terminal
-        knowledge and familiarity with troubleshooting. I don't plan to
-        provide support for these hooks. They are for reference only.
+        Setting up hooks requires familiarity with the Linux command line, Python
+        package management, and basic troubleshooting. Support is not provided for
+        general environment issues (e.g. missing ``pip3``, ``cv2`` import errors).
+        The hooks are provided as-is.
 
 
 Key Features
@@ -72,7 +72,7 @@ Detection results are:
 local or remote ML via ``pyzm.serve``.
 
 **What you don't get:** push notifications (FCM), WebSocket notifications, MQTT,
-notification rules/muting, zmNinja push, or the ES control interface.
+notification rules/muting, zmNg/zmNinja push, or the ES control interface.
 
 To set up Path 1, you only need to:
 
@@ -93,7 +93,7 @@ When an event occurs, the ES invokes ``zm_event_start.sh``, which calls ``zm_det
 Based on the detection result and your notification settings, the ES sends alerts via
 FCM (iOS/Android push), WebSockets, MQTT, and/or third-party push APIs.
 
-**What you get (in addition to Path 1):** push notifications to zmNinja and other
+**What you get (in addition to Path 1):** push notifications to zmNg/zmNinja and other
 FCM clients, WebSocket notifications, MQTT publishing, notification rules (time-based
 muting, per-monitor controls), per-device monitor filtering via ``tokens.txt``, and the
 ES control interface.
@@ -158,7 +158,7 @@ If using the ES hook mode, you can also test the full shell wrapper::
 
     sudo -u www-data /var/lib/zmeventnotification/bin/zm_event_start.sh <eid> <mid>
 
-If it doesn't work, go back and figure out where you have a problem
+If it doesn't work, see :doc:`hooks_faq` for debugging steps.
 
 
 Upgrading
@@ -322,8 +322,7 @@ Here is a concrete example from the default ``objectconfig.yml``:
 Leveraging same_model_sequence_strategy and frame_strategy effectively
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-When we allow model chaining, the question we need to answer is 'How deep do we want to go to get what we want?'
-That is what these attributes offer. 
+When using model chaining, these attributes control how aggressively the pipeline searches for matches.
 
 ``same_model_sequence_strategy`` is part ``ml_sequence``  with the following possible values:
 
@@ -390,7 +389,7 @@ for the full list (``max_frames``, ``start_frame``, ``frame_skip``, ``save_frame
 How ml_sequence and stream_sequence work together
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Like this:
+The combined logic works as follows:
 
 ::
 
@@ -526,7 +525,7 @@ License plate recognition
 
 Three ALPR options are provided: 
 
-- `Plate Recognizer <https://platerecognizer.com>`__ . It uses a deep learning model that does a far better job than OpenALPR (based on my tests). The class is abstracted, obviously, so in future I may add local models. For now, you will have to get a license key from them (they have a `free tier <https://platerecognizer.com/pricing/>`__ that allows 2500 lookups per month)
+- `Plate Recognizer <https://platerecognizer.com>`__ . Uses a deep learning model that provides more accurate results than OpenALPR in my testing. Requires a license key (a `free tier <https://platerecognizer.com/pricing/>`__ is available with 2500 lookups per month).
 - `OpenALPR <https://www.openalpr.com>`__ . While OpenALPR's detection is not as good as Plate Recognizer, when it does detect, it provides a lot more information (like car make/model/year etc.)
 - `OpenALPR command line <http://doc.openalpr.com/compiling.html>`__. This is a basic version of OpenALPR that can be self compiled and executed locally. It is far inferior to the cloud services and does NOT use any form of deep learning. However, it is free, and if you have a camera that has a good view of plates, it will work.
 
@@ -556,12 +555,12 @@ dependencies that takes time (including dlib) and not everyone wants it.
 
 .. sidebar:: Face recognition limitations
 
-        Don't expect magic with overhead cameras. This library requires a
+        Overhead cameras will not work well. This library requires a
         reasonable face orientation (works for front facing, or somewhat side
         facing poses) and does not work for full profiles or completely overhead
         faces. Take a look at the `accuracy
         wiki <https://github.com/ageitgey/face_recognition/wiki/Face-Recognition-Accuracy-Problems>`__
-        of this library to know more about its limitations. Also note that I found `cnn` mode is much more accurage than `hog` mode. However, `cnn` comes with a speed and memory tradeoff.
+        of this library to know more about its limitations. Note that ``cnn`` mode is significantly more accurate than ``hog`` mode, but comes with a speed and memory tradeoff.
 
 Using the right face recognition modes
 '''''''''''''''''''''''''''''''''''''''

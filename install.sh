@@ -88,6 +88,31 @@ print_success() {
     echo -e "${COLOR}Success:${NOCOLOR}$1"
 }
 
+print_section() {
+    COLOR="\033[1;36m"
+    NOCOLOR="\033[0m"
+    echo ""
+    echo -e "${COLOR}──── $1 ────${NOCOLOR}"
+}
+
+print_skip() {
+    COLOR="\033[0;33m"
+    NOCOLOR="\033[0m"
+    echo -e "${COLOR}Skipping: $1${NOCOLOR}"
+}
+
+# Run a command with its output dimmed (gray)
+# Usage: run_dimmed <command> [args...]
+run_dimmed() {
+    local DIM="\033[0;90m"
+    local NOCOLOR="\033[0m"
+    echo -ne "${DIM}"
+    "$@" 2>&1
+    local rc=$?
+    echo -ne "${NOCOLOR}"
+    return $rc
+}
+
 get_distro() {
     local DISTRO=`(lsb_release -ds || cat /etc/*release || uname -om ) 2>/dev/null | head -n1`
     local DISTRO_NORM='ubuntu'
@@ -154,8 +179,7 @@ verify_config() {
         exit
     fi
 
-    echo
-    echo ----------- Configured Values ----------------------------
+    print_section 'Configured Values'
     echo "Your distro seems to be ${DISTRO}"
     echo "Your webserver user seems to be ${WEB_OWNER}"
     echo "Your webserver group seems to be ${WEB_GROUP}"
@@ -199,9 +223,9 @@ verify_config() {
 
 # move proc for zmeventnotification.pl
 install_es() {
-    echo '*** Installing ES Dependencies ***'
+    print_section 'Installing ES Dependencies'
     if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" ]]; then
-      $INSTALLER install -y libyaml-libyaml-perl libcrypt-eksblowfish-perl \
+      run_dimmed $INSTALLER install -y libyaml-libyaml-perl libcrypt-eksblowfish-perl \
           libcrypt-openssl-rsa-perl libmodule-build-perl libyaml-perl libjson-perl \
           liblwp-protocol-https-perl libio-socket-ssl-perl liburi-perl libdbi-perl \
           libtest-warn-perl
@@ -211,7 +235,7 @@ install_es() {
       echo "Not ubuntu or debian - please install Perl dependencies manually"
     fi
 
-    echo '*** Installing ES ***'
+    print_section 'Installing Event Server'
     mkdir -p "${TARGET_DATA}/push" 2>/dev/null
     local es_target="${TARGET_BIN_ES}/zmeventnotification.pl"
     if install -m 755 -o "${WEB_OWNER}" -g "${WEB_GROUP}" zmeventnotification.pl "${TARGET_BIN_ES}"; then
@@ -230,7 +254,7 @@ install_es() {
         print_error "failed to install to ${es_target}"
     fi
 
-    echo '*** Installing Perl modules ***'
+    print_section 'Installing Perl modules'
     mkdir -p "${TARGET_PERL_LIB}/ZmEventNotification/"
     for pm_file in ZmEventNotification/*.pm; do
         local pm_target="${TARGET_PERL_LIB}/ZmEventNotification/$(basename "$pm_file")"
@@ -263,49 +287,29 @@ download_if_needed() {
     while [ $# -ge 2 ]; do
         local target="$1" source="$2"; shift 2
         if [ ! -f "${TARGET_DATA}/models/${model_dir}/${target}" ]; then
-            ${WGET} "${source}" -O"${TARGET_DATA}/models/${model_dir}/${target}"
+            run_dimmed ${WGET} "${source}" -O"${TARGET_DATA}/models/${model_dir}/${target}"
         else
-            echo "${target} exists, no need to download"
+            print_success " ${target} already exists"
         fi
     done
 }
 
 # install proc for ML hooks
-install_hook() {
-
-    if [ "${INSTALL_OPENCV}" == "yes" ]; then
-        echo "Installing python3-opencv..."
-        ${PY_SUDO} ${INSTALLER} install python3-opencv
-    else
-        echo "Skipping python3-opencv installation (INSTALL_OPENCV=${INSTALL_OPENCV})"
-    fi
-
-    echo '*** Installing Hooks ***'
-    mkdir -p "${TARGET_DATA}/bin" 2>/dev/null
-    rm -fr  "${TARGET_DATA}/bin/*" 2>/dev/null
-
-    #don't delete contrib so custom user files remain
-    mkdir -p "${TARGET_DATA}/contrib" 2>/dev/null
-
-    mkdir -p "${TARGET_DATA}/images" 2>/dev/null
-    mkdir -p "${TARGET_DATA}/mlapi" 2>/dev/null
-    mkdir -p "${TARGET_DATA}/known_faces" 2>/dev/null
-    mkdir -p "${TARGET_DATA}/unknown_faces" 2>/dev/null
+download_models() {
+    # Create model directories
     mkdir -p "${TARGET_DATA}/models/yolov3" 2>/dev/null
     mkdir -p "${TARGET_DATA}/models/tinyyolov3" 2>/dev/null
     mkdir -p "${TARGET_DATA}/models/tinyyolov4" 2>/dev/null
     mkdir -p "${TARGET_DATA}/models/yolov4" 2>/dev/null
     mkdir -p "${TARGET_DATA}/models/coral_edgetpu" 2>/dev/null
     mkdir -p "${TARGET_DATA}/models/ultralytics" 2>/dev/null
-    mkdir -p "${TARGET_DATA}/misc" 2>/dev/null
-    echo "everything that does not fit anywhere else :-)" > "${TARGET_DATA}/misc/README.txt" 2>/dev/null
-    
+
     if [ "${DOWNLOAD_MODELS}" == "yes" ]
     then
 
         if [ "${INSTALL_CORAL_EDGETPU}" == "yes" ]
         then
-            echo 'Checking for Google Coral Edge TPU data files...'
+            print_important ' Checking for Google Coral Edge TPU data files...'
             download_if_needed coral_edgetpu \
                 'coco_indexed.names' 'https://dl.google.com/coral/canned_models/coco_labels.txt' \
                 'ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite' 'https://github.com/google-coral/edgetpu/raw/master/test_data/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite' \
@@ -315,7 +319,7 @@ install_hook() {
 
         if [ "${INSTALL_YOLOV3}" == "yes" ]
         then
-            echo 'Checking for YoloV3 data files....'
+            print_important ' Checking for YOLOv3 data files...'
             [ -f "${TARGET_DATA}/models/yolov3/yolov3_classes.txt" ] && rm "${TARGET_DATA}/models/yolov3/yolov3_classes.txt"
             download_if_needed yolov3 \
                 'yolov3.cfg' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/yolov3/yolov3.cfg' \
@@ -326,7 +330,7 @@ install_hook() {
         if [ "${INSTALL_TINYYOLOV3}" == "yes" ]
         then
             [ -d "${TARGET_DATA}/models/tinyyolo" ] && mv "${TARGET_DATA}/models/tinyyolo" "${TARGET_DATA}/models/tinyyolov3"
-            echo 'Checking for TinyYOLOV3 data files...'
+            print_important ' Checking for TinyYOLOv3 data files...'
             [ -f "${TARGET_DATA}/models/tinyyolov3/yolov3-tiny.txt" ] && rm "${TARGET_DATA}/models/yolov3/yolov3-tiny.txt"
             download_if_needed tinyyolov3 \
                 'yolov3-tiny.cfg' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/tinyyolov3/yolov3-tiny.cfg' \
@@ -336,7 +340,7 @@ install_hook() {
 
         if [ "${INSTALL_TINYYOLOV4}" == "yes" ]
         then
-            echo 'Checking for TinyYOLOV4 data files...'
+            print_important ' Checking for TinyYOLOv4 data files...'
             download_if_needed tinyyolov4 \
                 'yolov4-tiny.cfg' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/tinyyolov4/yolov4-tiny.cfg' \
                 'coco.names' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/tinyyolov4/coco.names' \
@@ -351,8 +355,8 @@ install_hook() {
                 rm -rf "${TARGET_DATA}/models/cspn" 2>/dev/null
             fi
 
-            echo 'Checking for YOLOV4 data files...'
-            print_warning 'Note, you need OpenCV 4.4+ for Yolov4 to work'
+            print_important ' Checking for YOLOv4 data files...'
+            print_warning ' Note, you need OpenCV 4.4+ for Yolov4 to work'
             download_if_needed yolov4 \
                 'yolov4.cfg' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/yolov4/yolov4.cfg' \
                 'coco.names' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/yolov4/coco.names' \
@@ -361,7 +365,7 @@ install_hook() {
 
         if [ "${INSTALL_YOLOV26}" == "yes" ]
         then
-            echo 'Checking for ONNX YOLOv26 model files...'
+            print_important ' Checking for ONNX YOLOv26 model files...'
             print_warning 'Note, you need OpenCV 4.13+ for ONNX YOLOv26 to work (TopK layer support required)'
             download_if_needed ultralytics \
                 'yolo26n.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo26n.onnx' \
@@ -371,15 +375,41 @@ install_hook() {
                 'yolo26x.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo26x.onnx'
         fi
     else
-        echo "Skipping model downloads"
+        print_skip 'Model downloads'
     fi
+}
+
+install_hook() {
+
+    if [ "${INSTALL_OPENCV}" == "yes" ]; then
+        echo "Installing python3-opencv..."
+        run_dimmed ${PY_SUDO} ${INSTALLER} install python3-opencv
+    else
+        print_skip "python3-opencv installation"
+    fi
+
+    print_section 'Installing Hooks'
+    mkdir -p "${TARGET_DATA}/bin" 2>/dev/null
+    rm -fr  "${TARGET_DATA}/bin/*" 2>/dev/null
+
+    #don't delete contrib so custom user files remain
+    mkdir -p "${TARGET_DATA}/contrib" 2>/dev/null
+
+    mkdir -p "${TARGET_DATA}/images" 2>/dev/null
+    mkdir -p "${TARGET_DATA}/mlapi" 2>/dev/null
+    mkdir -p "${TARGET_DATA}/known_faces" 2>/dev/null
+    mkdir -p "${TARGET_DATA}/unknown_faces" 2>/dev/null
+    mkdir -p "${TARGET_DATA}/misc" 2>/dev/null
+    echo "everything that does not fit anywhere else :-)" > "${TARGET_DATA}/misc/README.txt" 2>/dev/null
     
+    download_models
+
     # Now install the ML hooks
 
-    echo "*** Installing push api plugins ***"
+    print_section 'Installing push API plugins'
      install -m 755 -o "${WEB_OWNER}" pushapi_plugins/pushapi_pushover.py "${TARGET_BIN_HOOK}"
 
-    echo "*** Installing detection scripts ***"
+    print_section 'Installing detection scripts'
     install -m 755 -o "${WEB_OWNER}" hook/zm_event_start.sh "${TARGET_BIN_HOOK}"
     install -m 755 -o "${WEB_OWNER}" hook/zm_event_end.sh "${TARGET_BIN_HOOK}"
 
@@ -395,8 +425,7 @@ install_hook() {
         "${TARGET_BIN_HOOK}/zm_train_faces.py"
     #python setup.py install && print_success "Done" || print_error "python setup failed"
 
-    echo
-    echo "*** Installing user contributions ***"
+    print_section 'Installing user contributions'
     cp docs/guides/contrib_guidelines.rst "${TARGET_DATA}/contrib"
     for file in contrib/*; do
     echo "Copying over ${file}..."
@@ -405,7 +434,7 @@ install_hook() {
     echo
     
 
-    echo "Removing old version of zmes_hook_helpers, if any"
+    print_section 'Installing Python hook package'
     ${PY_SUDO} ${PIP} uninstall -y zmes-hooks ${PIP_COMPAT}   >/dev/null 2>&1
     ${PY_SUDO} ${PIP} uninstall -y zmes_hook_helpers ${PIP_COMPAT}   >/dev/null 2>&1
  
@@ -419,11 +448,10 @@ install_hook() {
     fi
 
     echo "Running: ${PY_SUDO} ${PIP} -v install hook/ ${PIP_COMPAT}"
-    ${PY_SUDO} ${PIP} -v install hook/ ${PIP_COMPAT} && print_opencv_message || print_error "python hooks setup failed"
+    run_dimmed ${PY_SUDO} ${PIP} -v install hook/ ${PIP_COMPAT} && print_opencv_message || print_error "python hooks setup failed"
 
-    echo "Installing package deps..."
-    echo "Installing gifsicle, if needed..."
-    ${PY_SUDO} ${INSTALLER} install gifsicle -qq
+    print_section 'Installing package dependencies'
+    run_dimmed ${PY_SUDO} ${INSTALLER} install gifsicle -qq
 
 }
 
@@ -431,7 +459,7 @@ install_hook() {
 # move ES config files
 install_es_config() {
     # Ensure pyyaml is installed for config migration/upgrade scripts
-    ${PY_SUDO} ${PIP} install pyyaml ${PIP_COMPAT} >/dev/null 2>&1
+    run_dimmed ${PY_SUDO} ${PIP} install pyyaml ${PIP_COMPAT}
 
     # Auto-migrate from INI to YAML if needed
     if [ -f "${TARGET_CONFIG}/zmeventnotification.ini" ] && [ ! -f "${TARGET_CONFIG}/zmeventnotification.yml" ]; then
@@ -518,12 +546,15 @@ with open('${TARGET_CONFIG}/es_rules.yml', 'w') as f:
     fi
 
 
-    echo "====> Remember to fill in the right values in the config files, or your system won't work! <============="
+    print_warning " Remember to fill in the right values in the config files, or your system won't work!"
     echo
 }
 
 # move Hook config files
 install_hook_config() {
+    # Download models if needed (uses download_if_needed, so existing files are skipped)
+    download_models
+
     # Auto-migrate from INI to YAML if needed
     if [ -f "${TARGET_CONFIG}/objectconfig.ini" ] && [ ! -f "${TARGET_CONFIG}/objectconfig.yml" ]; then
         echo "Found existing objectconfig.ini but no objectconfig.yml - running migration..."
@@ -560,11 +591,11 @@ install_hook_config() {
         print_success "Updated /etc/zm paths to ${TARGET_CONFIG} in objectconfig.yml"
     fi
 
-    echo "====> Remember to fill in the right values in the config files, or your system won't work! <============="
+    print_warning " Remember to fill in the right values in the config files, or your system won't work!"
     echo
 }
 
-# returns 'ok' if openCV version >= version passed 
+# returns 'ok' if openCV version >= version passed
 check_opencv_version() {
     MAJOR=$1
     MINOR=$2
@@ -594,8 +625,6 @@ print_opencv_message() {
 
      Hooks are installed, but please make sure you have the right version
      of OpenCV installed. ONNX YOLOv26 models require OpenCV 4.13+.
-     I recommend removing any pip packages you may have installed of
-     opencv* and compiling OpenCV 4.13+ from source.
      See https://zmeventnotificationv7.readthedocs.io/en/latest/guides/hooks.html#opencv-install
 
     |----------------------------------------------------------------------|
@@ -609,8 +638,7 @@ run_doctor_checks() {
     local es_config="${TARGET_CONFIG}/zmeventnotification.yml"
     [ ! -f "$hook_config" ] && [ ! -f "$es_config" ] && return
 
-    echo
-    echo "Running post-install diagnostic checks..."
+    print_section 'Post-install diagnostic checks'
 
     ${PYTHON} tools/install_doctor.py \
         --hook-config "$hook_config" \
@@ -625,7 +653,7 @@ run_doctor_checks() {
 display_help() {
     cat << EOF
     
-    sudo -H [VAR1=value|VAR2=value...] $0 [-h|--help] [--install-es|--no-install-es] [--install-hook|--no-install-hook] [--install-config|--no-install-config] [--hook-config-upgrade|--no-hook-config-upgrade] [--no-pysudo] [--no-download-models] [--install-opencv|--no-install-opencv]
+    sudo -H [VAR1=value|VAR2=value...] $0 [-h|--help] [--install-es|--no-install-es] [--install-hook|--no-install-hook] [--install-config|--no-install-config] [--install-es-config|--no-install-es-config] [--install-hook-config|--no-install-hook-config] [--hook-config-upgrade|--no-hook-config-upgrade] [--no-pysudo] [--no-download-models] [--install-opencv|--no-install-opencv]
 
         When used without any parameters executes in interactive mode
 
@@ -637,8 +665,14 @@ display_help() {
         --install-hook: installs hooks without prompting
         --no-install-hook: skips hooks install without prompting
 
-        --install-config: installs/overwrites config files without prompting
-        --no-install-config: skips config install without prompting
+        --install-config: installs/overwrites both ES and hook config files without prompting
+        --no-install-config: skips both ES and hook config install without prompting
+
+        --install-es-config: installs/overwrites ES config without prompting
+        --no-install-es-config: skips ES config install without prompting
+
+        --install-hook-config: installs/overwrites hook config without prompting
+        --no-install-hook-config: skips hook config install without prompting
 
         --no-interactive: run automatically, but you need to specify flags for all components
 
@@ -692,6 +726,8 @@ check_args() {
     INSTALL_HOOK='prompt'
     INSTALL_ES_CONFIG='prompt'
     INSTALL_HOOK_CONFIG='prompt'
+    INSTALL_ES_CONFIG_EXPLICIT='no'
+    INSTALL_HOOK_CONFIG_EXPLICIT='no'
     INTERACTIVE='yes'
     PY_SUDO='sudo -H'
     DOWNLOAD_MODELS='yes'
@@ -751,6 +787,26 @@ check_args() {
             INSTALL_HOOK_CONFIG='no'
             shift
             ;;
+        --install-es-config)
+            INSTALL_ES_CONFIG='yes'
+            INSTALL_ES_CONFIG_EXPLICIT='yes'
+            shift
+            ;;
+        --no-install-es-config)
+            INSTALL_ES_CONFIG='no'
+            INSTALL_ES_CONFIG_EXPLICIT='yes'
+            shift
+            ;;
+        --install-hook-config)
+            INSTALL_HOOK_CONFIG='yes'
+            INSTALL_HOOK_CONFIG_EXPLICIT='yes'
+            shift
+            ;;
+        --no-install-hook-config)
+            INSTALL_HOOK_CONFIG='no'
+            INSTALL_HOOK_CONFIG_EXPLICIT='yes'
+            shift
+            ;;
         --install-opencv)
             INSTALL_OPENCV='yes'
             shift
@@ -765,15 +821,16 @@ check_args() {
     esac
     done  
 
-    # if ES won't be installed, doesn't make sense to copy ES config. Umm actually...
-    [[ ${INSTALL_ES} == 'no' ]] && INSTALL_ES_CONFIG='no'
+    # If ES/hook won't be installed and config wasn't explicitly requested, skip config too
+    if [[ ${INSTALL_ES_CONFIG_EXPLICIT} == 'no' ]]; then
+        [[ ${INSTALL_ES} == 'no' ]] && INSTALL_ES_CONFIG='no'
+        [[ ${INSTALL_ES} == 'prompt' && ${INSTALL_ES_CONFIG} == 'yes' ]] && INSTALL_ES_CONFIG='prompt'
+    fi
 
-    # If we are prompting for ES, lets also prompt for config and not auto
-    [[ ${INSTALL_ES} == 'prompt' && ${INSTALL_ES_CONFIG} == 'yes' ]] && INSTALL_ES_CONFIG='prompt'
-
-    # same logic as above
-    [[ ${INSTALL_HOOK} == 'no' ]] && INSTALL_HOOK_CONFIG='no'
-    [[ ${INSTALL_HOOK} == 'prompt' && ${INSTALL_HOOK_CONFIG} == 'yes' ]] && INSTALL_HOOK_CONFIG='prompt'
+    if [[ ${INSTALL_HOOK_CONFIG_EXPLICIT} == 'no' ]]; then
+        [[ ${INSTALL_HOOK} == 'no' ]] && INSTALL_HOOK_CONFIG='no'
+        [[ ${INSTALL_HOOK} == 'prompt' && ${INSTALL_HOOK_CONFIG} == 'yes' ]] && INSTALL_HOOK_CONFIG='prompt'
+    fi
 }
 
 check_deps() {
@@ -830,23 +887,23 @@ echo
 
 ES_INSTALLED='no'
 [[ ${INSTALL_ES} == 'yes' ]] && { install_es; ES_INSTALLED='yes'; }
-[[ ${INSTALL_ES} == 'no' ]] && echo 'Skipping Event Server install'
+[[ ${INSTALL_ES} == 'no' ]] && print_skip 'Event Server install'
 if [[ ${INSTALL_ES} == 'prompt' ]]
 then
-    confirm 'Install Event Server' 'y/N' && { install_es; ES_INSTALLED='yes'; } || echo 'Skipping Event Server install'
+    confirm 'Install Event Server' 'y/N' && { install_es; ES_INSTALLED='yes'; } || print_skip 'Event Server install'
 fi
 
 echo
 echo
 
 if [[ ${ES_INSTALLED} == 'no' ]]; then
-    echo 'Skipping Event Server config (ES was not installed)'
+    print_skip 'Event Server config (ES was not installed)'
 else
     [[ ${INSTALL_ES_CONFIG} == 'yes' ]] && install_es_config
-    [[ ${INSTALL_ES_CONFIG} == 'no' ]] && echo 'Skipping Event Server config install'
+    [[ ${INSTALL_ES_CONFIG} == 'no' ]] && print_skip 'Event Server config install'
     if [[ ${INSTALL_ES_CONFIG} == 'prompt' ]]
     then
-        confirm 'Install Event Server Config' 'y/N' && install_es_config || echo 'Skipping Event Server config install'
+        confirm 'Install Event Server Config' 'y/N' && install_es_config || print_skip 'Event Server config install'
     fi
 fi
 
@@ -854,20 +911,20 @@ echo
 echo
 
 [[ ${INSTALL_HOOK} == 'yes' ]] && install_hook 
-[[ ${INSTALL_HOOK} == 'no' ]] && echo 'Skipping Hook'
+[[ ${INSTALL_HOOK} == 'no' ]] && print_skip 'Hook install'
 if [[ ${INSTALL_HOOK} == 'prompt' ]] 
 then
-    confirm 'Install Hook' 'y/N' && install_hook || echo 'Skipping Hook install'
+    confirm 'Install Hook' 'y/N' && install_hook || print_skip 'Hook install'
 fi
 
 echo
 echo
 
 [[ ${INSTALL_HOOK_CONFIG} == 'yes' ]] && install_hook_config
-[[ ${INSTALL_HOOK_CONFIG} == 'no' ]] && echo 'Skipping Hook config install'
+[[ ${INSTALL_HOOK_CONFIG} == 'no' ]] && print_skip 'Hook config install'
 if [[ ${INSTALL_HOOK_CONFIG} == 'prompt' ]] 
 then
-    confirm 'Install Hook Config' 'y/N' && install_hook_config || echo 'Skipping Hook config install'
+    confirm 'Install Hook Config' 'y/N' && install_hook_config || print_skip 'Hook config install'
 fi
 
 # Make sure webserver can access them
@@ -919,7 +976,7 @@ then
         echo "No legacy objectconfig.ini found (or objectconfig.yml already exists), skipping upgrade"
     fi
 else
-    echo "Skipping hook config upgrade process"
+    print_skip 'Hook config upgrade process'
 fi
 
 
@@ -927,7 +984,7 @@ run_doctor_checks
 
 echo
 if [[ ${ES_INSTALLED} == 'yes' ]]; then
-    echo "*** Please remember to start the Event Server after this update ***"
+    print_success " Installation complete. Please remember to start the Event Server."
 else
-    echo "*** Hook installation complete. Configure objectconfig.yml and set up EventStartCommand in ZM. ***"
+    print_success " Hook installation complete. Configure objectconfig.yml and set up EventStartCommand in ZM."
 fi

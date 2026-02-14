@@ -64,6 +64,12 @@ Step 3: Run the installer
    cd zmeventnotification
    sudo -H ./install.sh    # say No to ES, Yes to hooks, Yes to hook config
 
+Or, to run non-interactively:
+
+.. code:: bash
+
+   sudo -H ./install.sh --no-install-es --install-hook --install-hook-config --no-interactive
+
 This handles everything else: downloads ML models (YOLOv4, YOLOv26 by default),
 installs the hook scripts and Python packages, creates the directory structure,
 and installs the config files.

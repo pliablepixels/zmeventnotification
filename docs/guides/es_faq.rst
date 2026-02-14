@@ -1,16 +1,14 @@
 Event Notification Server FAQ
 ===============================
 
-Machine Learning! Mmm..Machine Learning!
-----------------------------------------
+Machine Learning
+-----------------
 
-Easy. You will first have to read this document to correctly install
-this server along with zoneminder. Once it works well, you can explore
-how to enable Machine Learning based object detection that can be used
-along with ZoneMinder alarms. If you already have this server figured
-out, you can skip directly to the machine learning part (:doc:`hooks`)
+To use ML-based object detection, first install and configure the Event Server
+using this document, then set up the ML hooks as described in :doc:`hooks`.
+If you already have the ES working, you can skip directly to the ML setup.
 
-If you have questions on the machine learning part, see :doc:`hooks_faq`
+For ML-specific troubleshooting, see :doc:`hooks_faq`.
 
 
 What is it?
@@ -40,7 +38,7 @@ Why do we need it?
 Is this officially developed by ZM developers?
 ----------------------------------------------
 
-No. I developed it for zmNinja, but you can use it with your own
+No. I developed it for zmNg/zmNinja, but you can use it with your own
 consumer.
 
 How can I use this with Node-Red or Home Assistant?
@@ -138,7 +136,7 @@ Note that you can also automate updates like so:
 
 ::
 
-  sudo -H ./install.sh --install-hook --install-es --no-install-config --no-interactive
+  sudo -H ./install.sh --install-hook --install-es --no-install-hook-config --no-install-es-config --no-interactive
 
 The above will install/update the hooks, install/update the ES server but will not overwrite your existing config files. **NOTE** that ``install.sh`` now includes an automatic config upgrade step that merges new keys from the example configs into your existing YAML configs. However, you should always read :doc:`breaking` to check for structural changes
 
@@ -158,7 +156,7 @@ Understanding zmeventnotification configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Starting v1.0, `@synthead <https://github.com/synthead>`__ reworked the
-configuration (brilliantly) as follows:
+configuration as follows:
 
 -  If you just run ``zmeventnotification.pl`` it will try and load
    ``/etc/zm/zmeventnotification.yml``. If it doesn't find it, it will
@@ -325,7 +323,7 @@ I just added a new monitor and the ES is not sending notifications for it
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This generally happens if you add a monitor _after_ you configure the ES.
-What you need to do is go to zmNinja's ``Menu->Settings->Event Server`` option and enable the monitor you just added and press save.
+Go to zmNg/zmNinja's ``Menu->Settings->Event Server`` option, enable the monitor you just added, and press save.
 
 The ES is missing events. I see them being triggered in ZM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -356,7 +354,7 @@ the following conditions must be met:
 - You must use HTTPS
 - There is a 1MB limit to image size
 - You can't use self signed certs 
-- The IP/hostname needs to be accessible by zmNinja on the mobile device you are receiving pushes on
+- The IP/hostname needs to be accessible by zmNg/zmNinja on the mobile device you are receiving pushes on
 - You need a recent version of ZM
 - A good way to isolate if its a URL problem or something else is replace the ``picture_url`` in ``/etc/zm/secrets.yml`` 
   with a knows HTTPS url like `this <https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/A_small_bird.jpg/800px-A_small_bird.jpg>`__
@@ -384,11 +382,15 @@ Secure mode just doesn't work (WSS) - WS works
 Try to put in your event server IP in the ``address`` token in
 ``network`` section of ``zmeventnotification.yml``
 
-I'm not receiving push notifications in zmNinja
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+I'm not receiving push notifications in zmNg/zmNinja
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This almost always happens when zmNinja is not able to reach the server.
-Before you contact me, please perform the following steps and send me
+.. note::
+
+   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
+
+This almost always happens when zmNg/zmNinja is not able to reach the server.
+Before reporting an issue, please perform the following steps and include
 the output:
 
 1. Stop the event server. ``sudo zmdc.pl stop zmeventnotification.pl``
@@ -411,24 +413,24 @@ the output:
     2018-12-20,08:31:32 Web Socket Event Server listening on port 9000
     12/20/2018 08:31:32.696406 zmeventnotification[12460].INF [main:582] [Web Socket Event Server listening on port 9000]
 
-6. Now start zmNinja. You should see event server logs like this:
+6. Now start zmNg/zmNinja. You should see event server logs like this:
 
 ::
 
     2018-12-20,08:32:43 Raw incoming message: {"event":"push","data":{"type":"token","platform":"ios","token":"cVuLzCBsEn4:APA91bHYuO3hVJqTIMsm0IRNQEYAUa<deleted>GYBwNdwRfKyZV0","monlist":"1,2,4,5,6,7,11","intlist":"45,60,0,0,0,45,45","state":"enabled"}}
 
-If you don't see these logs on the event server, zmNinja is not able to
+If you don't see these logs on the event server, zmNg/zmNinja is not able to
 connect to the event server. This may be because of several reasons: 
 
 * Your event server IP/DNS is not reachable from your phone 
 
-* If you are using SSL, your certificates are invalid (try disabling SSL first - both 
-  on the event server and on zmNinja)
+* If you are using SSL, your certificates are invalid (try disabling SSL first — both
+  on the event server and in zmNg/zmNinja)
 
-* Your zmNinja configuration is wrong (the most common error I see is the server has 
-  SSL disabled, but  zmNinja is configured to use ``wss://`` instead of ``ws://``)
+* Your zmNg/zmNinja configuration is wrong (a common error is the server has
+  SSL disabled, but zmNg/zmNinja is configured to use ``wss://`` instead of ``ws://``)
 
-7. Assuming the above worked, go to zmNinja logs in the app. Somewhere
+7. Assuming the above worked, go to zmNg/zmNinja logs in the app. Somewhere
    in the logs, you should see a line similar to:
 
 ::
@@ -441,14 +443,13 @@ credentials (and in that case, you'll see an error message)
 
 8.  Finally, after all of the above succeeds, do a
     ``cat /var/lib/zmeventnotification/push/tokens.txt`` to make sure
-    the device token that zmNinja sent is stored (desktop apps don't
-    have a device token). If you are using zmNinja on a mobile app, and
-    you don't see an entry in ``tokens.txt`` you have a problem. Debug.
+    the device token that zmNg/zmNinja sent is stored (desktop apps don't
+    have a device token). If you are using zmNg/zmNinja on a mobile device and
+    don't see an entry in ``tokens.txt``, the registration did not succeed.
 
-9.  *Always* send me logs of both zmNinja and zmeventnotification - I
-    need them to understand what is going on. Don't send me one line.
-    You may think you are sending what is relevant, but you are not. One
-    line logs are mostly useless.
+9.  Always include logs from both zmNg/zmNinja and zmeventnotification when
+    reporting issues. Single-line log excerpts are rarely sufficient — include
+    the full relevant section.
 
 10. Some other notes:
 
@@ -458,16 +459,15 @@ credentials (and in that case, you'll see an error message)
 
 -  If you don't see an entry in ``tokens.txt`` (typically in
    ``/var/lib/zmeventnotification/push``) then your phone is not
-   registered to get push. Kill zmNinja, start the app, make sure the
+   registered to get push. Kill zmNg/zmNinja, start the app, make sure the
    event server receives the registration and check ``tokens.txt``
 
 -  Sometimes, Google's FCM server goes down, or Apple's APNS server goes
-   down for a while. Things automagically work in 24 hrs.
+   down for a while. Service typically resumes within 24 hours.
 
--  Kill the app. Then empty the contents of ``tokens.txt`` in the event
-   server (don't delete it). Then restart the event server. Start the
-   app again. If you don't see a new registration token, you have a
-   connection problem
+-  Kill the app, empty the contents of ``tokens.txt`` (don't delete the file),
+   restart the event server, and start the app again. If you don't see a new
+   registration token, there is a connection problem.
 
 -  I'd strongly recommend you run the event server in "manual mode" and
    stop daemon mode while debugging.
@@ -486,18 +486,17 @@ Some possibilities:
 
 - There are situations where you device token has changed and ``/var/lib/zmeventnotification/push/tokens.txt`` has 
   both the old and new token and both work. In this case, your device will get multiple 
-  notifications. Stop the ES, delete ``tokens.txt`` and let zmNinja re-register 
+  notifications. Stop the ES, delete ``tokens.txt`` and let zmNg/zmNinja re-register.
 
-- At times Google's FCM servers send out multiple
-  notifications. Why? I don't know. But it sorts itself out very quickly,
-  and if you think this must be the reason, I'll wager that you are
-  actually in the 99.9% lot and haven't checked properly.
+- At times Google's FCM servers send out duplicate notifications. This is
+  rare and typically resolves itself quickly. Before attributing the issue
+  to FCM, verify that you don't have multiple ES processes or stale tokens.
 
 
 How do I reduce the time of delay from an alarm occurring in ZM to the notification being sent out?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - First, turn on debug logs. You'll know where the delays are occurring and then you can deep dive.
-- Read the priniciples document: :ref:`from-detection-to-notification`. Really, it will help you understand how this works 
+- Read the principles document: :ref:`from-detection-to-notification` to understand the full notification flow.
 - There are some key areas you can optimize for:
 
    - The ES _polls_ ZoneMinder mapped memory for events. By default it is 5 seconds. To change it, 
@@ -527,9 +526,9 @@ Push notifications are delayed by several minutes when the phone turns off (Andr
 
 There seems to be multiple potential reasons:
 
-- Starting Android 6, a doze mode and battery optimization mode has been introduced which aggressively tries to 
+- Starting Android 6, a doze mode and battery optimization mode has been introduced which aggressively tries to
   put the phone into low power mode. This results in the apps disconnecting from FCM servers for around 10-15 mins
-  at a stretch, which may explain why you get delayed notifications. To avoid this, remove zmNinja from any battery
+  at a stretch, which may explain why you get delayed notifications. To avoid this, remove zmNg/zmNinja from any battery
   optimization and doze mode effects. There are instructions `here <https://documentation.onesignal.com/docs/notifications-show-successful-but-are-not-being-shown>`__
   on how to do that (scroll to the middle of the page and see the table that describes what to do depending on your phone manufacturer).
 
@@ -542,8 +541,8 @@ There seems to be multiple potential reasons:
 - If nothing else works, set `use_fcmv1` to `no` in `zmeventnotification.yml` to go back to legacy 
   protocol 
 
-- Finally, it is entirely possible there is some magic-foo of combination of attributes in FCMv1 which
-  is not documented that may do the right thing. If you figure it out, please let me know.
+- There may be undocumented combinations of FCMv1 attributes that improve delivery behavior.
+  If you find a working configuration, please share it via a GitHub issue.
 
 - If you are wondering what this all means for iOS - it is unaffected. iOS uses a priority 10 by default (high) 
   that delivers the notification instantly.
@@ -583,8 +582,8 @@ Running hooks manually detects the objects I want but fails to detect via ES (da
 There may be multiple reasons, but a common one is of timing. When the ES invokes the hook, it is invoked almost immediately upon event detection. In some cases, ZoneMinder still has not had time to create an alarmed frame, or the right snapshot frame. So what happens is that when the ES invokes the hook, it runs detection on a different image from the one you run later when invoked manually. Try adding a ``wait = 5`` to ``objectconfig.yml`` to that monitor section and see if it helps
 
 
-Great Krypton! I just upgraded ZoneMinder and I'm not getting push anymore!
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+I just upgraded ZoneMinder and I'm not getting push notifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Make sure your eventserver is running:
 ``sudo zmdc.pl status zmeventnotification.pl``
@@ -595,9 +594,9 @@ How do I disable secure (WSS) mode?
 As it turns out many folks run ZM inside the LAN only and don't want to
 deal with certificates. Fair enough. For that situation, edit
 zmeventnotification.pl and use ``enable: "no"`` in the ``ssl`` section
-of the configuration file. **Remember to ensure that your EventServer
-URL in zmNinja does NOT use wss too - change it to ws**. Also remember to
-restart the ES after this change.
+of the configuration file. **Make sure your EventServer
+URL in zmNg/zmNinja also uses ``ws://`` instead of ``wss://``**. Restart
+the ES after this change.
 
 
 .. _es-hooks-logging:
@@ -644,22 +643,22 @@ This gives you a summary of what you need to do:
 Debugging and reporting problems
 --------------------------------
 
-STOP. Before you shoot me an email, **please** make sure you have read
-the `common problems <#troubleshooting-common-situations>`__ and have
-followed *every step* of the `install guide <#how-do-i-install-it>`__
-and in sequence. I can't emphasize how important it is to be diligent.
+Before reporting an issue, please make sure you have read the
+`common problems <#troubleshooting-common-situations>`__ section and have
+followed every step of the `install guide <#how-do-i-install-it>`__
+in sequence.
 
-STOP (redux): Please don't send me emails without relevant logs (unless of course, it is to do with situations where, say, zmNinja doesn't load and you can't extract logs). Read :ref:`es-hooks-logging`.
+Please always include relevant logs when reporting issues. Read :ref:`es-hooks-logging` for how to enable and collect them.
 
 
 Here is how to debug and report:
 
-**If your problem involves zmNinja:**
+**If your problem involves zmNg/zmNinja:**
 
 -  Enable Debug logs in zmNinja (Setting->Developer Options->Enable
-   Debug Log), if zmNinja is part of the problem
+   Debug Log)
 
-- Clear zmNinja logs and then replicate the issue. Send me zmNinja logs right after that. That way it is easier for me to zero in to what the problem may be. If you send me a whole bunch of logs, unrelated to your issue, I'll likely not know what is going on.
+- Clear the logs, replicate the issue, and collect the logs immediately after. This makes it much easier to identify the relevant entries.
 
 **If your problem involves the ES and/or the hooks:**
 
@@ -672,11 +671,11 @@ When ``zm_detect.py`` starts, it logs both its own version and the pyzm library 
 
 
 - Make sure you see ``DBG`` logs (Debug). If you only see ``INF`` logs, you haven't followed the instructions above to enable debug logs. Read :ref:`es-hooks-logging` again.
-- Don't just send me a slice of what you think is relevant. Please don't think you know what to send me. Let me decide that. From your side, send me the full logs. By full logs, I mean:
+- Please include the full logs, not just a snippet. Specifically:
 
-  - If you think your detection is *not* working for an event, say eid=77985, send me *all* the ES logs starting from ``PARENT: New event 77985 reported for Monitor:<etc>`` to ``PARENT: Job: Deleting active_event eid:77985, mid:<etc>``. That is, everything from start to end of that event. Also send me *all* the detection logs. Let's say the monitor in question was Monitor Id:2. Then the detection logs will be in ``/var/log/zm/zmesdetect_m2.log``. Send me *all* the logs from the start to the finish for that event.
+  - For detection issues with a specific event (e.g. eid=77985): include all ES logs from ``PARENT: New event 77985 reported for Monitor:<etc>`` through ``PARENT: Job: Deleting active_event eid:77985, mid:<etc>``. Also include the corresponding detection logs (e.g. ``/var/log/zm/zmesdetect_m2.log`` for Monitor ID 2) for that event.
 
-  - If you have issues starting the ES, send me *all* logs starting from when the ES starts after you do a ``sudo zmdc.pl restart  zmeventnotification.pl``
+  - For ES startup issues: include all logs from when the ES starts after ``sudo zmdc.pl restart  zmeventnotification.pl``.
 
 To get DEBUG logs:
 
@@ -715,21 +714,21 @@ To get DEBUG logs:
   10/06/19 06:48:46 zmesdetect_m10[13732] DBG zm_detect.py:194 [|--> model:yolo detection took: 3.541227s]
 
 -  If you are debugging problems with receiving push notifications on
-   zmNinja mobile, then replicate the following scenario:
+   zmNg/zmNinja mobile, replicate the following scenario:
 
   -  Run the event server in manual mode as described above
-  -  Kill zmNinja
-  -  Start zmNinja
-  -  At this point, in the ``zmeventnotification`` logs you should registration messages (refer to logs example above). If you don't you've either not configured zmNinja to use the eventserver, or it can't reach the eventserver (very common problem)
-  -  Next up, make sure you are not running zmNinja in the foreground (move it to background or kill it). When zmNinja is in the foreground, it uses websockets to get notifications
+  -  Kill zmNg/zmNinja
+  -  Start zmNg/zmNinja
+  -  At this point, you should see registration messages in the ``zmeventnotification`` logs (refer to logs example above). If you don't, either zmNg/zmNinja is not configured to use the event server, or it can't reach it.
+  -  Make sure zmNg/zmNinja is not running in the foreground (move it to background or kill it). When in the foreground, it receives notifications via websockets instead of push.
   -  Force an alarm like I described above. If you don't see logs in ``zmeventnotification`` saying "Sending notification over FCM" then the eventserver, for some reason, does not have your app token. Inspect ``tokens.txt`` (typically in ``/etc/zm/``) to make sure an entry for your phone exists
   -  If you see that message, but your mobile phone is not receiving a push notification:
 
-    -  Make sure you haven't disable push notifications on your phone (lots of people do this by mistake and wonder why)
-    -  Make sure you haven't muted notifications (again, lots of people...)
-    -  Sometimes, the push servers of Apple and Google stop forwarding messages for a day or two. I have no idea why. Give it a day or two?
-    -  Open up zmNinja, go right to logs and send it to me
-    -  If you have issues, please send me a copy of your zmeventnotification logs generated above from Terminal-Log, as well as zmNinja debug logs
+    -  Make sure you haven't disabled push notifications on your phone
+    -  Make sure you haven't muted notifications
+    -  Sometimes Apple's or Google's push servers delay or drop messages temporarily — wait 24 hours and retry
+    -  Open zmNg/zmNinja, go to logs, and include them when reporting an issue
+    -  When reporting issues, include both your zmeventnotification logs and zmNg/zmNinja debug logs
 
 
 Brickbats
@@ -738,7 +737,7 @@ Brickbats
 **Why not just supply the username and password in the URL as a
 resource? It's over TLS**
 
-Yup its encrypted but it may show up in the history of a browser you
+Yes, the data is encrypted, but it may show up in the history of a browser you
 tried it from (if you are using a browser) Plus it may get passed along
 from the source when accessing another URL via the Referral header
 
