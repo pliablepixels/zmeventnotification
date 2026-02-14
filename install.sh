@@ -892,6 +892,8 @@ then
     echo "      2. Install the pycoral API:"
     echo "           pip3 install pycoral"
     echo "         or follow https://coral.ai/software/#pycoral-api"
+    print_warning " pycoral official packages only support Python <=3.9."
+    print_warning " For Python 3.10+ see: https://github.com/google-coral/pycoral/issues/149"
     echo
     echo "    You also need to make sure your web user (${WEB_OWNER}) has"
     echo "    access to the Coral USB device:"

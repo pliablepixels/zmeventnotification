@@ -163,6 +163,14 @@ the TPU model files. You must install the Coral runtime and Python API yourself:
 2. Install the correct ``libedgetpu`` library (max or standard performance)
 3. Install the pycoral API: ``pip3 install pycoral``
    (or see https://coral.ai/software/#pycoral-api)
+
+   .. warning::
+
+      Installing ``pycoral`` on Python 3.10+ is not straightforward — Google's official
+      packages only support up to Python 3.9. See
+      `pycoral#149 <https://github.com/google-coral/pycoral/issues/149>`__ for
+      community workarounds and alternative installation methods.
+
 4. Make sure your web user has access to the Coral USB device::
 
       sudo usermod -a -G plugdev www-data
