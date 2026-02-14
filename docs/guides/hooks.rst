@@ -35,7 +35,7 @@ Requirements
 ~~~~~~~~~~~~
 
 - Python 3.10+
-- OpenCV 4.10+ (for the default YOLOv26 ONNX model)
+- OpenCV 4.13+ (for the default YOLOv26 ONNX model)
 - pyzm v2 (``pip install pyzm``)
 
 How it works
@@ -195,7 +195,7 @@ Which models should I use?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - **YOLOv26 ONNX (Recommended)**: The default and recommended model. Uses ONNX format via OpenCV's DNN
-  module. Requires OpenCV 4.10+. Multiple sizes are available (``yolo26n``, ``yolo26s``, ``yolo26m``,
+  module. Requires OpenCV 4.13+. Multiple sizes are available (``yolo26n``, ``yolo26s``, ``yolo26m``,
   ``yolo26l``, ``yolo26x``) — smaller models are faster, larger models are more accurate.
   The ``n`` (nano) variant is enabled by default and provides a good balance.
 

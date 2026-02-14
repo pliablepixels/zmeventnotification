@@ -32,7 +32,7 @@ Building from source is more reliable — pip packages sometimes seg fault.
 
 .. important::
 
-   The default YOLOv26 model requires **OpenCV 4.10+**.
+   The default YOLOv26 model requires **OpenCV 4.13+**.
    Verify it works: ``python3 -c "import cv2; print(cv2.__version__)"``
 
 .. _opencv_seg_fault:

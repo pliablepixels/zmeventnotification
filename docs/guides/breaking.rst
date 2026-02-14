@@ -89,7 +89,7 @@ equivalents. The old files will be renamed with a ``.migrated`` suffix.
 - **``common_params.py`` removed**: The entire parameter substitution engine has been removed.
   ``${base_data_path}`` is the only substitution still supported (for path expansion).
 - **Default model changed to YOLOv26 ONNX**: YOLOv3 defaults are now disabled. The default enabled
-  model is ``YOLOv26n`` using ONNX format via OpenCV DNN. This requires **OpenCV 4.10+**.
+  model is ``YOLOv26n`` using ONNX format via OpenCV DNN. This requires **OpenCV 4.13+**.
   Direct Ultralytics/PyTorch support has been removed in favor of ONNX via OpenCV DNN.
 - **``Config::IniFiles`` Perl module no longer needed**: The ES now uses ``YAML::XS`` (via the
   ``libyaml-libyaml-perl`` package on Debian/Ubuntu) instead of ``Config::IniFiles``.
