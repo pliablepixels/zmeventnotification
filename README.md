@@ -27,6 +27,21 @@ Key pages:
 
 ES 7.0 is in development — expect breakages. If you find issues, please post them to this repo, not ZM repos.
 
+Developer Notes (for myself)
+----------------------------
+To make a release:
+```
+./scripts/make_release.sh
+```
+
+To test a CHANGELOG:
+```
+# VERSION in project root should be updated
+# replace v7.0.0 with whatever future version
+GITHUB_TOKEN=$(gh auth token) git-cliff --tag "v7.0.0"
+```
+
+
 Requirements
 -------------
 - Python 3.10 or above
