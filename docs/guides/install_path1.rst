@@ -29,6 +29,9 @@ or a specific version.
 **For GPU support**, compile from source with CUDA enabled. See the
 `official OpenCV build guide <https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html>`__.
 Building from source is more reliable — pip packages sometimes seg fault.
+Here is an `example gist <https://gist.github.com/pliablepixels/73d61e28060c8d418f9fcfb1e912e425>`__
+with instructions for compiling OpenCV from source on Ubuntu 24 that worked for me
+(not authoritative — adapt as needed for your setup).
 
 .. important::
 
