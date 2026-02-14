@@ -10,7 +10,10 @@ else
 	TAGVER=$1
 fi
 VER="${TAGVER/v/}"
-read -p "Future release is v${VER}. Please press any key to confirm..."
-github_changelog_generator -u zoneminder -p zmeventnotification --future-release v${VER}
-#github_changelog_generator  --future-release v${VER}
+echo "Creating tag:v$VER"
+echo
+read -p "Please generate CHANGELOG and commit it BEFORE you tag. Press a key when ready..."
+read -p "Press any key to create the tag or Ctrl-C to break..." -n1
 
+git tag -fa v$VER -m"v$VER"
+git push origin -f --tags
