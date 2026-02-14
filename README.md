@@ -29,7 +29,7 @@ ES 7.0 is in development — expect breakages. If you find issues, please post t
 
 Requirements
 -------------
-- Python 3.6 or above
+- Python 3.10 or above
 
 Screenshots
 ------------
