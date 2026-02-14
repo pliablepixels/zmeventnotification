@@ -24,18 +24,9 @@ body = """
 {%- else -%}
 {%- set commit_message = commit.message -%}
 {%- endif %}
-- {{ commit_message | split(pat="\n") | first | trim }}{% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/pliablepixels/zmeventnotification/pull/{{ commit.remote.pr_number }}){% endif %}{% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}
+- {{ commit_message | split(pat="\n") | first | trim }}{% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/pliablepixels/zmeventnotification/pull/{{ commit.remote.pr_number }}){% endif %} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/pliablepixels/zmeventnotification/commit/{{ commit.id }}))
 {%- endfor %}
 {% endfor %}
-
-{%- if github -%}
-{%- if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}
-### New Contributors
-{% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
-- @{{ contributor.username }} made their first contribution{% if contributor.pr_number %} in [#{{ contributor.pr_number }}](https://github.com/pliablepixels/zmeventnotification/pull/{{ contributor.pr_number }}){% endif %}
-{%- endfor %}
-{%- endif -%}
-{%- endif %}
 """
 trim = true
 footer = """
@@ -44,11 +35,11 @@ footer = """
 
 [git]
 conventional_commits = true
-filter_unconventional = false
+filter_unconventional = true
 split_commits = false
 commit_preprocessors = [
-  # Remove issue/PR number suffixes from scope for cleaner grouping
-  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
+  # Turn #NNN issue/PR references into GitHub links
+  { pattern = '#([0-9]+)', replace = "[#$1](https://github.com/pliablepixels/zmeventnotification/issues/$1)" },
 ]
 commit_parsers = [
   { message = "^Merge", skip = true },
@@ -62,10 +53,10 @@ commit_parsers = [
   { message = "^style", group = "Styling" },
   { message = "^perf", group = "Performance" },
   { message = "^ci", group = "CI/CD" },
-  { body = ".*security", group = "Security" },
-  # Catch-all for non-conventional commits
-  { message = ".*", group = "Other Changes" },
+  { message = "^security", group = "Security" },
 ]
+# Only generate changelog for v7+; skip all pre-v7 tags
+skip_tags = "v[0-6]\\..*"
 filter_commits = false
 topo_order = false
 sort_commits = "newest"
