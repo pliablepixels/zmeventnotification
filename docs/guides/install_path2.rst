@@ -157,3 +157,8 @@ If you want MQTT notifications:
    sudo cpanm Net::MQTT::Simple
 
 MQTT 3.1.1 or newer is required.
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+If something isn't working, see :doc:`hooks_faq` for debugging steps and common issues.

@@ -686,7 +686,7 @@ To get DEBUG logs:
 -  Start a terminal and start zmeventnotification manually from
    command line like so ``sudo -u www-data /usr/bin/zmeventnotification.pl --debug``
 - This will print debug logs on the terminal
-- Note that this will NOT print debug logs for hooks, so if you feel the problem is with hooks, see :ref:`this section <debug_reporting_hooks>`
+- Note that this will NOT print debug logs for hooks, so if you feel the problem is with hooks, see :ref:`this section <hooks-debug-issues>`
 
 **Option 2 (More comprehensive): Enable ZM logs**
 

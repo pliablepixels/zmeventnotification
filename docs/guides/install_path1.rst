@@ -139,3 +139,8 @@ Make sure the web user has device access: ``sudo usermod -a -G plugdev www-data`
    Google's official ``pycoral`` packages only support Python 3.9 and below. If you are
    running Python 3.10+, see `pycoral#149 <https://github.com/google-coral/pycoral/issues/149>`__
    for community workarounds.
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+If something isn't working, see :doc:`hooks_faq` for debugging steps and common issues.

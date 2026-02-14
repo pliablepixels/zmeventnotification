@@ -1,65 +1,67 @@
 Machine Learning Hooks FAQ
 ===========================
 
-My hooks run just fine in manual mode, but don't in daemon mode 
------------------------------------------------------------------
-The errors are almost always related to the fact that when run in daemon mode, python cannot find certain 
-libraries (example ``cv2``). This usually happens if you don't install these libraries globally (i.e. for all users).
-
-To zero-in on what is going on:
-
-   - Make sure you have set up logging as per :ref:`es-hooks-logging`. This should 
-     ensure these sort of errors are caught in the logs. 
-   - Try and run the script manually the way the daemon calls it. You will see the invocation in ``zmeventnotification.log``. Example:
-
-      ::
-
-         FORK:DoorBell (2), eid:175153 Invoking hook on event start:'/var/lib/zmeventnotification/bin/zm_event_start.sh' 175153 2 "DoorBell" " front" "/var/cache/zoneminder/events/2/2020-12-13/175153"]
-
-     So invoke manually like so:
-
-      ::
-         
-         sudo -u www-data '/var/lib/zmeventnotification/bin/zm_event_start.sh' 175153 2 "DoorBell" " front" "/var/cache/zoneminder/events/2/2020-12-13/175153"
-
-     The `-u www-data` is important (replace with whatever your webserver user name is)
-
-One user reported that they never saw logs. I get the feeling its because logs were not setup correctly, but there are some other insights 
-worth looking into. See `here <https://forums.zoneminder.com/viewtopic.php?f=33&p=119084&sid=8438a0ec567b9b7206bcd2372e22c615#p119084>`__
-
-I get a segment fault/core dump while trying to use opencv in detection
---------------------------------------------------------------------------
-See :ref:`opencv_seg_fault`.
-
-I am trying to use YoloV4 and I see errors in OpenCV
------------------------------------------------------
-- If you plan to use YoloV4 (full or Tiny) the minimum version requirement OpenCV 4.4.
-  So if you suddently see an error like: ``Unsupported activation: mish in function 'ReadDarknetFromCfgStream'`` 
-  popping up with YoloV4, that is a sign that you need to get a later version of OpenCV. 
-  
-Necessary Reading - Sample Config Files
-----------------------------------------
-The sample configuration files, `zmeventnotification.example.yml <https://github.com/pliablepixels/zmeventnotification/blob/master/zmeventnotification.example.yml>`__ and `objectconfig.yml <https://github.com/pliablepixels/zmeventnotification/blob/master/hook/objectconfig.yml>`__ come with extensive commentary about each attribute and what they do. Please go through them to get a better understanding. Note that most of the configuration attributes in ``zmeventnotification.yml`` are not related to machine learning, except for the ``hook`` section.
-
 How do the hooks actually invoke object detection?
 -----------------------------------------------------
 
 * When the Event Notification Server detects an event, it invokes the script specified in ``event_start_hook`` in your ``zmeventnotification.yml``. This is typically ``/var/lib/zmeventnotification/bin/zm_event_start.sh``
 
-* ``zm_event_start.sh`` in turn invokes ``zm_detect.py`` that does the actual machine learning. Upon exit, it either returns a ``1`` that means object found, or a ``0`` which means nothing found. Based on how you have configured your settings, this information is then stored in ZM and/or pushed to your mobile device as a notification.
+* ``zm_event_start.sh`` in turn invokes ``zm_detect.py`` that does the actual machine learning. Upon exit, it returns ``0`` (success) meaning an object was found, or ``1`` (failure) meaning nothing was detected. Based on how you have configured your settings, this information is then stored in ZM and/or pushed to your mobile device as a notification.
 
+
+Necessary Reading - Sample Config Files
+----------------------------------------
+The sample configuration files, `zmeventnotification.example.yml <https://github.com/pliablepixels/zmeventnotification/blob/master/zmeventnotification.example.yml>`__ and `objectconfig.yml <https://github.com/pliablepixels/zmeventnotification/blob/master/hook/objectconfig.yml>`__ come with extensive commentary about each attribute and what they do. Please go through them to get a better understanding. Note that most of the configuration attributes in ``zmeventnotification.yml`` are not related to machine learning, except for the ``hook`` section.
+
+.. _hooks-debug-issues:
 
 How To Debug Issues
 ---------------------
-* Refer to :ref:`es-hooks-logging`
+
+* Make sure you have debug logging enabled as described in :ref:`es-hooks-logging`
+* Don't just post the final error message. Please post *full* debug logs when reporting problems.
+
+If you have problems with hooks, there are three areas of failure:
+
+1. **The ES is unable to invoke hooks properly** (missing files, wrong paths, etc.)
+   — This will be reported in ES logs. See :ref:`this section <debug_reporting_es>`.
+
+2. **Hooks don't work** (detection script fails or returns unexpected results)
+   — Covered by the debugging steps below and in :ref:`triage-no-detection`.
+
+3. **The wrapper script** (typically ``/var/lib/zmeventnotification/bin/zm_event_start.sh``) **is not able to run** ``zm_detect.py``
+   — This won't be covered in either log (I need to add logging for this...).
+
+**Debugging hooks step by step:**
+
+- Stop the ES if it is running (``sudo zmdc.pl stop zmeventnotification.pl``) so that we don't mix up what we are debugging
+  with any new events that the ES may generate.
+
+- Next, look at ``/var/log/zm/zmeventnotification.log`` for the event that invoked a hook. For example::
+
+   01/06/2021 07:20:31.936130 zmeventnotification[28118].DBG [main:977] [|----> FORK:DeckCamera (6), eid:182253 Invoking hook on event start:'/var/lib/zmeventnotification/bin/zm_event_start.sh' 182253 6 "DeckCamera" " stairs" "/var/cache/zoneminder/events/6/2021-01-06/182253"]
+
+- Then run ``zm_detect.py`` manually with debug flags::
+
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --config /etc/zm/objectconfig.yml --debug --eventid 182253 --monitorid 6 --eventpath=/tmp
+
+  (You can use ``/tmp`` as the event path for convenience, or the actual event path shown in the log.)
+
+- This will print debug logs on the terminal showing exactly what went wrong.
+
+**Testing with the ES (if using hook mode):**
+
+1. Run ``zm_detect.py`` manually as shown above to verify detection works.
+2. Stop the ES: ``sudo zmdc.pl stop zmeventnotification.pl``
+3. Set ``console_logs: "yes"`` in ``zmeventnotification.yml``.
+4. Start it manually: ``sudo -u www-data /usr/bin/zmeventnotification.pl --debug``
+5. Force an alarm and check the output.
+
 
 .. _triage-no-detection:
 
 Triaging "No Detection" Problems
 ----------------------------------
-
-See also the :ref:`troubleshooting <hooks-troubleshooting>` section in the hooks guide
-for common image download issues.
 
 If your events are not getting detection results, follow these steps to isolate the problem.
 
@@ -107,11 +109,43 @@ Common things to look for:
 - **Frame download failures** — ZM API unreachable, authentication issues, or the
   event frames haven't been written to disk yet (see the snapshot/alarm timing
   section below).
+
+  One common reason detection fails is that the hook cannot download the event image.
+  To verify image downloads work:
+
+  -  Make sure your ``objectconfig.yml`` ``general`` section settings are
+     correct (portal, user, admin).
+  -  The hooks download images using URLs like
+     ``https://yourportal/zm/?view=image&eid=<eid>&fid=snapshot`` and
+     ``https://yourportal/zm/?view=image&eid=<eid>&fid=alarm``.
+  -  Open a browser, log into ZM, then in a new tab try
+     ``https://yourportal/zm/?view=image&eid=<eid>&fid=snapshot``
+     (replace ``<eid>`` with a real event ID). Do you see an image? If not,
+     your ZM portal settings need fixing — post in the ZM forums for help.
+  -  Do the same with ``fid=alarm``. If that doesn't return an image either,
+     your ZM version may need updating.
+
 - **Model loading failures** — missing weight files, incompatible OpenCV version,
   Coral TPU not accessible.
 - **No detections** — the model ran successfully but didn't find any objects in the
   frame. Try ``write_debug_image: yes`` in ``objectconfig.yml`` to save the frame
   that was actually analyzed.
+
+
+My hooks run fine in manual mode, but don't in daemon mode
+------------------------------------------------------------
+The errors are almost always related to the fact that when run in daemon mode, Python cannot find certain
+libraries (example ``cv2``). This usually happens if you don't install these libraries globally (i.e. for all users).
+
+To zero-in on what is going on:
+
+   - Make sure you have set up logging as per :ref:`es-hooks-logging`. This should
+     ensure these sort of errors are caught in the logs.
+   - Try and run the script manually the way the daemon calls it. You will see the invocation in ``zmeventnotification.log``.
+     Run it with ``sudo -u www-data`` to match the daemon's user — see :ref:`triage-no-detection` for the full procedure.
+
+One user reported that they never saw logs. I get the feeling its because logs were not setup correctly, but there are some other insights
+worth looking into. See `here <https://forums.zoneminder.com/viewtopic.php?f=33&p=119084&sid=8438a0ec567b9b7206bcd2372e22c615#p119084>`__
 
 
 It looks like when ES invokes the hooks, it misses objects, but when I run it manually, it detects it just fine
@@ -143,6 +177,18 @@ How do I solve this issue?
 - Use ``stream_sequence`` retry settings (``max_attempts``, ``sleep_between_attempts``) to automatically retry frame downloads.
 - Fix your zone triggers. This is really the right way. If you use object detection, re-look at how your zone triggers to be able to capture the object of interest as soon as possible. If you do that, chances are high that by the time the script runs, the image containing the object will be written to disk.
 
+
+I am trying to use YoloV4 and I see errors in OpenCV
+-----------------------------------------------------
+- If you plan to use YoloV4 (full or Tiny) the minimum version requirement OpenCV 4.4.
+  So if you suddently see an error like: ``Unsupported activation: mish in function 'ReadDarknetFromCfgStream'``
+  popping up with YoloV4, that is a sign that you need to get a later version of OpenCV.
+
+.. note::
+
+   The default model is now YOLOv26 (ONNX format), which requires **OpenCV 4.13+**.
+   If you are using the default configuration, make sure your OpenCV version meets
+   this requirement. YoloV4 (OpenCV 4.4+) is still supported as a fallback.
 
 I'm having issues with accuracy of Face Recognition
 -----------------------------------------------------
@@ -188,13 +234,17 @@ If you have configured the TPU properly, and on occasion you see an error like:
 
    Error running model: Failed to load delegate from libedgetpu.so.1
 
-then it is likely that you either need to replace your USB cable or need to reset your 
-USB device. In my case, after I set it up correctly, it would often show the error above 
-during runs. I realized that replacing the USB cable that Google provided solved it for 
+then it is likely that you either need to replace your USB cable or need to reset your
+USB device. In my case, after I set it up correctly, it would often show the error above
+during runs. I realized that replacing the USB cable that Google provided solved it for
 a majority of cases. See `this comment <https://github.com/tensorflow/tensorflow/issues/32743#issuecomment-766084239>`__
 for my experience on the cable. After buying the cable, I still saw it on occasion, but
 not frequently at all. In those cases, resetting USB works fine and you don't have to reboot.
 See `this comment <https://github.com/tensorflow/tensorflow/issues/32743#issuecomment-808912638>`__.
+
+I get a segment fault/core dump while trying to use opencv in detection
+--------------------------------------------------------------------------
+See :ref:`opencv_seg_fault`.
 
 .. _local_remote_ml:
 
@@ -234,4 +284,3 @@ detection falls back to local inference automatically.
   ``write_image_to_zm`` or ``write_debug_image``).
 
 See :ref:`remote_ml_config` for full setup details
-

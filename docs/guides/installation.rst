@@ -4,7 +4,7 @@ Installation
 There are two ways to use ML-powered object detection with ZoneMinder:
 
 **Path 1: Detection only (no ES)** — Wire ``zm_detect.py`` directly to ZoneMinder
-using ``EventStartCommand`` (requires ZM 1.37+). ZM calls the detection script
+using ``EventStartCommand`` (requires ZM 1.38.1+). ZM calls the detection script
 automatically when an event starts. Detection results are written to the event notes
 and saved as ``objdetect.jpg`` / ``objects.json`` in the event folder.
 
