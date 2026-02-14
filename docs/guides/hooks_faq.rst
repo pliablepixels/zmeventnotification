@@ -53,8 +53,13 @@ How To Debug Issues
 ---------------------
 * Refer to :ref:`es-hooks-logging`
 
+.. _triage-no-detection:
+
 Triaging "No Detection" Problems
 ----------------------------------
+
+See also the :ref:`troubleshooting <hooks-troubleshooting>` section in the hooks guide
+for common image download issues.
 
 If your events are not getting detection results, follow these steps to isolate the problem.
 

@@ -631,8 +631,13 @@ known faces images
 - crop around the face - not a tight crop, but no need to add a full body. A typical "passport" photo crop, maybe with a bit more of shoulder is ideal.
 
 
+.. _hooks-troubleshooting:
+
 Troubleshooting
 ~~~~~~~~~~~~~~~
+
+See also :ref:`triage-no-detection` in the FAQ for a step-by-step guide on
+translating ES log lines into manual ``zm_detect.py`` commands with debug flags.
 
 -  In general, I expect you to debug properly. Please don't ask me basic
    questions without investigating logs yourself
