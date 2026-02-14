@@ -45,6 +45,14 @@ Step 2: Install pyzm
    # Add --break-system-packages if your distro requires it
    sudo -H pip3 install pyzm
 
+.. note::
+
+   This installs the core pyzm library only. If you also want to run the
+   remote ML detection server (``pyzm.serve``) on this same machine, install
+   with the ``serve`` extra instead: ``sudo -H pip3 install pyzm[serve]``.
+   This pulls in the additional dependencies (FastAPI, uvicorn, etc.) needed
+   for the server. See :ref:`remote_ml_config` for details.
+
 Step 3: Run the installer
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
