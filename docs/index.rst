@@ -25,7 +25,7 @@ Event Notification Server v7+ Documentation
         :caption: Related Projects
 
         pyzmv2+ <https://pyzmv2.readthedocs.io/en/latest/>
-        zmNg <https://github.com/pliablepixels/zmNg>
+        zmNg <https://zmng.readthedocs.io/>
 
 
 `Github Repository <https://github.com/pliablepixels/zmeventnotification>`__
@@ -148,8 +148,8 @@ Documentation
         Documentation for pyzm, the ML detection library
 `zmNinja Documentation <https://zmninja.readthedocs.io/en/latest/index.html>`__
         Documentation for zmNinja
-`zmNg <https://github.com/pliablepixels/zmNg>`__
-        The newer-generation app for ZoneMinder
+`zmNg <https://zmng.readthedocs.io/>`__
+        Documentation for zmNg, the newer-generation app for ZoneMinder
 
 
 
