@@ -56,3 +56,17 @@ class TestRescalePolygons:
         g.polygons = [{'name': 'zone1', 'value': list(original), 'pattern': None}]
         rescale_polygons(1.0, 1.0)
         assert g.polygons[0]['value'] == original
+
+    def test_ignore_pattern_preserved(self):
+        """Ref: ZoneMinder/pyzm#37 -- ignore_pattern must survive rescaling."""
+        g.polygons = [{'name': 'driveway', 'value': [(10, 10), (20, 20), (30, 30)],
+                       'pattern': '(person|car)', 'ignore_pattern': '(car|truck)'}]
+        rescale_polygons(2.0, 2.0)
+        assert g.polygons[0]['ignore_pattern'] == '(car|truck)'
+        assert g.polygons[0]['pattern'] == '(person|car)'
+
+    def test_ignore_pattern_none_preserved(self):
+        """When ignore_pattern is not set, it should default to None after rescale."""
+        g.polygons = [{'name': 'zone1', 'value': [(10, 10), (20, 20), (30, 30)], 'pattern': None}]
+        rescale_polygons(2.0, 2.0)
+        assert g.polygons[0].get('ignore_pattern') is None

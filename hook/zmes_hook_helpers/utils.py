@@ -100,7 +100,7 @@ def rescale_polygons(xfactor, yfactor):
             newx = int(x * xfactor)
             newy = int(y * yfactor)
             newp.append((newx, newy))
-        newps.append({'name': p['name'], 'value': newp, 'pattern': p['pattern']})
+        newps.append({'name': p['name'], 'value': newp, 'pattern': p['pattern'], 'ignore_pattern': p.get('ignore_pattern')})
     g.logger.Debug(2,'resized polygons x={}/y={}: {}'.format(
         xfactor, yfactor, newps))
     g.polygons = newps
@@ -340,13 +340,15 @@ def process_config(args, ctx):
                         if g.config['only_triggered_zm_zones'] != 'yes':
                             p = str2tuple(coords_str)
                             pattern = zone_data.get('detection_pattern', None)
+                            ignore_pattern = zone_data.get('ignore_pattern', None)
                             g.polygons.append({
                                 'name': zone_name,
                                 'value': p,
-                                'pattern': pattern
+                                'pattern': pattern,
+                                'ignore_pattern': ignore_pattern,
                             })
-                            g.logger.Debug(2, 'adding polygon: {} [{}] pattern={}'.format(
-                                zone_name, coords_str, pattern))
+                            g.logger.Debug(2, 'adding polygon: {} [{}] pattern={} ignore_pattern={}'.format(
+                                zone_name, coords_str, pattern, ignore_pattern))
                         else:
                             g.logger.Debug(2, 'ignoring polygon: {} as only_triggered_zm_zones is true'.format(zone_name))
 

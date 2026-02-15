@@ -50,3 +50,5 @@ monitors:
     zones:
       driveway:
         coords: "100,100 500,100 500,400 100,400"
+        detection_pattern: "(person|car)"
+        ignore_pattern: "(car|truck)"

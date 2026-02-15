@@ -103,6 +103,19 @@ class TestProcessConfig:
         assert front["value"] == [(0, 0), (640, 0), (640, 480), (0, 480)]
         assert front["pattern"] == "person"
 
+    def test_monitor_zone_ignore_pattern(self, patched_config, ctx):
+        """Ref: ZoneMinder/pyzm#37 -- ignore_pattern parsed from zone config."""
+        process_config({"config": patched_config, "monitorid": "2"}, ctx)
+        driveway = [p for p in g.polygons if p["name"] == "driveway"][0]
+        assert driveway["pattern"] == "(person|car)"
+        assert driveway["ignore_pattern"] == "(car|truck)"
+
+    def test_monitor_zone_no_ignore_pattern(self, patched_config, ctx):
+        """Zones without ignore_pattern default to None."""
+        process_config({"config": patched_config, "monitorid": "1"}, ctx)
+        front = [p for p in g.polygons if p["name"] == "front_yard"][0]
+        assert front.get("ignore_pattern") is None
+
     def test_no_monitor_id(self, patched_config, ctx):
         process_config({"config": patched_config}, ctx)
         assert g.polygons == []

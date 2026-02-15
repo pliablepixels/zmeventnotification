@@ -334,9 +334,14 @@ When using model chaining, these attributes control how aggressively the pipelin
 ``frame_strategy`` is part of ``stream_sequence`` with the following possible values:
 
    - 'most_models': Match the frame that has matched most models (does not include same model alternatives) (Default)
-   - 'first': Stop at first match 
+   - 'first': Stop at first match
+   - 'first_new': Like ``first``, but only counts detections that pass past-detection filtering
+     (i.e. genuinely new objects, not parked cars already detected in a prior run)
    - 'most': Match the frame that has the highest number of detected objects
-   - 'most_unique' Match the frame that has the highest number of unique detected objects
+   - 'most_unique': Match the frame that has the highest number of unique detected objects
+
+When two frames tie on the primary metric (e.g. same number of detections), the frame with
+the higher total confidence sum wins.
            
 
 **A proper example:**

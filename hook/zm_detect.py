@@ -88,7 +88,7 @@ def main_handler():
 
     # --- Detection ---
     stream_cfg = StreamConfig.from_dict(stream_options)
-    zones = [Zone(name=p['name'], points=p['value'], pattern=p.get('pattern')) for p in g.polygons]
+    zones = [Zone(name=p['name'], points=p['value'], pattern=p.get('pattern'), ignore_pattern=p.get('ignore_pattern')) for p in g.polygons]
     matched_data = None
 
     # Inject remote gateway settings into ml_options so Detector.from_dict() picks them up

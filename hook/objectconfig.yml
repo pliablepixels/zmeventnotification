@@ -100,6 +100,7 @@ ml:
   disable_locks: "no"
 
   # Frame selection strategy
+  # frame_strategy options: most_models (default), first, first_new, most, most_unique
   stream_sequence:
     frame_strategy: most_models
     frame_set: "snapshot,alarm"
@@ -237,6 +238,9 @@ monitors:
     zones:
       my_driveway:
         coords: "306,356 1003,341 1074,683 154,715"
-        detection_pattern: "(person)"
+        detection_pattern: "(person|car)"
+        # ignore_pattern suppresses matching labels even if detection_pattern allows them.
+        # Useful for excluding parked cars or other stationary objects from a zone.
+        ignore_pattern: "(car|truck)"
       some_other_area:
         coords: "0,0 200,300 700,900"
