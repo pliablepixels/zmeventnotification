@@ -175,7 +175,7 @@ so subsequent detections are fast. See :ref:`this FAQ entry <local_remote_ml>`.
 To start the server on your GPU box::
 
    pip install pyzm[serve]
-   python -m pyzm.serve --models yolov4 --port 5000
+   python -m pyzm.serve --models yolo11s --port 5000
 
 Then point ``ml_gateway`` in ``objectconfig.yml`` to that server::
 
@@ -425,14 +425,14 @@ Using the remote ML detection server (pyzm.serve)
    pip install pyzm[serve]
 
    # Basic usage
-   python -m pyzm.serve --models yolov4 --port 5000
+   python -m pyzm.serve --models yolo11s --port 5000
 
    # With authentication
-   python -m pyzm.serve --models yolov4 --port 5000 \
+   python -m pyzm.serve --models yolo11s --port 5000 \
        --auth --auth-user admin --auth-password secret
 
    # Multiple models, GPU inference
-   python -m pyzm.serve --models yolov4 yolo26s --port 5000 --processor gpu
+   python -m pyzm.serve --models yolo11s yolo26s --port 5000 --processor gpu
 
 **Client setup** (``objectconfig.yml`` on the ZM box)::
 

@@ -2,7 +2,7 @@
 
 ### Remote ML: pyzm.serve replaces mlapi
 - **`pyzm.serve` is the new built-in remote ML server** — replaces the separate `mlapi` package
-- Server: `pip install pyzm[serve]` then `python -m pyzm.serve --models yolov4 --port 5000`
+- Server: `pip install pyzm[serve]` then `python -m pyzm.serve --models yolo11s --port 5000`
 - Client: set `ml_gateway` in `objectconfig.yml` `remote:` section to server URL
 - No more `mlapiconfig.ini` — all config stays in `objectconfig.yml`
 - Optional JWT authentication (`--auth` flag on server)

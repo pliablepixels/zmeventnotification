@@ -79,8 +79,8 @@ animation:
 
 
 # Remote ML gateway (pyzm.serve -- replaces legacy mlapi)
-# Start server on GPU box: python -m pyzm.serve --models yolov4 --port 5000
-# With auth: python -m pyzm.serve --models yolov4 --port 5000 --auth --auth-user admin --auth-password secret
+# Start server on GPU box: python -m pyzm.serve --models yolo11s --port 5000
+# With auth: python -m pyzm.serve --models yolo11s --port 5000 --auth --auth-user admin --auth-password secret
 remote:
   #ml_gateway: "http://192.168.1.183:5000"
   #ml_fallback_local: "yes"

@@ -255,7 +255,7 @@ You can offload ML inference to a remote server using ``pyzm.serve``, the built-
 remote ML detection server that replaces the legacy ``mlapi``. On the remote (GPU) box::
 
    pip install pyzm[serve]
-   python -m pyzm.serve --models yolov4 --port 5000
+   python -m pyzm.serve --models yolo11s --port 5000
 
 Then in ``objectconfig.yml`` on the ZM box, set::
 
