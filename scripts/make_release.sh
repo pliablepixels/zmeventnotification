@@ -31,17 +31,37 @@ export GITHUB_TOKEN=$(gh auth token)
 
 # --- Step 1: Check if tag already exists ---
 if git rev-parse "v${VER}" &>/dev/null; then
+    # Compute bumped patch version
+    MAJOR=$(echo "$VER" | cut -d. -f1)
+    MINOR=$(echo "$VER" | cut -d. -f2)
+    PATCH=$(echo "$VER" | cut -d. -f3)
+    BUMPED="${MAJOR}.${MINOR}.$((PATCH + 1))"
+
     echo "Tag v${VER} already exists."
-    read -p "Overwrite existing release? [y/N] " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        echo "  Deleting old release and tag v${VER} ..."
-        gh release delete "v${VER}" --repo "$GH_REPO" --yes 2>/dev/null || true
-        git tag -d "v${VER}"
-        git push origin --delete "v${VER}" 2>/dev/null || true
-    else
-        echo "Aborted."
-        exit 0
-    fi
+    echo "  1) Overwrite existing release (v${VER})"
+    echo "  2) Bump version: v${VER} -> v${BUMPED}"
+    read -p "Choose [1/2] or anything else to abort: " choice
+    case "$choice" in
+        1)
+            echo "  Deleting old release and tag v${VER} ..."
+            gh release delete "v${VER}" --repo "$GH_REPO" --yes 2>/dev/null || true
+            git tag -d "v${VER}"
+            git push origin --delete "v${VER}" 2>/dev/null || true
+            ;;
+        2)
+            echo "  Bumping version: v${VER} -> v${BUMPED}"
+            VER="$BUMPED"
+            echo "$VER" > VERSION
+            git add VERSION
+            git commit -m "chore: bump version to v${VER}"
+            git push origin master
+            echo "  Done."
+            ;;
+        *)
+            echo "Aborted."
+            exit 0
+            ;;
+    esac
     echo
 fi
 
