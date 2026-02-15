@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.3] - 2026-02-15
+
+### Bug Fixes
+
+- sync hook __version__ with VERSION file ([9880c5e](https://github.com/pliablepixels/zmeventnotification/commit/9880c5e0306988ef3f23df944ee84272c6a030f0))
+
+### Documentation
+
+- update pyzm.serve examples from yolov4 to yolo11s ([c2f7c4c](https://github.com/pliablepixels/zmeventnotification/commit/c2f7c4cbb6c5ee5352f33f43310244ac86d6b2ed))
+
+### Miscellaneous
+
+- bump version to v7.0.3 ([a749a4a](https://github.com/pliablepixels/zmeventnotification/commit/a749a4a5e1243d9a145491cba4a81829f3adb106))
+
 ## [7.0.2] - 2026-02-15
 
 ### Bug Fixes
@@ -11,6 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- update CHANGELOG for v7.0.2 ([6abf272](https://github.com/pliablepixels/zmeventnotification/commit/6abf2728a15f7c222d9d5e6f0fae782d439f147d))
 - update all references from YOLOv26 default to YOLOv11 ONNX default ([b5a459d](https://github.com/pliablepixels/zmeventnotification/commit/b5a459d76a1b01803c6c1949203adecf5c91316e))
 - add --pyzm-debug to EventStartCommand examples ([693acc0](https://github.com/pliablepixels/zmeventnotification/commit/693acc0f7e351f86fc9afe192198433f46cc91d0))
 
