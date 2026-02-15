@@ -29,6 +29,7 @@ INSTALL_TINYYOLOV3=${INSTALL_TINYYOLOV3:-no}
 INSTALL_YOLOV4=${INSTALL_YOLOV4:-yes}
 INSTALL_TINYYOLOV4=${INSTALL_TINYYOLOV4:-yes}
 INSTALL_CORAL_EDGETPU=${INSTALL_CORAL_EDGETPU:-no}
+INSTALL_YOLOV11=${INSTALL_YOLOV11:-yes}
 INSTALL_YOLOV26=${INSTALL_YOLOV26:-yes}
 
 
@@ -212,6 +213,7 @@ verify_config() {
         echo "Yolo V4 (INSTALL_YOLOV4): ${INSTALL_YOLOV4}"
         echo "Tiny Yolo V4 (INSTALL_TINYYOLOV4)": ${INSTALL_TINYYOLOV4}
         echo "Google Coral Edge TPU (INSTALL_CORAL_EDGETPU)": ${INSTALL_CORAL_EDGETPU}
+        echo "ONNX YOLOv11 (INSTALL_YOLOV11)": ${INSTALL_YOLOV11}
         echo "ONNX YOLOv26 (INSTALL_YOLOV26)": ${INSTALL_YOLOV26}
 
     fi
@@ -361,6 +363,17 @@ download_models() {
                 'yolov4.cfg' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/yolov4/yolov4.cfg' \
                 'coco.names' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/yolov4/coco.names' \
                 'yolov4.weights' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/yolov4/yolov4.weights'
+        fi
+
+        if [ "${INSTALL_YOLOV11}" == "yes" ]
+        then
+            print_important ' Checking for ONNX YOLOv11 model files...'
+            print_warning 'Note, you need OpenCV 4.10+ for ONNX YOLOv11 to work'
+            download_if_needed ultralytics \
+                'yolo11n.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo11n.onnx' \
+                'yolo11s.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo11s.onnx' \
+                'yolo11m.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo11m.onnx' \
+                'yolo11l.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo11l.onnx'
         fi
 
         if [ "${INSTALL_YOLOV26}" == "yes" ]

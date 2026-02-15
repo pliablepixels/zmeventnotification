@@ -137,7 +137,7 @@ ml:
           tpu_max_lock_wait: 100
           max_detection_size: "90%"
 
-        - name: YOLOv4 GPU/CPU
+        - name: YOLOv4
           enabled: "no"
           object_config: "${base_data_path}/models/yolov4/yolov4.cfg"
           object_weights: "${base_data_path}/models/yolov4/yolov4.weights"
@@ -151,9 +151,13 @@ ml:
           cpu_max_lock_wait: 100
           max_detection_size: "90%"
 
-        - name: YOLOv26n ONNX GPU/CPU
+        - name: YOLO ONNX
           enabled: "yes"
-          object_weights: "${base_data_path}/models/ultralytics/yolo26n.onnx"
+          # Available models (replace weight file below):
+          #   yolo11n, yolo11s, yolo11m, yolo11l
+          #   yolo26n, yolo26s, yolo26m, yolo26l
+          # n=nano, s=small, m=medium, l=large (higher quality, slower)
+          object_weights: "${base_data_path}/models/ultralytics/yolo11n.onnx"
           object_min_confidence: 0.3
           object_framework: opencv
           object_processor: gpu

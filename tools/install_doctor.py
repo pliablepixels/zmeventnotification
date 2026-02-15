@@ -131,23 +131,34 @@ def check_opencv_version(enabled_models):
         cv_ver = (0, 0)
     cv_ver_str = ".".join(str(x) for x in cv_ver) if cv_ver != (0, 0) else "not installed"
 
-    onnx_models = []
+    onnx_v26_models = []
+    onnx_v11_models = []
     v4_models = []
     for s, m in enabled_models:
         weights = str(m.get("object_weights", ""))
         name_lower = str(m.get("name", "")).lower()
-        if weights.endswith(".onnx") or "yolov26" in name_lower:
-            onnx_models.append((s, m))
+        if "yolo26" in weights or "yolov26" in name_lower:
+            onnx_v26_models.append((s, m))
+        elif weights.endswith(".onnx") or "yolo11" in weights or "yolov11" in name_lower:
+            onnx_v11_models.append((s, m))
         elif "yolov4" in name_lower:
             v4_models.append((s, m))
 
     warnings = []
-    if onnx_models and cv_ver < (4, 13):
-        names = ", ".join(m.get("name", "unknown") for _, m in onnx_models)
+    if onnx_v26_models and cv_ver < (4, 13):
+        names = ", ".join(m.get("name", "unknown") for _, m in onnx_v26_models)
         warnings.append(
             f"OpenCV {cv_ver_str} detected but 4.13+ is required for ONNX YOLOv26 models.\n"
             f"    Affected models: {names}\n"
-            f"    Upgrade OpenCV, or disable YOLOv26 and enable YOLOv4 instead (works with OpenCV 4.4+)."
+            f"    Upgrade OpenCV, or switch to YOLOv11 (requires 4.10+) or YOLOv4 (requires 4.4+)."
+        )
+
+    if onnx_v11_models and cv_ver < (4, 10):
+        names = ", ".join(m.get("name", "unknown") for _, m in onnx_v11_models)
+        warnings.append(
+            f"OpenCV {cv_ver_str} detected but 4.10+ is required for ONNX YOLOv11 models.\n"
+            f"    Affected models: {names}\n"
+            f"    Upgrade OpenCV, or switch to YOLOv4 (requires 4.4+)."
         )
 
     if v4_models and cv_ver < (4, 4):
