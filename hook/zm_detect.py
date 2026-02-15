@@ -3,10 +3,10 @@
 #
 # Two invocation modes:
 # 1. Traditional: called by zmeventnotification.pl via hook
-#      zm_detect.py -c config.yml -e <eid> -m <mid> -r "cause" -n --pyzm-debug
+#      zm_detect.py -c config.yml -e <eid> -m <mid> -r "cause" -n
 # 2. ZM EventStartCommand / EventEndCommand (ZM 1.37+):
 #      Configure in ZM Options -> Config -> EventStartCommand:
-#        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
+#        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n
 #      ZM substitutes %EID%, %MID%, %EC% tokens at runtime (same as zmfilter.pl).
 
 import argparse, ast, json, os, ssl, sys, time, traceback
@@ -34,7 +34,6 @@ def main_handler():
     ap.add_argument('-n', '--notes', action='store_true', help='update ZM notes')
     ap.add_argument('-d', '--debug', action='store_true')
     ap.add_argument('--fakeit', help='override detection results with fake labels for testing (comma-separated, e.g. "dog,person")')
-    ap.add_argument('--pyzm-debug', action='store_true', help='route pyzm library debug logs through ZMLog')
     args = vars(ap.parse_known_args()[0])
 
     if args.get('version'):  print('app:{}, pyzm:{}'.format(__app_version__, pyzm_version)); sys.exit(0)
@@ -50,14 +49,6 @@ def main_handler():
         g.config['pyzm_overrides'].update(dump_console=True, log_debug=True, log_level_debug=5, log_debug_target=None)
     mid = args.get('monitorid')
     g.logger = setup_zm_logging(name='zmesdetect_m{}'.format(mid) if mid else 'zmesdetect', override=g.config['pyzm_overrides'])
-
-    # Route pyzm's stdlib logging through the same handlers when --pyzm-debug
-    if args.get('pyzm_debug'):
-        import logging as _logging
-        _pyzm_logger = _logging.getLogger('pyzm')
-        _pyzm_logger.setLevel(_logging.DEBUG)
-        for _h in g.logger._logger.handlers:
-            _pyzm_logger.addHandler(_h)
 
     import cv2
     g.logger.Debug(1, 'zm_detect invoked: {}'.format(' '.join(sys.argv)))

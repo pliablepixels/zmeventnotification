@@ -45,7 +45,7 @@ param_dict = {
 import sys
 from datetime import datetime
 import requests
-import pyzm.ZMLog as zmlog
+from pyzm.log import setup_zm_logging
 import os
 
 
@@ -73,7 +73,7 @@ def read_secrets(config='/etc/zm/secrets.yml'):
     return data.get('secrets', {})
 
 # -------- MAIN ---------------
-zmlog.init(name='zmeventnotification_pushapi')
+zmlog = setup_zm_logging(name='zmeventnotification_pushapi')
 zmlog.Info('--------| Pushover Plugin v{} |--------'.format(version))
 if len(sys.argv) < 6:
     zmlog.Error ('Missing arguments, got {} arguments, was expecting at least 6: {}'.format(len(sys.argv)-1, sys.argv))

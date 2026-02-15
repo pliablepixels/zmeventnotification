@@ -29,7 +29,7 @@ Description: <add a meaningful description of what your script does>
 #   ARG7: event path (if hook_pass_image_path is yes)
 
 import sys
-import pyzm.ZMLog as zmlog
+from pyzm.log import setup_zm_logging
 
-zmlog.init(name='zmeventnotification_userscript_example')
-zmlog.Info ("This is a dummy script. Only for your testing. I got {} as arguments".format(sys.argv[1:]))
+zmlog = setup_zm_logging(name='zmeventnotification_userscript_example')
+zmlog.Info("This is a dummy script. Only for your testing. I got {} as arguments".format(sys.argv[1:]))

@@ -53,7 +53,7 @@ filename of /FTP_BASEDIR/MONITOR_NAME/detectedObjects-YY-MM-DD-HH-SS.jpg
 import sys
 from datetime import datetime
 #import requests
-import pyzm.ZMLog as zmlog
+from pyzm.log import setup_zm_logging
 import os
 import ftplib
 
@@ -76,13 +76,13 @@ def get_image(path, cause):
 # Simple function to read variables from secret file
 def read_secrets(config='/etc/zm/secrets.yml'):
     import yaml
-    zmlog.Debug(1,'eid:{} Reading secrets from {}'.format(eid,config))
+    zmlog.Debug(1, 'eid:{} Reading secrets from {}'.format(eid,config))
     with open(config) as f:
         data = yaml.safe_load(f)
     return data.get('secrets', {})
 
 # -------- MAIN ---------------
-zmlog.init(name='ftp_selective_upload')
+zmlog = setup_zm_logging(name='ftp_selective_upload')
 zmlog.Info('--------| Selective FTP Plugin v{} |--------'.format(version))
 #zmlog.Info ("I got {} arguments".format(len(sys.argv)))
 #zmlog.Info ("Arguments:  {}".format(sys.argv[1:]))

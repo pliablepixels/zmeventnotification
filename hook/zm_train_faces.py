@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 import argparse
 import ssl
-import pyzm.ZMLog as log 
+from pyzm.log import setup_zm_logging
 import zmes_hook_helpers.common_params as g
 import zmes_hook_helpers.utils as utils
 
 if __name__ == "__main__":
-    log.init(name='zm_train_faces', override={'dump_console':True})
+    g.logger = setup_zm_logging(name='zm_train_faces', override={'dump_console': True})
 # needs to be after log init
 
 import pyzm.ml.face_train_dlib as train
@@ -27,7 +27,5 @@ if __name__ == "__main__":
     args, u = ap.parse_known_args()
     args = vars(args)
 
-    #log.init(name='zm_face_train', dump_console=True)
-    g.logger = log
     utils.process_config(args, g.ctx)
     train.FaceTrain(options=g.config).train(size=args['size'])
