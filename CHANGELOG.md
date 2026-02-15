@@ -3,11 +3,35 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.2] - 2026-02-15
+
+### Bug Fixes
+
+- fix sed regex not matching indented FALLBACK_VERSION line ([551a94f](https://github.com/pliablepixels/zmeventnotification/commit/551a94f10535a1654ffaac0eb8aa1b812630535d))
+
+### Documentation
+
+- update all references from YOLOv26 default to YOLOv11 ONNX default ([b5a459d](https://github.com/pliablepixels/zmeventnotification/commit/b5a459d76a1b01803c6c1949203adecf5c91316e))
+- add --pyzm-debug to EventStartCommand examples ([693acc0](https://github.com/pliablepixels/zmeventnotification/commit/693acc0f7e351f86fc9afe192198433f46cc91d0))
+
+### Miscellaneous
+
+- bump version to v7.0.2 ([9310d87](https://github.com/pliablepixels/zmeventnotification/commit/9310d877b92f46af0faf0cbd2460ff295904197f))
+
+### Refactoring
+
+- consolidate YOLO ONNX into single entry with yolo11 default ([1abdc62](https://github.com/pliablepixels/zmeventnotification/commit/1abdc6285b0e0190b57e90971d597007a4cec348))
+- migrate all scripts from ZMLog to setup_zm_logging ([68d37c7](https://github.com/pliablepixels/zmeventnotification/commit/68d37c72fecf93eb3e3b8d12dae4d4a6f0aeccc1))
+
 ## [7.0.1] - 2026-02-15
 
 ### Bug Fixes
 
 - add GitHub Release step to make_release.sh, pin --repo to pliablepixels fork ([adeca59](https://github.com/pliablepixels/zmeventnotification/commit/adeca59dbd7ca8f6b8e46c0acf3e9d7af83008d1))
+
+### Documentation
+
+- update CHANGELOG for v7.0.1 ([e6f50f5](https://github.com/pliablepixels/zmeventnotification/commit/e6f50f5fbb68eba9509f1622406dd672ff1cb3d0))
 
 ### Features
 
