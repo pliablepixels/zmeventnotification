@@ -15,6 +15,10 @@ if [ ! -f ./VERSION ]; then
 fi
 VER=$(cat ./VERSION | tr -d '[:space:]')
 
+# Keep hook package version in sync with VERSION file
+INIT_PY="hook/zmes_hook_helpers/__init__.py"
+sed -i "s/^__version__ = \".*\"/__version__ = \"${VER}\"/" "$INIT_PY"
+
 echo "=== Release v${VER} ==="
 echo
 
@@ -52,7 +56,8 @@ if git rev-parse "v${VER}" &>/dev/null; then
             echo "  Bumping version: v${VER} -> v${BUMPED}"
             VER="$BUMPED"
             echo "$VER" > VERSION
-            git add VERSION
+            sed -i "s/^__version__ = \".*\"/__version__ = \"${VER}\"/" "$INIT_PY"
+            git add VERSION "$INIT_PY"
             git commit -m "chore: bump version to v${VER}"
             git push origin master
             echo "  Done."
@@ -68,15 +73,15 @@ fi
 # --- Step 2: Check for uncommitted files ---
 DIRTY_FILES=$(git status --porcelain)
 if [ -n "$DIRTY_FILES" ]; then
-    # Check if the only dirty file is VERSION
-    NON_VERSION=$(echo "$DIRTY_FILES" | grep -v ' VERSION$' || true)
+    # Check if the only dirty files are VERSION and __init__.py
+    NON_VERSION=$(echo "$DIRTY_FILES" | grep -v ' VERSION$' | grep -v "$INIT_PY" || true)
     if [ -n "$NON_VERSION" ]; then
-        echo "ERROR: Uncommitted files besides VERSION:"
+        echo "ERROR: Uncommitted files besides VERSION and $INIT_PY:"
         echo "$NON_VERSION"
         exit 1
     fi
-    echo "Committing VERSION file ..."
-    git add VERSION
+    echo "Committing version files ..."
+    git add VERSION "$INIT_PY"
     git commit -m "chore: bump version to v${VER}"
     git push origin master
     echo "  Done."
