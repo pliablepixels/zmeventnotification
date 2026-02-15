@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.1] - 2026-02-15
+
+### Bug Fixes
+
+- add GitHub Release step to make_release.sh, pin --repo to pliablepixels fork ([adeca59](https://github.com/pliablepixels/zmeventnotification/commit/adeca59dbd7ca8f6b8e46c0acf3e9d7af83008d1))
+
+### Features
+
+- add version bump option when tag already exists ([d6ecb51](https://github.com/pliablepixels/zmeventnotification/commit/d6ecb5160938f03c5b850924a39d22fe40ec495d))
+- add ignore_pattern zone support and first_new frame strategy ([a2fcc11](https://github.com/pliablepixels/zmeventnotification/commit/a2fcc11112ba3f740401e039cc3fae2d310e4ff8))
+- migrate zm_detect and helpers to pyzm.log.setup_zm_logging ([e38c801](https://github.com/pliablepixels/zmeventnotification/commit/e38c801536aad504b1c0f65243b4670cb5aebeed))
+
+### Miscellaneous
+
+- bump version to v7.0.1 ([0d54762](https://github.com/pliablepixels/zmeventnotification/commit/0d54762db7ce31996768bec9032655a6addcc574))
+
 ## [7.0.0] - 2026-02-14
 
 ### Bug Fixes
@@ -56,6 +72,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- update CHANGELOG for v7.0.0 ([0c590d6](https://github.com/pliablepixels/zmeventnotification/commit/0c590d66c5d9fb0e3bc72fae1f81bc86fd6c4dd8))
 - added self notes for release process ([a83feda](https://github.com/pliablepixels/zmeventnotification/commit/a83fedabb2a549b142fdc5740f83b8f830fa4d63))
 - add feature comparison table to installation page ([f6a1ca2](https://github.com/pliablepixels/zmeventnotification/commit/f6a1ca2add614495a00b2bfabd2f1b5f4aeea48a))
 - restructure principles for both paths; professionalize tone; update install.sh ([29210df](https://github.com/pliablepixels/zmeventnotification/commit/29210dfff42796c5fb1d72794037f859a7d55fd9))
