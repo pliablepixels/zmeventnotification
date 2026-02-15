@@ -270,7 +270,7 @@ install_es() {
     # Update Version.pm with the version from VERSION file
     if [ -f "VERSION" ]; then
         ES_VERSION=$(cat VERSION | tr -d '[:space:]')
-        sed -i "s/^my \$FALLBACK_VERSION = '.*';$/my \$FALLBACK_VERSION = '${ES_VERSION}';/" \
+        sed -i "s/^\(.*\)\$FALLBACK_VERSION = '.*';$/\1\$FALLBACK_VERSION = '${ES_VERSION}';/" \
             "${TARGET_PERL_LIB}/ZmEventNotification/Version.pm" &&
             echo "Set version to ${ES_VERSION} in Version.pm" || print_error "Failed to set version"
     fi
