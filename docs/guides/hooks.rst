@@ -57,7 +57,7 @@ Configure per monitor in ZM: go to the monitor's **Config -> Recording** tab and
 
 - **Event Start Command**::
 
-     /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
+     /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
 
 ZM substitutes ``%EID%``, ``%MID%``, ``%EC%`` tokens at runtime when an event starts.
 

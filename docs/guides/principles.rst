@@ -29,7 +29,7 @@ A typical ``EventStartCommand`` looks like:
 
 ::
 
-  /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n
+  /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
 
 2: zm_detect.py runs the ML pipeline
 --------------------------------------

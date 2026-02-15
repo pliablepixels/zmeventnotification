@@ -3,10 +3,10 @@
 #
 # Two invocation modes:
 # 1. Traditional: called by zmeventnotification.pl via hook
-#      zm_detect.py -c config.yml -e <eid> -m <mid> -r "cause" -n
+#      zm_detect.py -c config.yml -e <eid> -m <mid> -r "cause" -n --pyzm-debug
 # 2. ZM EventStartCommand / EventEndCommand (ZM 1.37+):
 #      Configure in ZM Options -> Config -> EventStartCommand:
-#        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n
+#        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
 #      ZM substitutes %EID%, %MID%, %EC% tokens at runtime (same as zmfilter.pl).
 
 import argparse, ast, json, os, ssl, sys, time, traceback
