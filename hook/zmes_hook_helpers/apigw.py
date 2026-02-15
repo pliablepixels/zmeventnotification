@@ -1,6 +1,4 @@
 import zmes_hook_helpers.common_params as g
-import pyzm.ZMLog as log
-import sys
 
 
 class ObjectRemote:

@@ -42,34 +42,22 @@ def main_handler():
     if not args.get('config'): print('--config required'); sys.exit(1)
     if not args.get('file') and not args.get('eventid'): print('--eventid required'); sys.exit(1)
 
-    # Config + logging (legacy helpers)
-    import pyzm.helpers.utils as pyzmutils, pyzm.ZMLog as zmlog
+    # Config + logging
+    import pyzm.helpers.utils as pyzmutils
+    from pyzm.log import setup_zm_logging
     utils.get_pyzm_config(args)
     if args.get('debug'):
         g.config['pyzm_overrides'].update(dump_console=True, log_debug=True, log_level_debug=5, log_debug_target=None)
     mid = args.get('monitorid')
-    zmlog.init(name='zmesdetect_m{}'.format(mid) if mid else 'zmesdetect', override=g.config['pyzm_overrides'])
-    g.logger = zmlog
+    g.logger = setup_zm_logging(name='zmesdetect_m{}'.format(mid) if mid else 'zmesdetect', override=g.config['pyzm_overrides'])
 
-    # Route pyzm's stdlib logging through ZMLog when --pyzm-debug is passed
+    # Route pyzm's stdlib logging through the same handlers when --pyzm-debug
     if args.get('pyzm_debug'):
         import logging as _logging
-
-        class _ZMLogBridge(_logging.Handler):
-            def emit(self, record):
-                msg = 'pyzm: ' + self.format(record)
-                if record.levelno <= _logging.DEBUG:
-                    g.logger.Debug(1, msg)
-                elif record.levelno <= _logging.INFO:
-                    g.logger.Info(msg)
-                elif record.levelno <= _logging.WARNING:
-                    g.logger.Warning(msg)
-                else:
-                    g.logger.Error(msg)
-
         _pyzm_logger = _logging.getLogger('pyzm')
         _pyzm_logger.setLevel(_logging.DEBUG)
-        _pyzm_logger.addHandler(_ZMLogBridge())
+        for _h in g.logger._logger.handlers:
+            _pyzm_logger.addHandler(_h)
 
     import cv2
     g.logger.Debug(1, 'zm_detect invoked: {}'.format(' '.join(sys.argv)))

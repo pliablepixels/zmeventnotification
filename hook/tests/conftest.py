@@ -40,9 +40,8 @@ class _StubZone:
 _mock_pyzm.Detector = _StubDetector
 _mock_pyzm.ZMClient = _StubZMClient
 
-_mock_zmlog = types.ModuleType("pyzm.ZMLog")
-_mock_zmlog.init = lambda *a, **kw: None
-_mock_zmlog.close = lambda *a, **kw: None
+_mock_log = types.ModuleType("pyzm.log")
+_mock_log.setup_zm_logging = lambda *a, **kw: StubLogger()
 
 _mock_helpers = types.ModuleType("pyzm.helpers")
 _mock_helpers_utils = types.ModuleType("pyzm.helpers.utils")
@@ -56,7 +55,7 @@ _mock_models_zm = types.ModuleType("pyzm.models.zm")
 _mock_models_zm.Zone = _StubZone
 
 sys.modules.setdefault("pyzm", _mock_pyzm)
-sys.modules.setdefault("pyzm.ZMLog", _mock_zmlog)
+sys.modules.setdefault("pyzm.log", _mock_log)
 sys.modules.setdefault("pyzm.helpers", _mock_helpers)
 sys.modules.setdefault("pyzm.helpers.utils", _mock_helpers_utils)
 sys.modules.setdefault("pyzm.models", _mock_models)

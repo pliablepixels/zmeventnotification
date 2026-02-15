@@ -1,49 +1,27 @@
-import logging
-import logging.handlers
 import zmes_hook_helpers.common_params as g
-import pyzm.ZMLog as zmlog
-from inspect import getframeinfo, stack
+from pyzm.log import setup_zm_logging
 
 
 class wrapperLogger():
     def __init__(self, name, override, dump_console):
-        zmlog.init(name=name, override=override)
-        self.dump_console = dump_console
-
-    
+        override['dump_console'] = dump_console
+        self._adapter = setup_zm_logging(name=name, override=override)
 
     def debug(self, msg, level=1):
-        idx = min(len(stack()), 1)
-        caller = getframeinfo(stack()[idx][0])
-        zmlog.Debug(level, msg, caller)
-        if (self.dump_console):
-            print('CONSOLE:' + msg)
+        self._adapter.Debug(level, msg)
 
     def info(self, msg):
-        idx = min(len(stack()), 1)
-        caller = getframeinfo(stack()[idx][0])
-        zmlog.Info(msg, caller)
-        if (self.dump_console):
-            print('CONSOLE:' + msg)
+        self._adapter.Info(msg)
 
     def error(self, msg):
-        idx = min(len(stack()), 1)
-        caller = getframeinfo(stack()[idx][0])
-        zmlog.Error(msg, caller)
-        if (self.dump_console):
-            print('CONSOLE:' + msg)
+        self._adapter.Error(msg)
 
     def fatal(self, msg):
-        idx = min(len(stack()), 1)
-        caller = getframeinfo(stack()[idx][0])
-        zmlog.Fatal(msg, caller)
-        if (self.dump_console):
-            print('CONSOLE:' + msg)
+        self._adapter.Fatal(msg)
 
     def setLevel(self, level):
         pass
-    
-  
+
 
 def init(process_name=None, override={}, dump_console=False):
     g.logger = wrapperLogger(name=process_name, override=override, dump_console=dump_console)
