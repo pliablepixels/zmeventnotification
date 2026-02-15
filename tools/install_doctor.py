@@ -123,7 +123,7 @@ def check_face_recognition(enabled_models):
 
 
 def check_opencv_version(enabled_models):
-    """Warn if OpenCV is too old for enabled ONNX/YOLOv26 or YOLOv4 models."""
+    """Warn if OpenCV is too old for enabled ONNX YOLOv11/YOLOv26 or YOLOv4 models."""
     try:
         import cv2
         cv_ver = tuple(int(x) for x in cv2.__version__.split(".")[:2])

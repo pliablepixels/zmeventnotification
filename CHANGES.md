@@ -19,9 +19,10 @@
 - Migration tools provided: `config_migrate_yaml.py`, `es_config_migrate_yaml.py`, `config_upgrade_yaml.py`
 - The `{{}}` templating system in objectconfig is removed; `ml_sequence` is now inlined directly in YAML
 
-### Object Detection: YOLOv26 ONNX via OpenCV DNN
-- **Added support for YOLOv26 ONNX models** — supposed to be accuracy improvement. You will need to upgrade OpenCV 
-- Installer (`install.sh`) can download ONNX models automatically (`INSTALL_YOLOV11` flag)
+### Object Detection: YOLO ONNX via OpenCV DNN
+- **Added support for YOLOv11 and YOLOv26 ONNX models** — YOLOv11 (OpenCV 4.10+) is the default; YOLOv26 (OpenCV 4.13+) also available
+- Multiple sizes for each: n (nano), s (small), m (medium), l (large)
+- Installer (`install.sh`) downloads both by default (`INSTALL_YOLOV11`, `INSTALL_YOLOV26` flags)
 
 ### Architecture: Modular Perl codebase
 - **Monolithic `zmeventnotification.pl` broken into 10 modules** under `ZmEventNotification/` (Config, DB, Rules, FCM, MQTT, HookProcessor, WebSocketHandler, etc.)

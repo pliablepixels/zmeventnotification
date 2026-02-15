@@ -34,7 +34,7 @@ with instructions for compiling OpenCV from source on Ubuntu 24 that worked for 
 
 .. important::
 
-   The default YOLOv26 model requires **OpenCV 4.13+**.
+   The default YOLOv11 model requires **OpenCV 4.10+** (YOLOv26 requires 4.13+).
    Verify it works: ``python3 -c "import cv2; print(cv2.__version__)"``
 
 .. _opencv_seg_fault:
@@ -70,7 +70,7 @@ Or, to run non-interactively:
 
    sudo -H ./install.sh --no-install-es --install-hook --install-hook-config --no-interactive
 
-This handles everything else: downloads ML models (YOLOv4, YOLOv26 by default),
+This handles everything else: downloads ML models (YOLOv4, YOLOv11, YOLOv26 by default),
 installs the hook scripts and Python packages, creates the directory structure,
 and installs the config files.
 
@@ -83,9 +83,9 @@ and installs the config files.
    # Example: only YOLOv26, skip YOLOv4
    sudo -H INSTALL_YOLOV4=no INSTALL_TINYYOLOV4=no ./install.sh
 
-Available flags (default in parentheses): ``INSTALL_YOLOV26`` (yes), ``INSTALL_YOLOV4`` (yes),
-``INSTALL_TINYYOLOV4`` (yes), ``INSTALL_YOLOV3`` (no), ``INSTALL_TINYYOLOV3`` (no),
-``INSTALL_CORAL_EDGETPU`` (no).
+Available flags (default in parentheses): ``INSTALL_YOLOV11`` (yes), ``INSTALL_YOLOV26`` (yes),
+``INSTALL_YOLOV4`` (yes), ``INSTALL_TINYYOLOV4`` (yes), ``INSTALL_YOLOV3`` (no),
+``INSTALL_TINYYOLOV3`` (no), ``INSTALL_CORAL_EDGETPU`` (no).
 
 Step 4: Configure
 ~~~~~~~~~~~~~~~~~

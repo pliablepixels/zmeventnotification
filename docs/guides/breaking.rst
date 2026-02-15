@@ -88,8 +88,9 @@ equivalents. The old files will be renamed with a ``.migrated`` suffix.
   The ``use_sequence`` flag no longer exists — sequences are always used.
 - **``common_params.py`` removed**: The entire parameter substitution engine has been removed.
   ``${base_data_path}`` is the only substitution still supported (for path expansion).
-- **Default model changed to YOLOv26 ONNX**: YOLOv3 defaults are now disabled. The default enabled
-  model is ``YOLOv26n`` using ONNX format via OpenCV DNN. This requires **OpenCV 4.13+**.
+- **Default model changed to YOLO ONNX**: YOLOv3 defaults are now disabled. The default enabled
+  model is ``yolo11n`` using ONNX format via OpenCV DNN. This requires **OpenCV 4.10+**.
+  YOLOv26 variants are also available (requires OpenCV 4.13+).
   Direct Ultralytics/PyTorch support has been removed in favor of ONNX via OpenCV DNN.
 - **``Config::IniFiles`` Perl module no longer needed**: The ES now uses ``YAML::XS`` (via the
   ``libyaml-libyaml-perl`` package on Debian/Ubuntu) instead of ``Config::IniFiles``.
@@ -105,8 +106,9 @@ equivalents. The old files will be renamed with a ``.migrated`` suffix.
   ``zmeventnotification.yml``, detected object labels (e.g. person, cat) will be written as Tags
   into ZoneMinder's database. Requires ZM >= 1.37.44.
 
-- **``INSTALL_YOLOV26`` install flag**: ``install.sh`` now defaults to downloading YOLOv26 ONNX models
-  (``INSTALL_YOLOV26=yes``). YOLOv3 defaults are now ``no``. Use ``INSTALL_YOLOV26=no`` to skip.
+- **``INSTALL_YOLOV11`` / ``INSTALL_YOLOV26`` install flags**: ``install.sh`` now defaults to
+  downloading both YOLOv11 and YOLOv26 ONNX models (both default to ``yes``).
+  YOLOv3 defaults are now ``no``. Set either flag to ``no`` to skip.
 
 **Upgrading:**
 

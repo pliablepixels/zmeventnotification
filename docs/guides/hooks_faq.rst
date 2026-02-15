@@ -186,7 +186,8 @@ I am trying to use YoloV4 and I see errors in OpenCV
 
 .. note::
 
-   The default model is now YOLOv26 (ONNX format), which requires **OpenCV 4.13+**.
+   The default model is now YOLOv11 (ONNX format), which requires **OpenCV 4.10+**.
+   YOLOv26 variants are also available but require **OpenCV 4.13+**.
    If you are using the default configuration, make sure your OpenCV version meets
    this requirement. YoloV4 (OpenCV 4.4+) is still supported as a fallback.
 

@@ -637,7 +637,7 @@ print_opencv_message() {
     |-------------------------- NOTE -------------------------------------|
 
      Hooks are installed, but please make sure you have the right version
-     of OpenCV installed. ONNX YOLOv26 models require OpenCV 4.13+.
+     of OpenCV installed. ONNX YOLOv11 models require OpenCV 4.10+, YOLOv26 requires 4.13+.
      See https://zmeventnotificationv7.readthedocs.io/en/latest/guides/hooks.html#opencv-install
 
     |----------------------------------------------------------------------|
@@ -715,6 +715,7 @@ display_help() {
         INSTALL_YOLOV4: Download and install yolov4 model (default:yes)
         INSTALL_TINY_YOLOV4: Download and install tiny yolov4 model (default:yes)
         INSTALL_CORAL_EDGETPU: Download and install coral models (default:no)
+        INSTALL_YOLOV11: Download and install ONNX YOLOv11 models (default:yes). Needs OpenCV 4.10+
         INSTALL_YOLOV26: Download and install ONNX YOLOv26 models (default:yes). Needs OpenCV 4.13+
 
         TARGET_CONFIG: Path to ES config dir (default: /etc/zm)

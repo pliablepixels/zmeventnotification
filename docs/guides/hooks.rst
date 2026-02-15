@@ -35,7 +35,7 @@ Requirements
 ~~~~~~~~~~~~
 
 - Python 3.10+
-- OpenCV 4.13+ (for the default YOLOv26 ONNX model)
+- OpenCV 4.10+ (for the default YOLOv11 ONNX model; 4.13+ needed for YOLOv26)
 - pyzm v2 (``pip install pyzm``)
 
 How it works
@@ -194,10 +194,11 @@ and can't reach ZM. See :ref:`remote_ml_config` for full details.
 Which models should I use?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **YOLOv26 ONNX (Recommended)**: The default and recommended model. Uses ONNX format via OpenCV's DNN
-  module. Requires OpenCV 4.13+. Multiple sizes are available (``yolo26n``, ``yolo26s``, ``yolo26m``,
-  ``yolo26l``, ``yolo26x``) — smaller models are faster, larger models are more accurate.
-  The ``n`` (nano) variant is enabled by default and provides a good balance.
+- **YOLO ONNX (Recommended)**: The default and recommended model. Uses ONNX format via OpenCV's DNN
+  module. Both YOLOv11 (requires OpenCV 4.10+) and YOLOv26 (requires OpenCV 4.13+) are supported.
+  Multiple sizes are available for each: ``n`` (nano), ``s`` (small), ``m`` (medium), ``l`` (large)
+  — smaller models are faster, larger models are more accurate.
+  The default is ``yolo11n`` (nano) which provides a good balance.
 
 - **YOLOv4**: Still supported via Darknet weights. Requires OpenCV 4.4+.
 
@@ -288,9 +289,9 @@ Here is a concrete example from the default ``objectconfig.yml``:
            pattern: "(person|car|motorbike|bus|truck|boat)"
            same_model_sequence_strategy: first
          sequence:
-           - name: YOLOv26n ONNX GPU/CPU
+           - name: YOLO ONNX
              enabled: "yes"
-             object_weights: "${base_data_path}/models/ultralytics/yolo26n.onnx"
+             object_weights: "${base_data_path}/models/ultralytics/yolo11n.onnx"
              object_min_confidence: 0.3
              object_framework: opencv
              object_processor: gpu
