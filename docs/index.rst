@@ -6,6 +6,11 @@
 Event Notification Server v7+ Documentation
 =============================================
 
+.. image:: ../logo/zmES7plus.png
+   :alt: zmES7+ Logo
+   :width: 200px
+   :align: center
+
 .. toctree::
         :hidden:
 

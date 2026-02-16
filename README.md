@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="logo/zmES7plus.png" alt="zmES7+ Logo" width="200">
+</p>
 
 Note
 -----
