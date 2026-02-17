@@ -74,7 +74,9 @@ To use a custom venv path:
 
 Available flags (default in parentheses): ``INSTALL_YOLOV11`` (yes), ``INSTALL_YOLOV26`` (yes),
 ``INSTALL_YOLOV4`` (yes), ``INSTALL_TINYYOLOV4`` (yes), ``INSTALL_YOLOV3`` (no),
-``INSTALL_TINYYOLOV3`` (no), ``INSTALL_CORAL_EDGETPU`` (no).
+``INSTALL_TINYYOLOV3`` (no), ``INSTALL_CORAL_EDGETPU`` (no), ``INSTALL_BIRDNET`` (no).
+
+You can also use the CLI flag ``--install-birdnet`` to install BirdNET audio detection.
 
 .. _opencv_install:
 

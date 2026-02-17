@@ -32,6 +32,7 @@ INSTALL_TINYYOLOV4=${INSTALL_TINYYOLOV4:-yes}
 INSTALL_CORAL_EDGETPU=${INSTALL_CORAL_EDGETPU:-no}
 INSTALL_YOLOV11=${INSTALL_YOLOV11:-yes}
 INSTALL_YOLOV26=${INSTALL_YOLOV26:-yes}
+INSTALL_BIRDNET=${INSTALL_BIRDNET:-no}
 
 
 TARGET_CONFIG=${TARGET_CONFIG:-'/etc/zm'}
@@ -305,6 +306,7 @@ verify_config() {
         echo "Google Coral Edge TPU (INSTALL_CORAL_EDGETPU)": ${INSTALL_CORAL_EDGETPU}
         echo "ONNX YOLOv11 (INSTALL_YOLOV11)": ${INSTALL_YOLOV11}
         echo "ONNX YOLOv26 (INSTALL_YOLOV26)": ${INSTALL_YOLOV26}
+        echo "BirdNET audio (INSTALL_BIRDNET)": ${INSTALL_BIRDNET}
 
     fi
     echo
@@ -763,7 +765,7 @@ run_doctor_checks() {
 display_help() {
     cat << EOF
     
-    sudo -H [VAR1=value|VAR2=value...] $0 [-h|--help] [--install-es|--no-install-es] [--install-hook|--no-install-hook] [--install-config|--no-install-config] [--install-es-config|--no-install-es-config] [--install-hook-config|--no-install-hook-config] [--hook-config-upgrade|--no-hook-config-upgrade] [--no-pysudo] [--no-download-models] [--install-opencv|--no-install-opencv] [--venv-path PATH] [--no-venv]
+    sudo -H [VAR1=value|VAR2=value...] $0 [-h|--help] [--install-es|--no-install-es] [--install-hook|--no-install-hook] [--install-config|--no-install-config] [--install-es-config|--no-install-es-config] [--install-hook-config|--no-install-hook-config] [--hook-config-upgrade|--no-hook-config-upgrade] [--no-pysudo] [--no-download-models] [--install-opencv|--no-install-opencv] [--install-birdnet|--no-install-birdnet] [--venv-path PATH] [--no-venv]
 
         When used without any parameters executes in interactive mode
 
@@ -799,6 +801,9 @@ display_help() {
         You will need to manually review the migrated config
         --no-hook-config-upgrade: skips above process
 
+        --install-birdnet: Install birdnet-analyzer for audio bird species detection
+        --no-install-birdnet: Skip BirdNET installation (default)
+
         --venv-path PATH: Path for the shared Python venv (default: /opt/zoneminder/venv)
         --no-venv: Skip venv creation and install globally with --break-system-packages
                    (not recommended — only for backward compatibility)
@@ -818,6 +823,7 @@ display_help() {
         INSTALL_CORAL_EDGETPU: Download and install coral models (default:no)
         INSTALL_YOLOV11: Download and install ONNX YOLOv11 models (default:yes). Needs OpenCV 4.13+
         INSTALL_YOLOV26: Download and install ONNX YOLOv26 models (default:yes). Needs OpenCV 4.13+
+        INSTALL_BIRDNET: Install birdnet-analyzer for audio bird detection (default:no)
 
         TARGET_CONFIG: Path to ES config dir (default: /etc/zm)
         TARGET_DATA: Path to ES data dir (default: /var/lib/zmeventnotification)
@@ -939,6 +945,14 @@ check_args() {
             ;;
         --no-venv)
             USE_VENV='no'
+            shift
+            ;;
+        --install-birdnet)
+            INSTALL_BIRDNET='yes'
+            shift
+            ;;
+        --no-install-birdnet)
+            INSTALL_BIRDNET='no'
             shift
             ;;
         *)  # unknown option
@@ -1094,6 +1108,17 @@ then
     echo "      sudo usermod -a -G plugdev ${WEB_OWNER}"
     echo "========================================================================"
     echo
+fi
+
+if [ "${INSTALL_BIRDNET}" == "yes" ]
+then
+    print_section 'Installing BirdNET audio detection (birdnet-analyzer)'
+    if [[ "${USE_VENV}" == "yes" ]]; then
+        run_dimmed "${ZM_VENV}/bin/pip" install birdnet-analyzer -q
+    else
+        run_dimmed ${PY_SUDO} ${PIP} install birdnet-analyzer ${PIP_COMPAT} -q
+    fi
+    print_success "birdnet-analyzer installed"
 fi
 
 if [ "${HOOK_CONFIG_UPGRADE}" == "yes" ]
