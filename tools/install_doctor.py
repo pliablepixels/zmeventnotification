@@ -150,13 +150,13 @@ def check_opencv_version(enabled_models):
         warnings.append(
             f"OpenCV {cv_ver_str} detected but 4.13+ is required for ONNX YOLOv26 models.\n"
             f"    Affected models: {names}\n"
-            f"    Upgrade OpenCV, or switch to YOLOv11 (requires 4.10+) or YOLOv4 (requires 4.4+)."
+            f"    Upgrade OpenCV, or switch to YOLOv11 (requires 4.13+) or YOLOv4 (requires 4.4+)."
         )
 
-    if onnx_v11_models and cv_ver < (4, 10):
+    if onnx_v11_models and cv_ver < (4, 13):
         names = ", ".join(m.get("name", "unknown") for _, m in onnx_v11_models)
         warnings.append(
-            f"OpenCV {cv_ver_str} detected but 4.10+ is required for ONNX YOLOv11 models.\n"
+            f"OpenCV {cv_ver_str} detected but 4.13+ is required for ONNX YOLOv11 models.\n"
             f"    Affected models: {names}\n"
             f"    Upgrade OpenCV, or switch to YOLOv4 (requires 4.4+)."
         )

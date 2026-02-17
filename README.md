@@ -37,6 +37,12 @@ To make a release:
 ./scripts/make_release.sh
 ```
 
+To test docs:
+```
+cd docs/
+make html && python -m http.server -d _build/html
+```
+
 To test a CHANGELOG:
 ```
 # VERSION in project root should be updated

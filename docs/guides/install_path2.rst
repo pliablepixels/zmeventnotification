@@ -46,6 +46,13 @@ and sets up the directory structure.
 
 .. note::
 
+   The installer pulls in **core pyzm** automatically. If you need additional
+   pyzm extras (remote ML server, training UI, etc.) or want to install a
+   local development version of pyzm, see the
+   `pyzm installation guide <https://pyzmv2.readthedocs.io/en/latest/guide/installation.html>`__.
+
+.. note::
+
    By default ``install.sh`` places the ES script in ``/usr/bin``. If your ZM install
    uses a different path (e.g. ``/usr/local/bin``), edit the ``TARGET_BIN`` variable
    in ``install.sh`` before running it.

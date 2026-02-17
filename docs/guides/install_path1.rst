@@ -6,56 +6,24 @@ Requires **ZM 1.38.1 or above**.
 
 If you also want push notifications, WebSockets, or MQTT, see :doc:`install_path2`.
 
-.. note::
-
-   On newer Linux distros (Ubuntu 23.04+, Debian 12+, etc.) you may need to add
-   ``--break-system-packages`` to ``pip3 install`` commands below, or use a virtual environment.
-
-Step 1: Install OpenCV
-~~~~~~~~~~~~~~~~~~~~~~
-
-The install script does **not** install OpenCV for you, because you may want GPU support
-or a specific version.
-
-.. _opencv_install:
-
-**Quick install (no GPU):**
-
-.. code:: bash
-
-   # Add --break-system-packages if your distro requires it
-   sudo -H pip3 install opencv-contrib-python
-
-**For GPU support**, compile from source with CUDA enabled. See the
-`official OpenCV build guide <https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html>`__.
-Here is an `example gist <https://gist.github.com/pliablepixels/73d61e28060c8d418f9fcfb1e912e425>`__
-with instructions for compiling OpenCV from source on Ubuntu 24 that worked for me
-(not authoritative — adapt as needed for your setup).
-
 .. important::
 
-   The default YOLOv11 model requires **OpenCV 4.10+** (YOLOv26 requires 4.13+).
-   Verify it works: ``python3 -c "import cv2; print(cv2.__version__)"``
+   The installer now creates a **shared Python virtual environment** at
+   ``/opt/zoneminder/venv`` instead of installing globally with
+   ``pip install --break-system-packages``.
 
-.. _opencv_seg_fault:
+   Why the change:
 
-Step 2: Install pyzm
-~~~~~~~~~~~~~~~~~~~~~
+   - Modern Linux distributions (Debian 12+, Ubuntu 23.04+, Fedora 38+)
+     mark the system Python as *externally managed* (PEP 668) and actively
+     block global pip installs.
+   - ``--break-system-packages`` bypasses that protection but can break
+     OS tools that depend on the system Python.
+   - Multiple ZoneMinder components (pyzm, hook helpers) need to share a
+     single Python environment — a dedicated venv gives them isolation from
+     the OS while still sharing packages with each other.
 
-.. code:: bash
-
-   # Add --break-system-packages if your distro requires it
-   sudo -H pip3 install pyzm
-
-.. note::
-
-   This installs the core pyzm library only. If you also want to run the
-   remote ML detection server (``pyzm.serve``) on this same machine, install
-   with the ``serve`` extra instead: ``sudo -H pip3 install pyzm[serve]``.
-   This pulls in the additional dependencies (FastAPI, uvicorn, etc.) needed
-   for the server. See :ref:`remote_ml_config` for details.
-
-Step 3: Run the installer
+Step 1: Run the installer
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
@@ -70,9 +38,30 @@ Or, to run non-interactively:
 
    sudo -H ./install.sh --no-install-es --install-hook --install-hook-config --no-interactive
 
-This handles everything else: downloads ML models (YOLOv4, YOLOv11, YOLOv26 by default),
-installs the hook scripts and Python packages, creates the directory structure,
-and installs the config files.
+This handles everything:
+
+- Creates a Python virtual environment at ``/opt/zoneminder/venv``
+  (customizable with ``--venv-path``).
+- Installs **pyzm** and the **hook helpers** into the venv.
+- Downloads ML models (YOLOv4, YOLOv11, YOLOv26 by default).
+- Installs hook scripts, creates the directory structure, and installs
+  config files.
+
+Both pyzm and the hook helpers live in the venv, keeping your system
+Python clean.
+
+.. note::
+
+   The installer pulls in **core pyzm** automatically. If you need additional
+   pyzm extras (remote ML server, training UI, etc.) or want to install a
+   local development version of pyzm, see the
+   `pyzm installation guide <https://pyzmv2.readthedocs.io/en/latest/guide/installation.html>`__.
+
+To use a custom venv path:
+
+.. code:: bash
+
+   sudo -H ./install.sh --venv-path /usr/local/zm/venv
 
 .. _install-specific-models:
 
@@ -87,13 +76,71 @@ Available flags (default in parentheses): ``INSTALL_YOLOV11`` (yes), ``INSTALL_Y
 ``INSTALL_YOLOV4`` (yes), ``INSTALL_TINYYOLOV4`` (yes), ``INSTALL_YOLOV3`` (no),
 ``INSTALL_TINYYOLOV3`` (no), ``INSTALL_CORAL_EDGETPU`` (no).
 
-Step 4: Configure
+.. _opencv_install:
+
+Step 2: OpenCV
+~~~~~~~~~~~~~~
+
+The install script does **not** install OpenCV for you, because you may want
+GPU support or a specific version.
+
+.. important::
+
+   ONNX models (YOLOv11, YOLOv26) require **OpenCV 4.13+**.
+
+**Quick install (no GPU):**
+
+.. code:: bash
+
+   /opt/zoneminder/venv/bin/pip install opencv-contrib-python
+
+**For GPU support**, compile from source with CUDA enabled. See the
+`official OpenCV build guide <https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html>`__.
+Here is an `example gist <https://gist.github.com/pliablepixels/73d61e28060c8d418f9fcfb1e912e425>`__
+with instructions for compiling OpenCV from source on Ubuntu 24 that worked for me
+(not authoritative — adapt as needed for your setup).
+
+The venv is created with ``--system-site-packages``, so a system-wide OpenCV
+built from source is automatically visible inside the venv.
+
+.. note::
+
+   If you already had OpenCV installed (from source or a system package)
+   *before* running the installer, the install script registers an
+   ``opencv-python`` compatibility shim so that pip does not overwrite your
+   build. This is specifically needed because ``pyzm[train]`` depends on
+   ``ultralytics``, which unconditionally pulls ``opencv-python`` from PyPI
+   and will overwrite custom OpenCV builds (e.g. CUDA or Metal-accelerated).
+
+   If your OpenCV is nevertheless replaced, you can restore it:
+
+   .. code:: bash
+
+      /opt/zoneminder/venv/bin/pip uninstall opencv-python opencv-python-headless
+      # Rebuild / reinstall your custom OpenCV
+
+Verify it works:
+
+.. code:: bash
+
+   /opt/zoneminder/venv/bin/python -c "import cv2; print(cv2.__version__)"
+
+.. _opencv_seg_fault:
+
+Step 3: Configure
 ~~~~~~~~~~~~~~~~~
 
 Edit ``/etc/zm/objectconfig.yml`` — at minimum, fill in the ``general`` section with your
 ZM portal URL, username, and password (or point them to ``secrets.yml``).
 
-Step 5: Wire up ZoneMinder
+.. note::
+
+   If you also want to run the remote ML detection server (``pyzm.serve``)
+   on this same machine, install the ``serve`` extra:
+   ``/opt/zoneminder/venv/bin/pip install "pyzm[serve]"``.
+   See :ref:`remote_ml_config` for details.
+
+Step 4: Wire up ZoneMinder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For each monitor, go to **Config -> Recording** and set:
@@ -102,7 +149,7 @@ For each monitor, go to **Config -> Recording** and set:
 
    /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
 
-Step 6: Test manually
+Step 5: Test manually
 ~~~~~~~~~~~~~~~~~~~~~
 
 First, verify you have the right versions installed:
@@ -135,8 +182,7 @@ Only needed if you want to recognize *who* a face belongs to (not just detect fa
 .. code:: bash
 
    sudo apt-get install libopenblas-dev liblapack-dev libblas-dev
-   # Add --break-system-packages if your distro requires it
-   sudo -H pip3 install face_recognition
+   /opt/zoneminder/venv/bin/pip install face_recognition
 
 Optional: Google Coral EdgeTPU
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

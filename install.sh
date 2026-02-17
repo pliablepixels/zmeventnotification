@@ -17,7 +17,8 @@
 
 PYTHON=${PYTHON:-python3}
 PIP=${PIP:-pip3}
-PIP_COMPAT=${PIP_COMPAT:---break-system-packages}
+ZM_VENV="${ZM_VENV:-/opt/zoneminder/venv}"
+USE_VENV="${USE_VENV:-yes}"
 INSTALLER=${INSTALLER:-$(which apt-get || which yum)}
 
 # Models to install
@@ -114,6 +115,90 @@ run_dimmed() {
     return $rc
 }
 
+# Ensure python3-venv is available and create the shared venv
+ensure_venv() {
+    if [[ "${USE_VENV}" != "yes" ]]; then
+        print_warning "Venv disabled — using global pip with --break-system-packages"
+        PIP_COMPAT="--break-system-packages"
+        return 0
+    fi
+    PIP_COMPAT=""
+
+    print_section "Setting up Python virtual environment"
+
+    # Check if venv already exists and is usable
+    if [[ -d "${ZM_VENV}" && -x "${ZM_VENV}/bin/python" ]]; then
+        print_success "Venv already exists at ${ZM_VENV}"
+    else
+        # Make sure python3 -m venv works
+        if ! ${PYTHON} -m venv --help &>/dev/null; then
+            echo "python3-venv not available — installing..."
+            if command -v apt-get &>/dev/null; then
+                run_dimmed apt-get update -qq && run_dimmed apt-get install -y -qq python3-venv
+            elif command -v dnf &>/dev/null; then
+                run_dimmed dnf install -y python3-libs
+            elif command -v yum &>/dev/null; then
+                run_dimmed yum install -y python3-libs
+            else
+                print_error "Cannot auto-install python3-venv. Install it manually, then re-run."
+                exit 1
+            fi
+        fi
+
+        echo "Creating venv at ${ZM_VENV} ..."
+        mkdir -p "$(dirname "${ZM_VENV}")"
+        ${PYTHON} -m venv --system-site-packages "${ZM_VENV}"
+        print_success "Venv created (Python: $(${ZM_VENV}/bin/python --version))"
+    fi
+
+    # Point PYTHON and PIP at the venv — no sudo needed for venv installs
+    PYTHON="${ZM_VENV}/bin/python"
+    PIP="${ZM_VENV}/bin/pip"
+    PY_SUDO=""
+
+    # Upgrade pip inside the venv
+    run_dimmed "${PIP}" install --upgrade pip setuptools wheel -q
+
+    # If cv2 is already importable (e.g. source-built or system-packaged),
+    # create a fake dist-info so pip won't pull opencv-python from PyPI
+    shim_opencv
+
+    print_success "Using venv Python: ${PYTHON}"
+}
+
+# Shim opencv-python if cv2 is already available via system-site-packages
+shim_opencv() {
+    local venv_python="${ZM_VENV}/bin/python"
+
+    # Can the venv Python already import cv2?
+    local cv2_version
+    cv2_version=$("${venv_python}" -c "import cv2; print(cv2.__version__)" 2>/dev/null) || return 0
+
+    # Is there already a pip-registered opencv-python? If so, no shim needed.
+    if "${venv_python}" -m pip show opencv-python &>/dev/null; then
+        return 0
+    fi
+
+    local site_packages
+    site_packages=$("${venv_python}" -c "import sysconfig; print(sysconfig.get_path('purelib'))")
+
+    local dist_dir="${site_packages}/opencv_python-${cv2_version}.dist-info"
+    mkdir -p "${dist_dir}"
+
+    cat > "${dist_dir}/METADATA" <<EOF
+Metadata-Version: 2.1
+Name: opencv-python
+Version: ${cv2_version}
+Summary: Shim — real cv2 is provided by a source/system build
+EOF
+
+    echo > "${dist_dir}/RECORD"
+    echo "opencv-python" > "${dist_dir}/top_level.txt"
+    echo "Wheel-Version: 1.0" > "${dist_dir}/WHEEL"
+
+    print_success "opencv-python shim created (cv2 ${cv2_version} from source/system)"
+}
+
 get_distro() {
     local DISTRO=`(lsb_release -ds || cat /etc/*release || uname -om ) 2>/dev/null | head -n1`
     local DISTRO_NORM='ubuntu'
@@ -195,6 +280,11 @@ verify_config() {
     echo "Download and install models (if needed): ${DOWNLOAD_MODELS}"
     echo "Install OpenCV: ${INSTALL_OPENCV}"
     echo "Perl module install path: ${TARGET_PERL_LIB}"
+    if [[ "${USE_VENV}" == "yes" ]]; then
+        echo "Python venv: ${ZM_VENV}"
+    else
+        echo "Python venv: DISABLED (global install)"
+    fi
     echo
 
     [[ ${INSTALL_ES} != 'no' ]] && echo "The Event Server will be installed to ${TARGET_BIN_ES}"
@@ -368,7 +458,7 @@ download_models() {
         if [ "${INSTALL_YOLOV11}" == "yes" ]
         then
             print_important ' Checking for ONNX YOLOv11 model files...'
-            print_warning 'Note, you need OpenCV 4.10+ for ONNX YOLOv11 to work'
+            print_warning 'Note, you need OpenCV 4.13+ for ONNX YOLOv11 to work'
             download_if_needed ultralytics \
                 'yolo11n.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo11n.onnx' \
                 'yolo11s.onnx' 'https://github.com/pliablepixels/zmes_ai_assets/raw/master/models/ultralytics/yolo11s.onnx' \
@@ -436,7 +526,14 @@ install_hook() {
         "${TARGET_BIN_HOOK}/zm_event_start.sh"
     sed -i "s|default='/etc/zm/objectconfig.yml'|default='${TARGET_CONFIG}/objectconfig.yml'|" \
         "${TARGET_BIN_HOOK}/zm_train_faces.py"
-    #python setup.py install && print_success "Done" || print_error "python setup failed"
+
+    # Patch shebangs to use the venv Python
+    if [[ "${USE_VENV}" == "yes" ]]; then
+        sed -i "s|#!/usr/bin/python3|#!${ZM_VENV}/bin/python|" \
+            "${TARGET_BIN_HOOK}/zm_detect.py" \
+            "${TARGET_BIN_HOOK}/zm_train_faces.py"
+        print_success "Patched shebangs to use ${ZM_VENV}/bin/python"
+    fi
 
     print_section 'Installing user contributions'
     cp docs/guides/contrib_guidelines.rst "${TARGET_DATA}/contrib"
@@ -448,9 +545,8 @@ install_hook() {
     
 
     print_section 'Installing Python hook package'
-    ${PY_SUDO} ${PIP} uninstall -y zmes-hooks ${PIP_COMPAT}   >/dev/null 2>&1
-    ${PY_SUDO} ${PIP} uninstall -y zmes_hook_helpers ${PIP_COMPAT}   >/dev/null 2>&1
- 
+    ${PY_SUDO} ${PIP} uninstall -y zmes-hooks ${PIP_COMPAT} >/dev/null 2>&1
+    ${PY_SUDO} ${PIP} uninstall -y zmes_hook_helpers ${PIP_COMPAT} >/dev/null 2>&1
 
     ZM_DETECT_VERSION=`./hook/zm_detect.py --bareversion`
     if [ "$ZM_DETECT_VERSION" == "" ]; then
@@ -637,7 +733,7 @@ print_opencv_message() {
     |-------------------------- NOTE -------------------------------------|
 
      Hooks are installed, but please make sure you have the right version
-     of OpenCV installed. ONNX YOLOv11 models require OpenCV 4.10+, YOLOv26 requires 4.13+.
+     of OpenCV installed. ONNX models (YOLOv11, YOLOv26) require OpenCV 4.13+.
      See https://zmeventnotificationv7.readthedocs.io/en/latest/guides/hooks.html#opencv-install
 
     |----------------------------------------------------------------------|
@@ -666,7 +762,7 @@ run_doctor_checks() {
 display_help() {
     cat << EOF
     
-    sudo -H [VAR1=value|VAR2=value...] $0 [-h|--help] [--install-es|--no-install-es] [--install-hook|--no-install-hook] [--install-config|--no-install-config] [--install-es-config|--no-install-es-config] [--install-hook-config|--no-install-hook-config] [--hook-config-upgrade|--no-hook-config-upgrade] [--no-pysudo] [--no-download-models] [--install-opencv|--no-install-opencv]
+    sudo -H [VAR1=value|VAR2=value...] $0 [-h|--help] [--install-es|--no-install-es] [--install-hook|--no-install-hook] [--install-config|--no-install-config] [--install-es-config|--no-install-es-config] [--install-hook-config|--no-install-hook-config] [--hook-config-upgrade|--no-hook-config-upgrade] [--no-pysudo] [--no-download-models] [--install-opencv|--no-install-opencv] [--venv-path PATH] [--no-venv]
 
         When used without any parameters executes in interactive mode
 
@@ -689,7 +785,7 @@ display_help() {
 
         --no-interactive: run automatically, but you need to specify flags for all components
 
-        --no-pysudo: If specified will install python packages 
+        --no-pysudo: If specified will install python packages
         without sudo (some users don't install packages globally)
 
         --no-download-models: If specified will not download any models.
@@ -702,12 +798,16 @@ display_help() {
         You will need to manually review the migrated config
         --no-hook-config-upgrade: skips above process
 
-        In addition to the above, you can also override all variables used for your own needs 
-        Overridable variables are: 
+        --venv-path PATH: Path for the shared Python venv (default: /opt/zoneminder/venv)
+        --no-venv: Skip venv creation and install globally with --break-system-packages
+                   (not recommended — only for backward compatibility)
+
+        In addition to the above, you can also override all variables used for your own needs
+        Overridable variables are:
 
         PYTHON: python interpreter (default: python3)
         PIP: pip package installer (default: pip3)
-        WGET: path to wget (default `which wget`)
+        WGET: path to wget (default \`which wget\`)
 
         INSTALLER: Your OS equivalent of apt-get or yum (default: apt-get or yum)
         INSTALL_YOLOV3: Download and install yolov3 model (default:no)
@@ -715,7 +815,7 @@ display_help() {
         INSTALL_YOLOV4: Download and install yolov4 model (default:yes)
         INSTALL_TINY_YOLOV4: Download and install tiny yolov4 model (default:yes)
         INSTALL_CORAL_EDGETPU: Download and install coral models (default:no)
-        INSTALL_YOLOV11: Download and install ONNX YOLOv11 models (default:yes). Needs OpenCV 4.10+
+        INSTALL_YOLOV11: Download and install ONNX YOLOv11 models (default:yes). Needs OpenCV 4.13+
         INSTALL_YOLOV26: Download and install ONNX YOLOv26 models (default:yes). Needs OpenCV 4.13+
 
         TARGET_CONFIG: Path to ES config dir (default: /etc/zm)
@@ -725,6 +825,9 @@ display_help() {
         TARGET_PERL_LIB: Path to install Perl modules (default: /usr/share/perl5)
 
         INSTALL_OPENCV: Install python3-opencv (default: no)
+
+        ZM_VENV: Path to shared Python venv (default: /opt/zoneminder/venv)
+        USE_VENV: Set to 'no' to disable venv and use global install (default: yes)
 
         WEB_OWNER: Your webserver user (default: www-data)
         WEB_GROUP: Your webserver group (default: www-data)
@@ -829,8 +932,16 @@ check_args() {
             INSTALL_OPENCV='no'
             shift
             ;;
+        --venv-path)
+            ZM_VENV="$2"
+            shift 2
+            ;;
+        --no-venv)
+            USE_VENV='no'
+            shift
+            ;;
         *)  # unknown option
-            shift 
+            shift
             ;;
     esac
     done  
@@ -896,6 +1007,12 @@ DISTRO=$(get_distro)
 check_root
 verify_config
 check_deps
+
+# Set up the venv before any Python installs happen
+if [[ ${INSTALL_HOOK} != 'no' ]]; then
+    ensure_venv
+fi
+
 echo
 echo
 
@@ -943,6 +1060,11 @@ fi
 
 # Make sure webserver can access them
 chown -R ${WEB_OWNER}:${WEB_GROUP} "${TARGET_DATA}"
+
+# Set venv ownership so www-data can use it
+if [[ "${USE_VENV}" == "yes" && -d "${ZM_VENV}" ]]; then
+    chown -R ${WEB_OWNER}:${WEB_GROUP} "${ZM_VENV}"
+fi
 
 
 if [ "${INSTALL_CORAL_EDGETPU}" == "yes" ]
@@ -1002,3 +1124,8 @@ if [[ ${ES_INSTALLED} == 'yes' ]]; then
 else
     print_success " Hook installation complete. Configure objectconfig.yml and set up EventStartCommand in ZM."
 fi
+
+echo
+print_important " Core pyzm was installed automatically. For additional pyzm extras"
+echo "  (remote ML server, training UI, etc.) see:"
+echo "  https://pyzmv2.readthedocs.io/en/latest/guide/installation.html"

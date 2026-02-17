@@ -6,7 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
 SPHINXPROJ    = EventNotificationServer
 SOURCEDIR     = .
-BUILDDIR      = docgen
+BUILDDIR      = _build
 
 # Put it first so that "make" without argument is like "make help".
 help:
