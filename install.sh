@@ -857,109 +857,87 @@ check_args() {
     DOWNLOAD_MODELS='yes'
     HOOK_CONFIG_UPGRADE='yes'
 
-    for key in "${cmd_args[@]}"
-    do
+    local i=0
+    while [[ $i -lt ${#cmd_args[@]} ]]; do
+    local key="${cmd_args[$i]}"
     case $key in
         -h|--help)
             display_help && exit
-            shift
             ;;
 
         --no-download-models)
             DOWNLOAD_MODELS='no'
-            shift
             ;;
         --no-pysudo)
             PY_SUDO=''
-            shift
             ;;
         --no-interactive)
             INTERACTIVE='no'
-            shift
             ;;
         --install-es)
             INSTALL_ES='yes'
-            shift 
             ;;
         --no-install-es)
             INSTALL_ES='no'
-            shift
             ;;
         --install-hook)
             INSTALL_HOOK='yes'
-            shift 
             ;;
         --no-install-hook)
             INSTALL_HOOK='no'
-            shift
             ;;
         --no-hook-config-upgrade)
             HOOK_CONFIG_UPGRADE='no'
-            shift
             ;;
         --hook-config-upgrade)
             HOOK_CONFIG_UPGRADE='yes'
-            shift
             ;;
         --install-config)
             INSTALL_HOOK_CONFIG='yes'
             INSTALL_ES_CONFIG='yes'
-            shift
             ;;
         --no-install-config)
             INSTALL_ES_CONFIG='no'
             INSTALL_HOOK_CONFIG='no'
-            shift
             ;;
         --install-es-config)
             INSTALL_ES_CONFIG='yes'
             INSTALL_ES_CONFIG_EXPLICIT='yes'
-            shift
             ;;
         --no-install-es-config)
             INSTALL_ES_CONFIG='no'
             INSTALL_ES_CONFIG_EXPLICIT='yes'
-            shift
             ;;
         --install-hook-config)
             INSTALL_HOOK_CONFIG='yes'
             INSTALL_HOOK_CONFIG_EXPLICIT='yes'
-            shift
             ;;
         --no-install-hook-config)
             INSTALL_HOOK_CONFIG='no'
             INSTALL_HOOK_CONFIG_EXPLICIT='yes'
-            shift
             ;;
         --install-opencv)
             INSTALL_OPENCV='yes'
-            shift
             ;;
         --no-install-opencv)
             INSTALL_OPENCV='no'
-            shift
             ;;
         --venv-path)
-            ZM_VENV="$2"
-            shift 2
+            ZM_VENV="${cmd_args[$((i+1))]}"
+            i=$((i + 1))
             ;;
         --no-venv)
             USE_VENV='no'
-            shift
             ;;
         --install-birdnet)
             INSTALL_BIRDNET='yes'
-            shift
             ;;
         --no-install-birdnet)
             INSTALL_BIRDNET='no'
-            shift
-            ;;
-        *)  # unknown option
-            shift
             ;;
     esac
-    done  
+    i=$((i + 1))
+    done
 
     # If ES/hook won't be installed and config wasn't explicitly requested, skip config too
     if [[ ${INSTALL_ES_CONFIG_EXPLICIT} == 'no' ]]; then
