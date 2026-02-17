@@ -288,7 +288,7 @@ Here is a concrete example from the default ``objectconfig.yml``:
    ml:
      ml_sequence:
        general:
-         model_sequence: "object,face,alpr"
+         model_sequence: "object,face,alpr,audio"
        object:
          general:
            pattern: "(person|car|motorbike|bus|truck|boat)"
@@ -310,6 +310,15 @@ Here is a concrete example from the default ``objectconfig.yml``:
              face_detection_framework: dlib
              known_images_path: "${base_data_path}/known_faces"
              face_model: cnn
+       audio:
+         general:
+           pattern: ".*"
+           same_model_sequence_strategy: first
+         sequence:
+           - name: BirdNET
+             enabled: "yes"
+             audio_framework: birdnet
+             birdnet_min_conf: 0.5
 
 **Explanation:**
 
@@ -639,6 +648,65 @@ known faces images
    images, but experiment. Larger the image, the larger the memory
    requirements)
 - crop around the face - not a tight crop, but no need to add a full body. A typical "passport" photo crop, maybe with a bit more of shoulder is ideal.
+
+
+Audio Recognition (BirdNET)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+BirdNET identifies 6500+ bird species from audio extracted from ZoneMinder events.
+It uses the `BirdNET-Analyzer <https://github.com/kahst/BirdNET-Analyzer>`__ deep learning
+model. Audio is extracted from the event video, split into 3-second chunks, and each chunk
+is analyzed for bird species. The best confidence per species across all chunks is reported.
+
+**Installation:**
+
+BirdNET is not installed by default. Install it into the venv::
+
+   /opt/zoneminder/venv/bin/pip install birdnet-analyzer
+
+**Configuration** (in ``objectconfig.yml``):
+
+1. Add ``audio`` to your ``model_sequence``::
+
+      ml_sequence:
+        general:
+          model_sequence: "object,face,alpr,audio"
+
+2. Configure the ``audio`` section::
+
+      audio:
+        general:
+          pattern: ".*"
+          same_model_sequence_strategy: first
+        sequence:
+          - name: BirdNET
+            enabled: "yes"
+            audio_framework: birdnet
+            birdnet_min_conf: 0.5
+            birdnet_lat: -1
+            birdnet_lon: -1
+            birdnet_sensitivity: 1.0
+            birdnet_overlap: 0.0
+
+**Parameters:**
+
+- ``birdnet_min_conf`` — minimum confidence threshold (0.0–1.0). Default: 0.5
+- ``birdnet_lat``, ``birdnet_lon`` — latitude/longitude for seasonal species filtering.
+  Set to your location to restrict predictions to species expected in your area at the
+  current time of year. -1 disables location filtering (all 6500+ species considered).
+  If set to -1 but the ZM monitor has lat/lon in the database, those values are used
+  as a fallback.
+- ``birdnet_sensitivity`` — sigmoid sensitivity (higher = more sensitive, more false positives). Default: 1.0
+- ``birdnet_overlap`` — overlap in seconds between consecutive 3-second audio chunks (0.0–2.9). Default: 0.0
+
+**Notes:**
+
+- Audio detection only runs on monitors that have audio recording enabled in ZoneMinder.
+- Unlike image-based detections, audio detections do not have spatial bounding boxes
+  (a dummy 1×1 box is used internally).
+- BirdNET results appear in event notes alongside object/face/ALPR detections.
+- The ``pattern`` regex in the ``audio`` general section filters species names,
+  e.g. ``pattern: "(Robin|Sparrow)"`` to only report specific species.
 
 
 Troubleshooting

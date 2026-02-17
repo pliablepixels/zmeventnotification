@@ -220,6 +220,24 @@ ml:
           #  region: strict
           #  mode: fast
 
+    audio:
+      general:
+        pattern: ".*"
+        same_model_sequence_strategy: first
+      sequence:
+        - name: BirdNET
+          enabled: "no"
+          audio_framework: birdnet
+          # Minimum confidence threshold (0.0-1.0)
+          birdnet_min_conf: 0.5
+          # Location for seasonal species filtering (-1 = disabled)
+          birdnet_lat: -1
+          birdnet_lon: -1
+          # Sensitivity of the sigmoid function (higher = more sensitive)
+          birdnet_sensitivity: 1.0
+          # Overlap between 3-second audio chunks (0.0-2.9)
+          birdnet_overlap: 0.0
+
 
 # Monitor-specific overrides
 # Settings here are deep-merged into the global config, so you only
