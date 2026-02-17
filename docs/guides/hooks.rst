@@ -23,6 +23,7 @@ Key Features
 - Detection: objects, faces
 - Recognition: faces
 - License plate recognition (ALPR) via cloud services
+- Audio recognition: bird species identification via BirdNET
 - Platforms:
 
    - CPU (object, face detection, face recognition),
@@ -68,7 +69,7 @@ Detection results are:
   (if ``write_image_to_zm: "yes"`` in ``objectconfig.yml``)
 - Optionally tagged in ZM (if ``tag_detected_objects: "yes"``, requires ZM >= 1.37.44)
 
-**What you get:** object/face/ALPR detection, annotated images, detection notes in ZM,
+**What you get:** object/face/ALPR/audio detection, annotated images, detection notes in ZM,
 local or remote ML via ``pyzm.serve``.
 
 **What you don't get:** push notifications (FCM), WebSocket notifications, MQTT,
@@ -207,6 +208,10 @@ Which models should I use?
 - **YOLOv3 / Tiny YOLOv3 / Tiny YOLOv4**: Still available but no longer installed by default.
   Set the appropriate ``INSTALL_*`` flag to ``yes`` during install if you need them.
 
+- **BirdNET audio recognition**: Identifies 6500+ bird species from audio in ZM events.
+  Requires ``birdnet-analyzer``:
+  ``/opt/zoneminder/venv/bin/pip install birdnet-analyzer``
+
 - For face recognition, use ``face_model: cnn`` for more accuracy and ``face_model: hog`` for better speed
 
 
@@ -215,7 +220,7 @@ Which models should I use?
 Understanding detection configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can chain arbitrary detection types (object, face, alpr) and multiple models within
+You can chain arbitrary detection types (object, face, alpr, audio) and multiple models within
 each type. The detection pipeline is configured through two key structures in ``objectconfig.yml``:
 
 - ``ml_sequence`` — specifies the sequence of ML detection steps
@@ -311,8 +316,8 @@ Here is a concrete example from the default ``objectconfig.yml``:
 - The ``general`` section at the top level specifies characteristics that apply to all elements inside
   the structure.
 
-   - ``model_sequence`` dictates the detection types (comma separated). Example ``object,face,alpr`` will
-     first run object detection, then face, then alpr
+   - ``model_sequence`` dictates the detection types (comma separated). Example ``object,face,alpr,audio`` will
+     first run object detection, then face, then alpr, then audio
 
 - For each detection type in ``model_sequence``, you specify model configurations in the ``sequence`` list.
   Each entry in the sequence is a model configuration with a ``name`` and ``enabled`` flag.
@@ -555,7 +560,7 @@ Face Detection + Face Recognition
 Face Recognition uses
 `this <https://github.com/ageitgey/face_recognition>`__ library. Before
 you try and use face recognition, please make sure you did a
-``sudo -H pip3 install face_recognition`` The reason this is not
+``/opt/zoneminder/venv/bin/pip install face_recognition`` The reason this is not
 automatically done during setup is that it installs a lot of
 dependencies that takes time (including dlib) and not everyone wants it.
 
