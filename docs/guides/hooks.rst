@@ -58,7 +58,9 @@ Configure per monitor in ZM: go to the monitor's **Config -> Recording** tab and
 
 - **Event Start Command**::
 
-     /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
+     /var/lib/zmeventnotification/bin/zm_detect.py -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
+
+  (``-c`` defaults to ``/etc/zm/objectconfig.yml``; pass it explicitly only if your config is elsewhere.)
 
 ZM substitutes ``%EID%``, ``%MID%``, ``%EC%`` tokens at runtime when an event starts.
 
@@ -120,11 +122,13 @@ Regardless of which path you use, you can always test detection manually::
 
    # Test with a ZM event
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-       --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+       --eventid <eid> --monitorid <mid> --debug
 
    # Test with a local image file (no ZM event needed)
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-       --config /etc/zm/objectconfig.yml --file /path/to/image.jpg --debug
+       --file /path/to/image.jpg --debug
+
+(``--config`` defaults to ``/etc/zm/objectconfig.yml`` and can be omitted if your config is at the standard path.)
 
 
 Post install steps
@@ -133,8 +137,10 @@ Post install steps
 -  Make sure you edit your installed ``objectconfig.yml`` to the right
    settings. You MUST change the ``general`` section for your own
    portal.
--  Make sure the ``CONFIG_FILE`` variable in ``zm_event_start.sh`` is
-   correct
+-  If you use ``zm_event_start.sh`` (Path 2), make sure the ``CONFIG_FILE``
+   variable in the script matches your config location. When calling
+   ``zm_detect.py`` directly (Path 1), ``-c`` defaults to
+   ``/etc/zm/objectconfig.yml``.
 
 
 Test operation
@@ -145,7 +151,7 @@ You can test detection directly with ``zm_detect.py`` (no need to go through the
 ::
 
     sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-        --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+        --eventid <eid> --monitorid <mid> --debug
 
 Replace ``<eid>`` with an actual event ID from your ZM console. The ``<mid>`` is the monitor ID
 (optional — if specified, monitor-specific settings from ``objectconfig.yml`` will be used).
@@ -153,7 +159,9 @@ Replace ``<eid>`` with an actual event ID from your ZM console. The ``<mid>`` is
 You can also test with a local image file instead of a ZM event::
 
     sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-        --config /etc/zm/objectconfig.yml --file /path/to/test.jpg --debug
+        --file /path/to/test.jpg --debug
+
+``--config`` defaults to ``/etc/zm/objectconfig.yml``. Pass it explicitly only if your config is elsewhere.
 
 If using the ES hook mode, you can also test the full shell wrapper::
 
@@ -723,7 +731,7 @@ zm_detect.py command-line reference
                  [-n] [-d] [--fakeit LABELS] [--pyzm-debug]
 
 ``-c, --config``
-    Path to ``objectconfig.yml`` (required).
+    Path to ``objectconfig.yml`` (default: ``/etc/zm/objectconfig.yml``).
 
 ``-e, --eventid``
     ZM event ID to analyze (required unless ``--file`` is given).

@@ -3,7 +3,8 @@
 #
 # Two invocation modes:
 # 1. Traditional: called by zmeventnotification.pl via hook
-#      zm_detect.py -c config.yml -e <eid> -m <mid> -r "cause" -n
+#      zm_detect.py -e <eid> -m <mid> -r "cause" -n
+#      (uses /etc/zm/objectconfig.yml by default; override with -c)
 # 2. ZM EventStartCommand / EventEndCommand (ZM 1.37+):
 #      Configure in ZM Options -> Config -> EventStartCommand:
 #        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n
@@ -22,7 +23,7 @@ import zmes_hook_helpers.utils as utils
 
 def main_handler():
     ap = argparse.ArgumentParser()
-    ap.add_argument('-c', '--config', help='config file with path')
+    ap.add_argument('-c', '--config', default='/etc/zm/objectconfig.yml', help='config file with path')
     ap.add_argument('-e', '--eventid', help='event ID to retrieve')
     ap.add_argument('-p', '--eventpath', help='path to store object image file', default='')
     ap.add_argument('-m', '--monitorid', help='monitor id - needed for mask')
@@ -38,7 +39,8 @@ def main_handler():
 
     if args.get('version'):  print('app:{}, pyzm:{}'.format(__app_version__, pyzm_version)); sys.exit(0)
     if args.get('bareversion'): print(__app_version__); sys.exit(0)
-    if not args.get('config'): print('--config required'); sys.exit(1)
+    if not os.path.isfile(args['config']):
+        print('Config file not found: {}'.format(args['config'])); sys.exit(1)
     if not args.get('file') and not args.get('eventid'): print('--eventid required'); sys.exit(1)
 
     # Config + logging

@@ -525,6 +525,7 @@ install_hook() {
     sed -i "s|/var/lib/zmeventnotification/bin/zm_detect.py|${TARGET_BIN_HOOK}/zm_detect.py|g" \
         "${TARGET_BIN_HOOK}/zm_event_start.sh"
     sed -i "s|default='/etc/zm/objectconfig.yml'|default='${TARGET_CONFIG}/objectconfig.yml'|" \
+        "${TARGET_BIN_HOOK}/zm_detect.py" \
         "${TARGET_BIN_HOOK}/zm_train_faces.py"
 
     # Patch shebangs to use the venv Python

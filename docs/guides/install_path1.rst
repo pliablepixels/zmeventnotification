@@ -147,7 +147,9 @@ For each monitor, go to **Config -> Recording** and set:
 
 **Event Start Command**::
 
-   /var/lib/zmeventnotification/bin/zm_detect.py -c /etc/zm/objectconfig.yml -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
+   /var/lib/zmeventnotification/bin/zm_detect.py -e %EID% -m %MID% -r "%EC%" -n --pyzm-debug
+
+``-c`` defaults to ``/etc/zm/objectconfig.yml``; pass it explicitly only if your config is elsewhere.
 
 Step 5: Test manually
 ~~~~~~~~~~~~~~~~~~~~~
@@ -161,18 +163,18 @@ First, verify you have the right versions installed:
 You should see **app:7.0.0** (or above) and **pyzm:2.0.0** (or above).
 If either version is lower, update the corresponding package before continuing.
 
-Then test detection:
+Then test detection (``--config`` defaults to ``/etc/zm/objectconfig.yml``):
 
 .. code:: bash
 
    # Test with a real ZM event
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-       --config /etc/zm/objectconfig.yml --eventid <eid> --monitorid <mid> --debug
+       --eventid <eid> --monitorid <mid> --debug
 
    # Or test with a local image (no ZM event needed)
    wget https://upload.wikimedia.org/wikipedia/commons/c/c4/Anna%27s_hummingbird.jpg -O /tmp/bird.jpg
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
-       --config /etc/zm/objectconfig.yml --file /tmp/bird.jpg --debug
+       --file /tmp/bird.jpg --debug
 
 Optional: Face recognition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

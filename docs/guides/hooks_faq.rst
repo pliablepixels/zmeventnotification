@@ -41,9 +41,9 @@ If you have problems with hooks, there are three areas of failure:
 
    01/06/2021 07:20:31.936130 zmeventnotification[28118].DBG [main:977] [|----> FORK:DeckCamera (6), eid:182253 Invoking hook on event start:'/var/lib/zmeventnotification/bin/zm_event_start.sh' 182253 6 "DeckCamera" " stairs" "/var/cache/zoneminder/events/6/2021-01-06/182253"]
 
-- Then run ``zm_detect.py`` manually with debug flags::
+- Then run ``zm_detect.py`` manually with debug flags (``--config`` defaults to ``/etc/zm/objectconfig.yml``)::
 
-   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --config /etc/zm/objectconfig.yml --debug --eventid 182253 --monitorid 6 --eventpath=/tmp
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --debug --eventid 182253 --monitorid 6 --eventpath=/tmp
 
   (You can use ``/tmp`` as the event path for convenience, or the actual event path shown in the log.)
 
@@ -77,12 +77,12 @@ This tells you the exact arguments the ES passed to the hook script:
 **Step 2: Run zm_detect manually with debug flags**
 
 Translate the hook invocation into a direct ``zm_detect.py`` call and add
-``--debug`` and ``--pyzm-debug`` for full diagnostic output::
+``--debug`` and ``--pyzm-debug`` for full diagnostic output
+(``--config`` defaults to ``/etc/zm/objectconfig.yml``)::
 
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
      --eventid <eid> \
      --monitorid <mid> \
-     --config /etc/zm/objectconfig.yml \
      --eventpath "<EventPath>" \
      --reason "<Cause>" \
      --debug \
