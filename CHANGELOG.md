@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- fix objectconfig gateway mode default, comment out auth keys ([c8cea48](https://github.com/pliablepixels/zmeventnotification/commit/c8cea484188781bfe9b204908dcc479744cd66ca))
+- update CHANGELOG for v7.0.4 ([bb0a012](https://github.com/pliablepixels/zmeventnotification/commit/bb0a01288e55c23349ae19afbf3ef8469f741cbb))
 - add BirdNET audio section to objectconfig and hooks guide ([c9c655e](https://github.com/pliablepixels/zmeventnotification/commit/c9c655e0df5e395f506debfa5d479de288ad38c8))
 - add BirdNET audio detection to hooks documentation ([55d4bf0](https://github.com/pliablepixels/zmeventnotification/commit/55d4bf0e3e4ecf8c81fe1fd56ee8eb2b6bc242ef))
 - add zmES7+ logo to README and RTD docs ([a416f7d](https://github.com/pliablepixels/zmeventnotification/commit/a416f7ddbc553abe14d8874b36ed679b2bf62f1a))
