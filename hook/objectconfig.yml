@@ -85,14 +85,15 @@ remote:
   #ml_gateway: "http://192.168.1.183:5000"
   #ml_fallback_local: "yes"
 
-  # Gateway mode: "image" (default) or "url"
-  #   image: ZM box fetches frames, JPEG-encodes, and uploads to server
+  # Gateway mode: "url" (default) or "image"
   #   url:   ZM box sends frame URLs; server fetches images directly from ZM
   #          (more efficient when the GPU box can reach your ZM portal)
+  #   image: ZM box fetches frames, JPEG-encodes, and uploads to server
   #ml_gateway_mode: "url"
 
-  ml_user: "!ML_USER"
-  ml_password: "!ML_PASSWORD"
+  # Auth credentials (optional -- only needed if server uses --auth)
+  #ml_user: "!ML_USER"
+  #ml_password: "!ML_PASSWORD"
   ml_timeout: 60
 
 
