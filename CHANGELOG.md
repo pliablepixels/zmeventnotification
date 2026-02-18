@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.4] - 2026-02-18
+
+### Bug Fixes
+
+- broken --venv-path argument parsing ([a44915b](https://github.com/pliablepixels/zmeventnotification/commit/a44915b5797f047037632f4c27659cfb212e559d))
+
+### Documentation
+
+- add BirdNET audio section to objectconfig and hooks guide ([c9c655e](https://github.com/pliablepixels/zmeventnotification/commit/c9c655e0df5e395f506debfa5d479de288ad38c8))
+- add BirdNET audio detection to hooks documentation ([55d4bf0](https://github.com/pliablepixels/zmeventnotification/commit/55d4bf0e3e4ecf8c81fe1fd56ee8eb2b6bc242ef))
+- add zmES7+ logo to README and RTD docs ([a416f7d](https://github.com/pliablepixels/zmeventnotification/commit/a416f7ddbc553abe14d8874b36ed679b2bf62f1a))
+- point zmNg sidebar and doc links to RTD ([2fea09d](https://github.com/pliablepixels/zmeventnotification/commit/2fea09d77f9fa94c1e2af68b95886f915bbffa0c))
+
+### Features
+
+- add --install-birdnet flag for BirdNET audio detection ([abca135](https://github.com/pliablepixels/zmeventnotification/commit/abca1356439729cce6ffa20eca1324a7a416b224))
+- default zm_detect.py config to /etc/zm/objectconfig.yml ([00e4fca](https://github.com/pliablepixels/zmeventnotification/commit/00e4fca394fd860c2ea1e4d821dbe578b0f59980))
+- use shared venv instead of --break-system-packages ([dce5934](https://github.com/pliablepixels/zmeventnotification/commit/dce593482463ace5cff5456f025a0c8534d81d2b))
+
+### Miscellaneous
+
+- bump version to v7.0.4 ([e07bb9c](https://github.com/pliablepixels/zmeventnotification/commit/e07bb9cfbeade2df243ebcf3dd41e681f24df3e0))
+- bump version to 7.0.4 ([8524214](https://github.com/pliablepixels/zmeventnotification/commit/85242149ada8c0ad0df300da4e6244b66fd6dc40))
+- bump pyzm dependency to >=2.1.0 ([6c0a459](https://github.com/pliablepixels/zmeventnotification/commit/6c0a459c10da2fefbfeca3553bf8b1f0fa9cf07f))
+
+### Refactoring
+
+- use pyzm v2 OOP methods in zm_detect ([f9ce160](https://github.com/pliablepixels/zmeventnotification/commit/f9ce160ce7c60c31f0d8293ae062f98fed5068a8))
+
 ## [7.0.3] - 2026-02-15
 
 ### Bug Fixes
@@ -11,6 +40,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- update CHANGELOG for v7.0.3 ([ffcd4ab](https://github.com/pliablepixels/zmeventnotification/commit/ffcd4ab0f23300dcae11bb918c07e17d9bf5436e))
 - update pyzm.serve examples from yolov4 to yolo11s ([c2f7c4c](https://github.com/pliablepixels/zmeventnotification/commit/c2f7c4cbb6c5ee5352f33f43310244ac86d6b2ed))
 
 ### Miscellaneous
