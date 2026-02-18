@@ -26,9 +26,17 @@ class _StubDetector:
     def detect(self, *a, **kw): return type("R", (), {"to_dict": lambda s: {}})()
     def detect_event(self, *a, **kw): return type("R", (), {"to_dict": lambda s: {}})()
 
+class _StubEvent:
+    def __init__(self, **kw):
+        self.notes = kw.get('notes', '')
+    def path(self): return None
+    def update_notes(self, notes): pass
+    def tag(self, labels): pass
+
 class _StubZMClient:
     api = None
     def __init__(self, *a, **kw): pass
+    def event(self, eid): return _StubEvent()
 
 class _StubStreamConfig:
     @classmethod

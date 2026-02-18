@@ -73,7 +73,7 @@ def main_handler():
     if isinstance(stream_options, str): stream_options = ast.literal_eval(stream_options)
 
     # Connect to ZM via pyzm v2
-    zm = ZMClient(url=g.config['api_portal'], user=g.config['user'], password=g.config['password'],
+    zm = ZMClient(api_url=g.config['api_portal'], user=g.config['user'], password=g.config['password'],
                   portal_url=g.config['portal'], verify_ssl=(g.config['allow_self_signed'] != 'yes'))
     stream_options['api'], stream_options['polygons'] = zm.api, g.polygons
     g.config['stream_sequence'] = stream_options
@@ -149,7 +149,8 @@ def main_handler():
                 cv2.rectangle(debug_image, (_b[0], _b[1]), (_b[2], _b[3]), (0, 0, 255), 1)
             cv2.imwrite(os.path.join(g.config['image_path'], '{}-{}-debug.jpg'.format(os.path.basename(stream), matched_data['frame_id'])), debug_image)
         if g.config['write_image_to_zm'] == 'yes':
-            eventpath = args.get('eventpath') or (zm.event_path(int(args['eventid'])) if args.get('eventid') else None)
+            ev = zm.event(int(args['eventid'])) if args.get('eventid') else None
+            eventpath = args.get('eventpath') or (ev.path() if ev else None)
             if eventpath:
                 os.makedirs(eventpath, exist_ok=True)
                 cv2.imwrite(os.path.join(eventpath, 'objdetect.jpg'), debug_image)
@@ -166,14 +167,15 @@ def main_handler():
             ev = zm.event(int(args['eventid']))
             old = ev.notes or ''
             parts = old.split('Motion:') if old else ['']
-            zm.update_event_notes(int(args['eventid']), pred + ('Motion:' + parts[1] if len(parts) > 1 else ''))
+            ev.update_notes(pred + ('Motion:' + parts[1] if len(parts) > 1 else ''))
         except Exception as e: g.logger.Error('Error updating notes: {}'.format(e))
 
     # --- Tag detected objects in ZM ---
     if g.config.get('tag_detected_objects') == 'yes' and args.get('eventid') and matched_data.get('labels'):
         try:
             g.logger.Debug(1, 'Tagging event {} with labels: {}'.format(args['eventid'], matched_data['labels']))
-            zm.tag_event(int(args['eventid']), matched_data['labels'])
+            ev = zm.event(int(args['eventid']))
+            ev.tag(matched_data['labels'])
             g.logger.Debug(1, 'Tagging complete for event {}'.format(args['eventid']))
         except Exception as e: g.logger.Error('Error tagging event: {}'.format(e))
 
