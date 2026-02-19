@@ -9,7 +9,7 @@ The key changes that affect ES users:
 
 **What changed:**
 
-- **``mlapi`` is replaced by ``pyzm.serve``** — the remote ML detection server is now built
+- ``mlapi`` **is replaced by** ``pyzm.serve`` — the remote ML detection server is now built
   into pyzm itself. No separate ``mlapi`` package or ``mlapiconfig.ini`` needed.
 - **``Detector`` is the single entry point** — replaces ``DetectSequence``, ``ObjectDetect``,
   ``FaceDetect``, and other scattered classes. ``zm_detect.py`` now uses ``Detector.from_dict()``
@@ -39,15 +39,19 @@ The key changes that affect ES users:
    YAML structures are fully backward compatible. ``Detector.from_dict()`` reads them
    identically.
 
-**Remote ML config — before (mlapi) vs. after (pyzm.serve):**
+**Remote ML config** — before (``mlapi``) vs. after (``pyzm.serve``):
 
-Before (``objectconfig.yml`` with mlapi)::
+Before (``objectconfig.yml`` with ``mlapi``):
+
+.. code-block:: yaml
 
    remote:
      ml_gateway: "http://gpu-box:5000"
      # Also needed: mlapiconfig.ini on the GPU box
 
-After (``objectconfig.yml`` with pyzm.serve)::
+After (``objectconfig.yml`` with ``pyzm.serve``):
+
+.. code-block:: yaml
 
    remote:
      ml_gateway: "http://gpu-box:5000"
