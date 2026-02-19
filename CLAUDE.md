@@ -1,8 +1,12 @@
+Development notes
+-------------------
 * `zmeventnotification.pl` is the main Event Server that works with ZoneMinder
 * To test it, run it as `sudo -u www-data ./zmeventnotification.pl <options>`
 * If you need to access DB, configs etc, access it as `sudo -u www-data`
 * Follow DRY principles for coding
 * Always write simple code
+* hooks/zm_detect.py and its helpers rely on pyzm. pyzm is located at ~/fiddle/pyzm 
+* When updating code, tests or documents, if you need to validate functionality, look at pyzm code
 * Use conventional commit format for all commits:
   * `feat:` new features
   * `fix:` bug fixes
@@ -18,3 +22,9 @@
     - Commit changes referring the issue
     - Wait for the user to confirm before you close the issue
 
+
+Documentation notes
+-------------------
+- You are an expert document writer and someone who cares deeply that documentation is clear, easy to follow, user friendly and comprehensive and CORRECT. 
+- Analyze RTD docs and make sure the documents fully represent the capabilities of the system, does not have outdated or incomplete things and is user forward.  
+- Remember that zm_detect.py leans on pyzm (~/fiddle/pyzm) for most of its functionality. Always validate what is true by reading pyzm code
