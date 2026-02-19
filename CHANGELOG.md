@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.5] - 2026-02-19
+
+### Documentation
+
+- added documentation notes and pyzm reliance ([49dd557](https://github.com/pliablepixels/zmeventnotification/commit/49dd5575447882d2444a29abe1a417967f5d0f74))
+- comprehensive RTD documentation audit and fixes ([ea81fe1](https://github.com/pliablepixels/zmeventnotification/commit/ea81fe1b0f742296eb3528860234a306258b67c3))
+
+### Miscellaneous
+
+- bump version to v7.0.5 ([e07aa97](https://github.com/pliablepixels/zmeventnotification/commit/e07aa9785dcbd70a7226601f72e30fb31c30ebea))
+- pyzm bump ([98da324](https://github.com/pliablepixels/zmeventnotification/commit/98da32425fe28412a17bd9a4d1f4b843e3591b51))
+
 ## [7.0.4] - 2026-02-18
 
 ### Bug Fixes
@@ -11,6 +23,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- update CHANGELOG for v7.0.4 ([5a4b6db](https://github.com/pliablepixels/zmeventnotification/commit/5a4b6dbc2644f70eeff9f8dc483621497239420a))
 - fix objectconfig gateway mode default, comment out auth keys ([c8cea48](https://github.com/pliablepixels/zmeventnotification/commit/c8cea484188781bfe9b204908dcc479744cd66ca))
 - update CHANGELOG for v7.0.4 ([bb0a012](https://github.com/pliablepixels/zmeventnotification/commit/bb0a01288e55c23349ae19afbf3ef8469f741cbb))
 - add BirdNET audio section to objectconfig and hooks guide ([c9c655e](https://github.com/pliablepixels/zmeventnotification/commit/c9c655e0df5e395f506debfa5d479de288ad38c8))
