@@ -102,6 +102,13 @@ So at this stage, we have a new event and we need to decide if the ES will send 
 * If you had hooks enabled, and the hook succeeded (i.e. return value of ``0``), then the notification *may* be sent to the channels you specified in ``event_start_notify_on_hook_success``.
 * If the hook failed (i.e. return value of non zero, then the notification *may* be sent to the channels specified in ``event_start_notify_on_hook_fail``)
 
+3.2.1: Notification channels
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
+
 .. sidebar:: Summary of rules:
 
   * if hooks are used, needs to return 0 as exit status
@@ -110,13 +117,6 @@ So at this stage, we have a new event and we need to decide if the ES will send 
   * Then, channel must be in the notify_on_xxx attributes
   * Then, if FCM, monitor must be in tokens.txt for that device
   * Then, if FCM, delay must be > delay specified in tokens.txt
-
-3.2.1: Notification channels
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. note::
-
-   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
 
 At a high level, there are 4 types of clients that are interested in receiving notifications:
 
