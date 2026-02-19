@@ -24,7 +24,7 @@ How do I talk to it?
     - push (only applicable for zmNg/zmNinja)
     - alarm notifications (from server to client)
 
-  - 'escontrol' messages. This allows the client to change the behaviour of the ES dynamically. The changes are stored persistently in ``/var/lib/zmeventnotification/misc/admin_interface.txt``.
+  - 'escontrol' messages. This allows the client to change the behaviour of the ES dynamically. The changes are stored persistently in ``/var/lib/zmeventnotification/misc/escontrol_interface.dat``.
 
 Category: Normal messages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -53,7 +53,7 @@ Authentication successful:
 
 ::
 
-    {"event":"auth", "type":"", "version":"0.2","status":"Success","reason":""}
+    {"event":"auth", "type":"", "version":"<version>","status":"Success","reason":""}
 
 Note that it also sends its version number for convenience
 
@@ -132,7 +132,7 @@ A client can send a control message to request Event Server version
 
 ::
 
-    {"event":"control", "type:":"version", "version":"0.2","status":"Success","reason":""}
+    {"event":"control", "type:":"version", "version":"<version>","status":"Success","reason":""}
 
 Alarm notifications
 '''''''''''''''''''''''
@@ -152,10 +152,8 @@ Push Notifications (for both iOS and Android)
 
    While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
 
-To make Push Notifications work, please make sure you read the `section
-on enabling
-Push <https://github.com/pliablepixels/zmeventnotification#44-apnsgcm-howto---only-applicable-for-zmninja-not-for-other-consumers>`__
-for the event server.
+To make Push Notifications work, please make sure you read the
+:doc:`install_path2` guide and ensure FCM is configured in ``zmeventnotification.yml``.
 
 Concepts of Push and why it is only for zmNg/zmNinja
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -185,11 +183,11 @@ Here is an example of registering an Android device:
     {"event":"push","data":{"type":"token","platform":"android","token":"<device tokenid here>", "state":"enabled"}}
 
 For devices capable of receiving push notifications, but want to stop
-receiving push notifications over APNS/GCM and have it delivered over
+receiving push notifications over FCM and have it delivered over
 websockets instead, set the state to disabled
 
 For example: Here is an example of registering an Android device, which
-disables push notifications over GCM:
+disables push notifications over FCM:
 
 ::
 
@@ -259,7 +257,7 @@ To authenticate:
 
 ::
 
-  {"type":"","reason":"","event":"auth","version":"5.7","status":"Success"}
+  {"type":"","reason":"","event":"auth","version":"<version>","status":"Success"}
 
 escontrol commands
 '''''''''''''''''''''
@@ -341,7 +339,7 @@ so:
     wscat -c wss://myzmeventnotification.domain:9000 -n
     connected (press CTRL+C to quit)
     > {"event":"auth","data":{"user":"admin","password":"xxxx"}}
-    < {"reason":"","status":"Success","type":"","event":"auth","version":"0.93"}
+    < {"reason":"","status":"Success","type":"","event":"auth","version":"<version>"}
 
 In the example above, I used ``wscat`` to connect to my event server and
 then sent it a JSON login message which it accepted and acknowledged.

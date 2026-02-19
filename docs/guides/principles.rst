@@ -180,11 +180,15 @@ The ``tokens.txt`` file stores additional fields beyond the token itself. Here i
 You will also note that ``tokens.txt`` does not contain any other entries besides android and iOS. zmNg/zmNinja desktop does not feature here, for example. That is because ``tokens.txt`` only exists to store FCM registrations. zmNg/zmNinja desktop only receives notifications when it is running and via websockets, so that connection is established when the desktop app runs. FCM tokens on the other hand need to be remembered, because zmNg/zmNinja may not be running in your phone and the ES still needs to send out notifications to all tokens (devices) that might have previously registered.
 
 
-3.2.4: The Rules file
+3.2.3: The Rules file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ES uses a ``es_rules.yml`` that gets installed in ``/etc/zm/``.
-It is a YAML file that supports various rules. As of today, it only supports
-the "mute" action. You can specify "mute" time ranges where the ES will not send out notifications.
+It is a YAML file that supports various rules. Two actions are supported:
+
+- ``mute`` — suppress the notification entirely during the matching time window
+- ``critical_notify`` — escalate the notification as a critical/high-priority alert (the notification is still sent, but marked as critical)
+
+You can specify time ranges, days of the week, and cause patterns to control when each action applies.
 
 Here is an example of the rules file:
 
@@ -206,6 +210,12 @@ Here is an example of the rules file:
             to: "6 am"
             action: mute
             cause_has: truck
+          - comment: "Always escalate person detections at night"
+            time_format: "%I:%M %p"
+            from: "10 pm"
+            to: "6 am"
+            cause_has: person
+            action: critical_notify
       998:
         rules:
           - time_format: "%I:%M %p"
@@ -216,7 +226,10 @@ Here is an example of the rules file:
 It says for Monitor ID 999, don't send notifications between
 9:30pm to 1am on Mon,Tue,Wed for any alarms that don't have "person" in it's cause
 assuming you are using object detection. It also says from 3am - 6am for all days of the week,
-don't send alarms if the alarm cause has "truck" in it.
+don't send alarms if the alarm cause has "truck" in it. From 10pm - 6am, any alarm with
+"person" in the cause will be escalated as a critical notification.
+
+Rules are evaluated sequentially; the first matching rule wins.
 
 For Monitor 998, don't send notifications from 5pm to 7am for all days of the week.
 Note that you need to install ``Time::Piece`` in Perl.
@@ -240,7 +253,10 @@ Starting with version ``5.14``, two additional triggers are supported: ``event_s
 -------------------------------------
 Once all checks have passed, ``zmeventnotification.pl`` sends the notification. The protocol depends on the channel:
 
-  - If it is FCM, the message is sent using FCM API
+  - If it is FCM, the message is sent using the FCM API. By default, messages are proxied through
+    a cloud function (``fcm_v1_url``). You can bypass the proxy and send directly to Google's FCM V1
+    API by setting ``fcm_service_account_file`` to the path of a Google Service Account JSON file in
+    the ``fcm`` section of ``zmeventnotification.yml``.
   - If it is MQTT, the message is sent using ``MQTT::Simple`` (a perl package)
   - If it is Websockets, the message is sent using ``Net::WebSocket`` (a perl package)
   - If it is a 3rd party push service, the message is sent via the script defined in ``api_push_script`` in ``zmeventnotification.yml``

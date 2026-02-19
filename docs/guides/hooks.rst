@@ -264,6 +264,37 @@ under the ``monitors`` section. You can override the entire structure or just pa
          general:
            model_sequence: "object,alpr"
 
+Per-monitor zones
+^^^^^^^^^^^^^^^^^^
+You can define detection zones per monitor. Each zone specifies a polygon region and optionally
+a ``detection_pattern`` (regex of labels to look for in that zone) and an ``ignore_pattern``
+(regex of labels to suppress even if they match ``detection_pattern``).
+
+::
+
+   monitors:
+     999:
+       zones:
+         my_driveway:
+           coords: "306,356 1003,341 1074,683 154,715"
+           detection_pattern: "(person|car)"
+           ignore_pattern: "(car|truck)"
+         front_porch:
+           coords: "0,0 200,300 700,900"
+
+- ``coords`` — polygon coordinates as ``"x1,y1 x2,y2 x3,y3 ..."``
+- ``detection_pattern`` — regex for which labels to accept in this zone (optional; if omitted, all labels match)
+- ``ignore_pattern`` — regex for labels to suppress in this zone even if ``detection_pattern`` allows them
+  (optional). Useful for excluding parked cars or other stationary objects from a specific area.
+
+You can also import zones from ZoneMinder instead of defining them manually:
+
+::
+
+   general:
+     import_zm_zones: "yes"
+     only_triggered_zm_zones: "no"
+
 
 
 Understanding ml_sequence
@@ -347,12 +378,15 @@ Leveraging same_model_sequence_strategy and frame_strategy effectively
 
 When using model chaining, these attributes control how aggressively the pipeline searches for matches.
 
-``same_model_sequence_strategy`` is part ``ml_sequence``  with the following possible values:
+``same_model_sequence_strategy`` is part of ``ml_sequence``  with the following possible values:
 
    - ``first`` - When detecting objects, if there are multiple fallbacks, break out the moment we get a match
       using any object detection library (Default)
    - ``most`` - run through all libraries, select one that has most object matches
    - ``most_unique`` - run through all libraries, select one that has most unique object matches
+   - ``union`` - run through all libraries, combine all detections from every variant into one merged list.
+     Useful when you have multiple models that detect different classes (e.g. a base YOLO model and a
+     fine-tuned model) and want to combine their results
 
 ``frame_strategy`` is part of ``stream_sequence`` with the following possible values:
 
@@ -767,6 +801,12 @@ zm_detect.py command-line reference
 
 ``-v, --version``
     Print version and exit.
+
+``--bareversion``
+    Print just the version number (no pyzm version) and exit.
+
+``-o, --output-path``
+    Directory to write debug images to (used with ``write_debug_image``).
 
 Questions
 ~~~~~~~~~~~

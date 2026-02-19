@@ -30,7 +30,7 @@ If you have problems with hooks, there are three areas of failure:
    — Covered by the debugging steps below and in :ref:`triage-no-detection`.
 
 3. **The wrapper script** (typically ``/var/lib/zmeventnotification/bin/zm_event_start.sh``) **is not able to run** ``zm_detect.py``
-   — This won't be covered in either log (I need to add logging for this...).
+   — This won't be covered in either log. Try running the wrapper script manually to diagnose.
 
 **Debugging hooks step by step:**
 

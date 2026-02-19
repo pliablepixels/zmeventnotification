@@ -206,6 +206,25 @@ Make sure the web user has device access: ``sudo usermod -a -G plugdev www-data`
    running Python 3.10+, see `pycoral#149 <https://github.com/google-coral/pycoral/issues/149>`__
    for community workarounds.
 
+Post-install diagnostics
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+After installation, run the diagnostic tool to check your environment:
+
+::
+
+   sudo -u www-data python3 tools/install_doctor.py \
+       --hook-config /etc/zm/objectconfig.yml \
+       --es-config /etc/zm/zmeventnotification.yml \
+       --web-owner www-data --web-group www-data \
+       --base-data /var/lib/zmeventnotification
+
+(Run from the zmeventnotification source directory.)
+This checks GPU/CUDA availability, OpenCV version, model file paths, file permissions,
+SSL certificates, MQTT/FCM Perl dependencies, and Python package versions. Fix any
+issues it reports before proceeding. Note that ``install.sh`` runs this automatically
+at the end of installation.
+
 Troubleshooting
 ~~~~~~~~~~~~~~~
 

@@ -15,13 +15,9 @@ You can get the version by doing:
 sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py --version
 ```
 
-**Are you using MLAPI? (Y/N)**
+**Are you using a remote ML server (pyzm.serve)? (Y/N)**
 
-If you are using MLAPI, please mention the version
-You can get the version by doing: (change path to wherever you install mlapi)
-```
-/var/lib/zmeventnotification/mlapi/mlapi.py --version
-```
+If yes, please mention whether you are using ``url`` or ``image`` gateway mode.
 
 **The version of ZoneMinder you are using:**
 
