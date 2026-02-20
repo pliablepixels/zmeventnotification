@@ -40,7 +40,7 @@ These tests mock pyzm and use no real models.  They run anywhere:
 End-to-end tests
 -----------------
 
-The ``hook/tests/test_e2e/`` directory contains 26 tests that exercise
+The ``hook/tests/test_e2e/`` directory contains tests that exercise
 the full objectconfig YAML → pyzm detection → output chain using real
 YOLO models and a real test image (``bird.jpg``, included in the repo).
 

@@ -48,7 +48,7 @@ per-monitor notification rules, time-based muting, and integration with
 app for ZoneMinder).
 
 The **ML Ecosystem** (``zm_detect.py + pyzm``) is the machine learning detection
-framework. They take a ZoneMinder event and runs it through one or more
+framework. They take a ZoneMinder event and run it through one or more
 ML pipelines — supporting multiple model types (object, face, ALPR, etc.).
 The ML hook is powered by `pyzm <https://pyzmv2.readthedocs.io/en/latest/#>`__,
 a standalone ML detection library that can also be used independently.
