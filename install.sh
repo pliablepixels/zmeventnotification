@@ -559,6 +559,9 @@ install_hook() {
       echo "VERSION=__version__" >> hook/zmes_hook_helpers/__init__.py
     fi
 
+    PYZM_PREINSTALLED=false
+    ${PIP} show pyzm &>/dev/null && PYZM_PREINSTALLED=true
+
     echo "Running: ${PY_SUDO} ${PIP} -v install hook/ ${PIP_COMPAT}"
     run_dimmed ${PY_SUDO} ${PIP} -v install hook/ ${PIP_COMPAT} && print_opencv_message || print_error "python hooks setup failed"
 
@@ -1129,7 +1132,9 @@ else
     print_success " Hook installation complete. Configure objectconfig.yml and set up EventStartCommand in ZM."
 fi
 
-echo
-print_important " Core pyzm was installed automatically. For additional pyzm extras"
-echo "  (remote ML server, training UI, etc.) see:"
-echo "  https://pyzmv2.readthedocs.io/en/latest/guide/installation.html"
+if [[ "${PYZM_PREINSTALLED}" == false ]]; then
+    echo
+    print_important " Core pyzm was installed automatically. For additional pyzm extras"
+    echo "  (remote ML server, training UI, etc.) see:"
+    echo "  https://pyzmv2.readthedocs.io/en/latest/guide/installation.html"
+fi
