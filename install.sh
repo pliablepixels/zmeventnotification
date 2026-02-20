@@ -488,7 +488,7 @@ install_hook() {
 
     if [ "${INSTALL_OPENCV}" == "yes" ]; then
         echo "Installing python3-opencv..."
-        run_dimmed ${PY_SUDO} ${INSTALLER} install python3-opencv
+        run_dimmed ${INSTALLER} install -y python3-opencv
     else
         print_skip "python3-opencv installation"
     fi
@@ -566,7 +566,7 @@ install_hook() {
     run_dimmed ${PY_SUDO} ${PIP} -v install hook/ ${PIP_COMPAT} && print_opencv_message || print_error "python hooks setup failed"
 
     print_section 'Installing package dependencies'
-    run_dimmed ${PY_SUDO} ${INSTALLER} install gifsicle -qq
+    run_dimmed ${INSTALLER} install -y gifsicle -qq
 
 }
 
@@ -1005,7 +1005,7 @@ verify_config
 check_deps
 
 # Set up the venv before any Python installs happen
-if [[ ${INSTALL_HOOK} != 'no' ]]; then
+if [[ ${INSTALL_HOOK} != 'no' || ${INSTALL_ES_CONFIG} != 'no' || ${INSTALL_HOOK_CONFIG} != 'no' || ${INSTALL_BIRDNET} == 'yes' ]]; then
     ensure_venv
 fi
 
@@ -1094,11 +1094,7 @@ fi
 if [ "${INSTALL_BIRDNET}" == "yes" ]
 then
     print_section 'Installing BirdNET audio detection (birdnet-analyzer)'
-    if [[ "${USE_VENV}" == "yes" ]]; then
-        run_dimmed "${ZM_VENV}/bin/pip" install birdnet-analyzer -q
-    else
-        run_dimmed ${PY_SUDO} ${PIP} install birdnet-analyzer ${PIP_COMPAT} -q
-    fi
+    run_dimmed ${PY_SUDO} ${PIP} install birdnet-analyzer ${PIP_COMPAT} -q
     print_success "birdnet-analyzer installed"
 fi
 
