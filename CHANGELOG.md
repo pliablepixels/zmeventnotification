@@ -3,10 +3,23 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.6] - 2026-02-20
+
+### Documentation
+
+- fix inline code quoting for mlapi and pyzm.serve in breaking.rst ([55eaf84](https://github.com/pliablepixels/zmeventnotification/commit/55eaf843932590b69fa3eb3f2827b7b2f0ae503a))
+- fix sidebar/note formatting in principles.rst section 3.2.1 ([e249c05](https://github.com/pliablepixels/zmeventnotification/commit/e249c05c8e70ca0082382e1e40325bb74e47eaf2))
+
+### Miscellaneous
+
+- bump version to v7.0.6 ([adc4564](https://github.com/pliablepixels/zmeventnotification/commit/adc4564dbe6f6b571091f23209c9aa3a5a0ae677))
+- ver bump for pyzm ([babbe4a](https://github.com/pliablepixels/zmeventnotification/commit/babbe4ab9d140cf0002bafd92fad062d7d4d6c7d))
+
 ## [7.0.5] - 2026-02-19
 
 ### Documentation
 
+- update CHANGELOG for v7.0.5 ([6f375d9](https://github.com/pliablepixels/zmeventnotification/commit/6f375d9f65410bb8276da5a06ca63814771d9f73))
 - added documentation notes and pyzm reliance ([49dd557](https://github.com/pliablepixels/zmeventnotification/commit/49dd5575447882d2444a29abe1a417967f5d0f74))
 - comprehensive RTD documentation audit and fixes ([ea81fe1](https://github.com/pliablepixels/zmeventnotification/commit/ea81fe1b0f742296eb3528860234a306258b67c3))
 
