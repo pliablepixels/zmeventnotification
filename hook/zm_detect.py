@@ -10,7 +10,11 @@
 #        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n
 #      ZM substitutes %EID%, %MID%, %EC% tokens at runtime (same as zmfilter.pl).
 
-import argparse, ast, json, os, ssl, sys, time, traceback
+import argparse, ast, json, os, re, ssl, sys, time, traceback
+
+import cv2
+import numpy as np
+import yaml
 
 from pyzm import __version__ as pyzm_version
 from pyzm import Detector, ZMClient
@@ -19,6 +23,57 @@ from pyzm.models.zm import Zone
 import zmes_hook_helpers.common_params as g
 from zmes_hook_helpers import __version__ as __app_version__
 import zmes_hook_helpers.utils as utils
+
+
+# ---------------------------------------------------------------------------
+# Utility helpers (inlined from removed pyzm.helpers.utils)
+# ---------------------------------------------------------------------------
+
+def _read_config(path):
+    """Read a YAML config file and return a dict."""
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    return data if data else {}
+
+
+def _template_fill(input_str, config=None, secrets=None):
+    """Replace ${key} and !key placeholders with config/secret values."""
+    res = input_str
+    if config:
+        res = re.sub(r'\$\{(\w+?)\}', lambda m: config.get(m.group(1), 'MISSING-{}'.format(m.group(1))), res)
+    if secrets:
+        res = re.sub(r'!(\w+)', lambda m: secrets.get(m.group(1).lower(), '!{}'.format(m.group(1).lower())), res)
+    return res
+
+
+def _draw_bbox(image, boxes, labels, confidences=None, polygons=None,
+               poly_color=(255, 255, 255), poly_thickness=1, write_conf=True):
+    """Draw bounding boxes, labels, and zone polygons on *image*."""
+    slate_colors = [(39, 174, 96), (142, 68, 173), (0, 129, 254),
+                    (254, 60, 113), (243, 134, 48), (91, 177, 47)]
+    bgr_slate_colors = slate_colors[::-1]
+    image = image.copy()
+
+    if poly_thickness and polygons:
+        for ps in polygons:
+            cv2.polylines(image, [np.asarray(ps['value'])], True,
+                          poly_color, thickness=poly_thickness)
+
+    arr_len = len(bgr_slate_colors)
+    for i, label in enumerate(labels):
+        box_color = bgr_slate_colors[i % arr_len]
+        if write_conf and confidences:
+            label += ' {:.2f}%'.format(confidences[i] * 100)
+        cv2.rectangle(image, (boxes[i][0], boxes[i][1]),
+                       (boxes[i][2], boxes[i][3]), box_color, 2)
+        font_scale, font_type, font_thickness = 0.8, cv2.FONT_HERSHEY_SIMPLEX, 1
+        text_size = cv2.getTextSize(label, font_type, font_scale, font_thickness)[0]
+        r_top_left = (boxes[i][0], boxes[i][1] - text_size[1] - 4)
+        r_bottom_right = (boxes[i][0] + text_size[0] + 4, boxes[i][1])
+        cv2.rectangle(image, r_top_left, r_bottom_right, box_color, -1)
+        cv2.putText(image, label, (boxes[i][0] + 2, boxes[i][1] - 2),
+                    font_type, font_scale, (255, 255, 255), font_thickness)
+    return image
 
 
 def main_handler():
@@ -44,7 +99,6 @@ def main_handler():
     if not args.get('file') and not args.get('eventid'): print('--eventid required'); sys.exit(1)
 
     # Config + logging
-    import pyzm.helpers.utils as pyzmutils
     from pyzm.log import setup_zm_logging
     utils.get_pyzm_config(args)
     if args.get('debug'):
@@ -52,7 +106,6 @@ def main_handler():
     mid = args.get('monitorid')
     g.logger = setup_zm_logging(name='zmesdetect_m{}'.format(mid) if mid else 'zmesdetect', override=g.config['pyzm_overrides'])
 
-    import cv2
     g.logger.Debug(1, 'zm_detect invoked: {}'.format(' '.join(sys.argv)))
     g.logger.Debug(1, '---------| app:{}, pyzm:{}, OpenCV:{}|------------'.format(__app_version__, pyzm_version, cv2.__version__))
 
@@ -65,8 +118,8 @@ def main_handler():
 
     # Secret substitution
     ml_options = g.config['ml_sequence']
-    secrets_flat = pyzmutils.read_config(g.config['secrets']).get('secrets', {}) if g.config.get('secrets') else {}
-    ml_options = ast.literal_eval(pyzmutils.template_fill(input_str=str(ml_options), config=None, secrets=secrets_flat))
+    secrets_flat = _read_config(g.config['secrets']).get('secrets', {}) if g.config.get('secrets') else {}
+    ml_options = ast.literal_eval(_template_fill(str(ml_options), config=None, secrets=secrets_flat))
     g.config['ml_sequence'] = ml_options
 
     stream_options = g.config['stream_sequence']
@@ -140,7 +193,7 @@ def main_handler():
 
     # --- Write images ---
     if matched_data.get('image') is not None and (g.config['write_image_to_zm'] == 'yes' or g.config['write_debug_image'] == 'yes'):
-        debug_image = pyzmutils.draw_bbox(image=matched_data['image'], boxes=matched_data['boxes'],
+        debug_image = _draw_bbox(image=matched_data['image'], boxes=matched_data['boxes'],
             labels=matched_data['labels'], confidences=matched_data['confidences'],
             polygons=matched_data.get('polygons', []), poly_thickness=g.config['poly_thickness'],
             write_conf=(g.config['show_percent'] == 'yes'))
