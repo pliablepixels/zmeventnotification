@@ -181,11 +181,29 @@ Then test detection (``--config`` defaults to ``/etc/zm/objectconfig.yml``):
 Optional: Face recognition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Only needed if you want to recognize *who* a face belongs to (not just detect faces):
+Only needed if you want to recognize *who* a face belongs to (not just detect faces).
+Takes a while and installs a lot of dependencies, which is why it is not included
+automatically.
+
+.. note::
+
+   If you use Google Coral, you can do face *detection* (not recognition) via
+   the Coral libraries and can skip this section.
 
 .. code:: bash
 
-   sudo apt-get install libopenblas-dev liblapack-dev libblas-dev
+   sudo apt-get install libopenblas-dev liblapack-dev libblas-dev  # not mandatory, but gives a good speed boost
+   /opt/zoneminder/venv/bin/pip install face_recognition            # installs dlib automatically
+
+If you installed ``face_recognition`` earlier **without** the BLAS libraries,
+reinstall both ``dlib`` and ``face_recognition`` so dlib is built with OpenBLAS
+support:
+
+.. code:: bash
+
+   /opt/zoneminder/venv/bin/pip uninstall dlib face-recognition
+   sudo apt-get install libopenblas-dev liblapack-dev libblas-dev   # the important part
+   /opt/zoneminder/venv/bin/pip install dlib --verbose --no-cache-dir  # make sure it finds openblas
    /opt/zoneminder/venv/bin/pip install face_recognition
 
 Optional: Google Coral EdgeTPU
