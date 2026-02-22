@@ -3,10 +3,30 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.7] - 2026-02-22
+
+### Bug Fixes
+
+- inline pyzm.helpers.utils functions removed in pyzm v2 ([4665014](https://github.com/pliablepixels/zmeventnotification/commit/4665014031607f108b2ef41fb1acbc824ae533e2))
+- stop using PY_SUDO for system package installs and broaden ensure_venv scope ([bc928c8](https://github.com/pliablepixels/zmeventnotification/commit/bc928c8bba28b2165a069b7b8f7a5d2fb272938f))
+- only show pyzm extras message when pyzm was freshly installed ([c2d9979](https://github.com/pliablepixels/zmeventnotification/commit/c2d99797b005ec6920e3cc77d36ba389ba759848))
+
+### Documentation
+
+- expand face recognition install with BLAS and reinstall steps ([067f267](https://github.com/pliablepixels/zmeventnotification/commit/067f267a4b044d00f4e77879e6768ca536473baa))
+- remove the test count and fix gramar ([c89d7ab](https://github.com/pliablepixels/zmeventnotification/commit/c89d7abb4698ff3597d7398d17dc9953bb4c0114))
+
+### Miscellaneous
+
+- bump version to v7.0.7 ([79833b5](https://github.com/pliablepixels/zmeventnotification/commit/79833b52b0a759399ed1acee7ad371203f16a0ae))
+- ver bump ([0d4a94c](https://github.com/pliablepixels/zmeventnotification/commit/0d4a94c60a637ddad58d58b94eee99cc3955a749))
+- ver bump ([b3dfb02](https://github.com/pliablepixels/zmeventnotification/commit/b3dfb02e3e07ffdea1d44f71900982cb2747e2cb))
+
 ## [7.0.6] - 2026-02-20
 
 ### Documentation
 
+- update CHANGELOG for v7.0.6 ([d647693](https://github.com/pliablepixels/zmeventnotification/commit/d647693cd52127b47ef7d1a48df1a5f1712b8184))
 - fix inline code quoting for mlapi and pyzm.serve in breaking.rst ([55eaf84](https://github.com/pliablepixels/zmeventnotification/commit/55eaf843932590b69fa3eb3f2827b7b2f0ae503a))
 - fix sidebar/note formatting in principles.rst section 3.2.1 ([e249c05](https://github.com/pliablepixels/zmeventnotification/commit/e249c05c8e70ca0082382e1e40325bb74e47eaf2))
 
