@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.8] - 2026-02-22
+
+### Bug Fixes
+
+- log objdetect image write path ([f2c5633](https://github.com/pliablepixels/zmeventnotification/commit/f2c5633f0895c2e8501a29e39af218e6073b4559))
+
+### Miscellaneous
+
+- bump version to v7.0.8 ([88a29ce](https://github.com/pliablepixels/zmeventnotification/commit/88a29ce659fe5f35c58fa30bbe8d62cb16f2c038))
+- pyzm ver bump ([6927139](https://github.com/pliablepixels/zmeventnotification/commit/692713950229fc925eaa20e0177716f939a0ffdc))
+- pyzm ver bump ([b19db27](https://github.com/pliablepixels/zmeventnotification/commit/b19db27696924fe664b91b9fe40052658e64ea46))
+
 ## [7.0.7] - 2026-02-22
 
 ### Bug Fixes
@@ -13,6 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- update CHANGELOG for v7.0.7 ([12303a5](https://github.com/pliablepixels/zmeventnotification/commit/12303a527d2643b0eff5066c643d4d9db35e061d))
 - expand face recognition install with BLAS and reinstall steps ([067f267](https://github.com/pliablepixels/zmeventnotification/commit/067f267a4b044d00f4e77879e6768ca536473baa))
 - remove the test count and fix gramar ([c89d7ab](https://github.com/pliablepixels/zmeventnotification/commit/c89d7abb4698ff3597d7398d17dc9953bb4c0114))
 
