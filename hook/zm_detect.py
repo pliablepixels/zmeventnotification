@@ -206,7 +206,9 @@ def main_handler():
             eventpath = args.get('eventpath') or (ev.path() if ev else None)
             if eventpath:
                 os.makedirs(eventpath, exist_ok=True)
-                cv2.imwrite(os.path.join(eventpath, 'objdetect.jpg'), debug_image)
+                objdetect_path = os.path.join(eventpath, 'objdetect.jpg')
+                cv2.imwrite(objdetect_path, debug_image)
+                g.logger.Debug(1, 'Wrote objdetect image to {}'.format(objdetect_path))
                 try:
                     with open(os.path.join(eventpath, 'objects.json'), 'w') as f:
                         json.dump({k: matched_data[k] for k in ('labels','boxes','frame_id','confidences','image_dimensions') if k in matched_data}, f)
