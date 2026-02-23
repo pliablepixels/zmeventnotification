@@ -23,7 +23,7 @@ Full documentation — installation, configuration, testing, and more — is on 
 **[zmeventnotificationv7.readthedocs.io](https://zmeventnotificationv7.readthedocs.io/en/latest/)**
 
 Key pages:
-- [Installation](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/install.html)
+- [Installation](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/installation.html)
 - [Configuration](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/config.html)
 - [Testing](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/testing.html)
 - [Hooks & ML](https://zmeventnotificationv7.readthedocs.io/en/latest/guides/hooks.html)
