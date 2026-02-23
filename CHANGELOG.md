@@ -3,11 +3,26 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.9] - 2026-02-23
+
+### Fix
+
+- Update README.md broken install link ([826fea3](https://github.com/pliablepixels/zmeventnotification/commit/826fea3b312e2c50522f00c4bbe7f3431cc5aa4e))
+
+### Miscellaneous
+
+- bump version to v7.0.9 ([df46ae4](https://github.com/pliablepixels/zmeventnotification/commit/df46ae4d46f605115ce3389a14de850a73c67d30))
+- pyzm ver bump ([4d7bc7b](https://github.com/pliablepixels/zmeventnotification/commit/4d7bc7bd9df92c50485098c025e1707b91231c27))
+
 ## [7.0.8] - 2026-02-22
 
 ### Bug Fixes
 
 - log objdetect image write path ([f2c5633](https://github.com/pliablepixels/zmeventnotification/commit/f2c5633f0895c2e8501a29e39af218e6073b4559))
+
+### Documentation
+
+- update CHANGELOG for v7.0.8 ([5250d7d](https://github.com/pliablepixels/zmeventnotification/commit/5250d7d04a821f3309a3407f1f85872b3f4425c7))
 
 ### Miscellaneous
 
