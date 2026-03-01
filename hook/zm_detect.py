@@ -56,7 +56,7 @@ def _draw_bbox(image, boxes, labels, confidences=None, polygons=None,
 
     if poly_thickness and polygons:
         for ps in polygons:
-            cv2.polylines(image, [np.asarray(ps['value'])], True,
+            cv2.polylines(image, [np.asarray(ps['value'], dtype=np.int32)], True,
                           poly_color, thickness=poly_thickness)
 
     arr_len = len(bgr_slate_colors)
