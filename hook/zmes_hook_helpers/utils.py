@@ -7,19 +7,15 @@ import logging.handlers
 import sys
 import datetime
 import ssl
-import urllib
 import json
 import time
 import re
 import ast
 import os
-import urllib.parse
 import traceback
 
 import yaml
 import zmes_hook_helpers.common_params as g
-
-from urllib.error import HTTPError
 
 
 def _deep_merge(base, override):
@@ -131,64 +127,35 @@ def findWholeWord(w):
     return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
 
-# Imports zone definitions from ZM
-def import_zm_zones(mid, reason):
+# Imports zone definitions from ZM via pyzm client
+def import_zm_zones(mid, reason, zm_client):
 
     match_reason = False
     if reason:
         match_reason = True if g.config['only_triggered_zm_zones']=='yes' else False
     g.logger.Debug(2,'import_zm_zones: match_reason={} and reason={}'.format(match_reason, reason))
 
-    url = g.config['api_portal'] + '/zones/forMonitor/' + mid + '.json'
-    g.logger.Debug(2,'Getting ZM zones using {}?username=xxx&password=yyy&user=xxx&pass=yyy'.format(url))
-    url = url + '?username=' + g.config['user']
-    url = url + '&password=' + urllib.parse.quote(g.config['password'], safe='')
-    url = url + '&user=' + g.config['user']
-    url = url + '&pass=' + urllib.parse.quote(g.config['password'], safe='')
+    monitor = zm_client.monitor(int(mid))
+    zones = monitor.get_zones()
 
-    if g.config['api_portal'].lower().startswith('https://'):
-        main_handler = urllib.request.HTTPSHandler(context=g.ctx)
-    else:
-        main_handler = urllib.request.HTTPHandler()
+    for z in zones:
+        raw = z.raw().get('Zone', {})
 
-    if g.config['basic_user']:
-        g.logger.Debug(2,'Basic auth config found, associating handlers')
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-        top_level_url = g.config['api_portal']
-        password_mgr.add_password(None, top_level_url, g.config['basic_user'],
-                                  g.config['basic_password'])
-        handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib.request.build_opener(handler, main_handler)
-
-    else:
-        opener = urllib.request.build_opener(main_handler)
-    try:
-        input_file = opener.open(url)
-    except HTTPError as e:
-        g.logger.Error('HTTP Error in import_zm_zones:{}'.format(e))
-        raise
-    except Exception as e:
-        g.logger.Error('General error in import_zm_zones:{}'.format(e))
-        raise
-
-    c = input_file.read()
-    j = json.loads(c)
-
-    for item in j['zones']:
-        if item['Zone']['Type'] == 'Inactive':
-            g.logger.Debug(2, 'Skipping {} as it is inactive'.format(item['Zone']['Name']))
+        if raw.get('Type') == 'Inactive':
+            g.logger.Debug(2, 'Skipping {} as it is inactive'.format(z.name))
             continue
-        if  match_reason:
-            if not findWholeWord(item['Zone']['Name'])(reason):
-                g.logger.Debug(1,'dropping {} as zones in alarm cause is {}'.format(item['Zone']['Name'], reason))
-                continue
-        item['Zone']['Name'] = item['Zone']['Name'].replace(' ','_').lower()
-        g.logger.Debug(2,'importing zoneminder polygon: {} [{}]'.format(item['Zone']['Name'], item['Zone']['Coords']))
-        g.polygons.append({
-            'name': item['Zone']['Name'],
-            'value': str2tuple(item['Zone']['Coords']),
-            'pattern': None
 
+        if match_reason:
+            if not findWholeWord(z.name)(reason):
+                g.logger.Debug(1,'dropping {} as zones in alarm cause is {}'.format(z.name, reason))
+                continue
+
+        name = z.name.replace(' ','_').lower()
+        g.logger.Debug(2,'importing zoneminder polygon: {} [{}]'.format(name, z.points))
+        g.polygons.append({
+            'name': name,
+            'value': z.points,
+            'pattern': None
         })
 
 
@@ -367,11 +334,10 @@ def process_config(args, ctx):
                         g.logger.Debug(3, '[monitor-{}] overrides key:{} with value:{}'.format(mid, k, v))
                         g.config[k] = v
 
-            # Import ZM zones if needed
+            # Zone import (if needed) is now handled by zm_detect.py
+            # after ZMClient creation, via import_zm_zones(mid, reason, zm_client).
             if g.config['only_triggered_zm_zones'] == 'yes':
                 g.config['import_zm_zones'] = 'yes'
-            if g.config['import_zm_zones'] == 'yes':
-                import_zm_zones(args.get('monitorid'), args.get('reason'))
         else:
             g.logger.Info(
                 'Ignoring monitor specific settings, as you did not provide a monitor id'

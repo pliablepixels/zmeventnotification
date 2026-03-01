@@ -128,6 +128,13 @@ def main_handler():
     # Connect to ZM via pyzm v2
     zm = ZMClient(api_url=g.config['api_portal'], user=g.config['user'], password=g.config['password'],
                   portal_url=g.config['portal'], verify_ssl=(g.config['allow_self_signed'] != 'yes'))
+
+    # Import ZM zones via pyzm client (ref: pliablepixels/zmeventnotification#18)
+    if g.config.get('import_zm_zones') == 'yes':
+        mid = args.get('monitorid')
+        if mid:
+            utils.import_zm_zones(mid, args.get('reason'), zm)
+
     stream_options['api'], stream_options['polygons'] = zm.api, g.polygons
     g.config['stream_sequence'] = stream_options
     stream = (args.get('eventid') or args.get('file') or '').strip()

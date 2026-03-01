@@ -43,7 +43,23 @@ class _StubStreamConfig:
     def from_dict(cls, d): return cls()
 
 class _StubZone:
-    def __init__(self, *a, **kw): pass
+    def __init__(self, name="", points=None, pattern=None, ignore_pattern=None, _raw=None):
+        self.name = name
+        self.points = points or []
+        self.pattern = pattern
+        self.ignore_pattern = ignore_pattern
+        self._raw = _raw or {}
+
+    def raw(self):
+        return self._raw
+
+    def as_dict(self):
+        return {
+            "name": self.name,
+            "value": self.points,
+            "pattern": self.pattern,
+            "ignore_pattern": self.ignore_pattern,
+        }
 
 _mock_pyzm.Detector = _StubDetector
 _mock_pyzm.ZMClient = _StubZMClient
