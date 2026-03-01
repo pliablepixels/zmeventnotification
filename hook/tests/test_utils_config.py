@@ -130,6 +130,101 @@ class TestProcessConfig:
         assert g.config.get("ml_password") == "mlpass"
 
 
+class TestRecursiveSecretResolution:
+    """Verify that secrets inside ml_sequence/stream_sequence are resolved."""
+
+    @pytest.fixture
+    def _config_with_nested_secrets(self, tmp_path):
+        """Write a config whose ml_sequence contains !SECRET_KEY tokens."""
+        secrets = {"secrets": {"ALPR_KEY": "my-alpr-key-123", "EXTRA": "extra-val"}}
+        secrets_path = str(tmp_path / "secrets.yml")
+        with open(secrets_path, "w") as f:
+            yaml.dump(secrets, f)
+
+        cfg = {
+            "general": {
+                "secrets": secrets_path,
+                "base_data_path": "/var/lib/zmeventnotification",
+                "allow_self_signed": "yes",
+                "portal": "https://zm.example.com/zm",
+                "api_portal": "https://zm.example.com/zm/api",
+                "user": "u",
+                "password": "p",
+                "write_image_to_zm": "no",
+                "write_debug_image": "no",
+                "show_percent": "no",
+                "import_zm_zones": "no",
+                "only_triggered_zm_zones": "no",
+            },
+            "ml": {
+                "ml_sequence": {
+                    "general": {"model_sequence": "object,alpr"},
+                    "alpr": {
+                        "general": {"pattern": "(plate)"},
+                        "sequence": [{"alpr_key": "!ALPR_KEY", "enabled": "yes"}],
+                    },
+                },
+                "stream_sequence": {"resize": 800, "strategy": "first"},
+            },
+        }
+        cfg_path = str(tmp_path / "objectconfig.yml")
+        with open(cfg_path, "w") as f:
+            yaml.dump(cfg, f)
+        return cfg_path
+
+    def test_secret_in_ml_sequence_resolved(self, _config_with_nested_secrets, ctx):
+        """Secret inside ml_sequence.alpr.sequence[0].alpr_key gets resolved."""
+        process_config({"config": _config_with_nested_secrets}, ctx)
+        alpr_key = g.config["ml_sequence"]["alpr"]["sequence"][0]["alpr_key"]
+        assert alpr_key == "my-alpr-key-123"
+
+    def test_secret_in_list(self, tmp_path, ctx):
+        """Secrets inside list elements are resolved."""
+        secrets = {"secrets": {"TOK": "resolved-value"}}
+        secrets_path = str(tmp_path / "secrets.yml")
+        with open(secrets_path, "w") as f:
+            yaml.dump(secrets, f)
+
+        cfg = {
+            "general": {
+                "secrets": secrets_path,
+                "base_data_path": "/var/lib/zmeventnotification",
+                "allow_self_signed": "yes",
+                "portal": "http://localhost/zm",
+                "api_portal": "http://localhost/zm/api",
+                "user": "u",
+                "password": "p",
+                "write_image_to_zm": "no",
+                "write_debug_image": "no",
+                "show_percent": "no",
+                "import_zm_zones": "no",
+                "only_triggered_zm_zones": "no",
+            },
+            "ml": {
+                "ml_sequence": {
+                    "general": {"model_sequence": "object"},
+                    "object": {
+                        "sequence": ["!TOK", "plain-string"],
+                    },
+                },
+                "stream_sequence": {"resize": 800},
+            },
+        }
+        cfg_path = str(tmp_path / "objectconfig.yml")
+        with open(cfg_path, "w") as f:
+            yaml.dump(cfg, f)
+
+        process_config({"config": cfg_path}, ctx)
+        seq = g.config["ml_sequence"]["object"]["sequence"]
+        assert seq == ["resolved-value", "plain-string"]
+
+    def test_non_secret_strings_untouched(self, _config_with_nested_secrets, ctx):
+        """Non-secret strings are left unchanged."""
+        process_config({"config": _config_with_nested_secrets}, ctx)
+        assert g.config["ml_sequence"]["general"]["model_sequence"] == "object,alpr"
+        assert g.config["ml_sequence"]["alpr"]["sequence"][0]["enabled"] == "yes"
+
+
 class TestCorrectType:
     """Test the _correct_type helper indirectly through process_config."""
 

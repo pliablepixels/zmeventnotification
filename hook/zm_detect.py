@@ -10,11 +10,10 @@
 #        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n
 #      ZM substitutes %EID%, %MID%, %EC% tokens at runtime (same as zmfilter.pl).
 
-import argparse, ast, json, os, re, ssl, sys, time, traceback
+import argparse, ast, json, os, ssl, sys, time, traceback
 
 import cv2
 import numpy as np
-import yaml
 
 from pyzm import __version__ as pyzm_version
 from pyzm import Detector, ZMClient
@@ -23,27 +22,6 @@ from pyzm.models.zm import Zone
 import zmes_hook_helpers.common_params as g
 from zmes_hook_helpers import __version__ as __app_version__
 import zmes_hook_helpers.utils as utils
-
-
-# ---------------------------------------------------------------------------
-# Utility helpers (inlined from removed pyzm.helpers.utils)
-# ---------------------------------------------------------------------------
-
-def _read_config(path):
-    """Read a YAML config file and return a dict."""
-    with open(path) as f:
-        data = yaml.safe_load(f)
-    return data if data else {}
-
-
-def _template_fill(input_str, config=None, secrets=None):
-    """Replace ${key} and !key placeholders with config/secret values."""
-    res = input_str
-    if config:
-        res = re.sub(r'\$\{(\w+?)\}', lambda m: config.get(m.group(1), 'MISSING-{}'.format(m.group(1))), res)
-    if secrets:
-        res = re.sub(r'!(\w+)', lambda m: secrets.get(m.group(1).lower(), '!{}'.format(m.group(1).lower())), res)
-    return res
 
 
 def _draw_bbox(image, boxes, labels, confidences=None, polygons=None,
@@ -116,12 +94,7 @@ def main_handler():
     if not g.config['ml_sequence']:  g.logger.Error('ml_sequence missing'); sys.exit(1)
     if not g.config['stream_sequence']: g.logger.Error('stream_sequence missing'); sys.exit(1)
 
-    # Secret substitution
     ml_options = g.config['ml_sequence']
-    secrets_flat = _read_config(g.config['secrets']).get('secrets', {}) if g.config.get('secrets') else {}
-    ml_options = ast.literal_eval(_template_fill(str(ml_options), config=None, secrets=secrets_flat))
-    g.config['ml_sequence'] = ml_options
-
     stream_options = g.config['stream_sequence']
     if isinstance(stream_options, str): stream_options = ast.literal_eval(stream_options)
 

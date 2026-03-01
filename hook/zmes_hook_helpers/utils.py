@@ -207,17 +207,23 @@ def process_config(args, ctx):
             return val
 
     def _resolve_secret(val):
-        """If val starts with '!', replace with secret token value."""
-        if not isinstance(val, str) or not val or val[0] != '!':
-            return val
-        g.logger.Debug(2, 'Secret token found in config: {}'.format(val))
-        if not has_secrets:
-            raise ValueError('Secret token found, but no secret file specified')
-        token = val[1:]
-        if token in secrets_file.get('secrets', {}):
-            return secrets_file['secrets'][token]
-        else:
-            raise ValueError('secret token {} not found in secrets file'.format(val))
+        """Recursively resolve !TOKEN secret references in strings, dicts, and lists."""
+        if isinstance(val, str):
+            if not val or val[0] != '!':
+                return val
+            g.logger.Debug(2, 'Secret token found in config: {}'.format(val))
+            if not has_secrets:
+                raise ValueError('Secret token found, but no secret file specified')
+            token = val[1:]
+            if token in secrets_file.get('secrets', {}):
+                return secrets_file['secrets'][token]
+            else:
+                raise ValueError('secret token {} not found in secrets file'.format(val))
+        elif isinstance(val, dict):
+            return {k: _resolve_secret(v) for k, v in val.items()}
+        elif isinstance(val, list):
+            return [_resolve_secret(item) for item in val]
+        return val
 
     try:
         g.logger.Info('Reading config from: {}'.format(args.get('config')))
@@ -266,8 +272,8 @@ def process_config(args, ctx):
             ml_section = yml['ml']
             for k, v in ml_section.items():
                 if k in ('ml_sequence', 'stream_sequence'):
-                    # These are native dicts from YAML - store directly
-                    g.config[k] = v
+                    # These are native dicts from YAML - resolve secrets recursively
+                    g.config[k] = _resolve_secret(v)
                 else:
                     v = _resolve_secret(v)
                     if k in g.config_vals:

@@ -16,7 +16,6 @@ Run:
 
 from __future__ import annotations
 
-import ast
 import os
 import ssl
 import sys
@@ -155,8 +154,7 @@ def run_detect_chain(
     import zmes_hook_helpers.common_params as g
     import zmes_hook_helpers.utils as utils
 
-    # These must be imported AFTER use_real_pyzm has cleared mock modules
-    import pyzm.helpers.utils as pyzmutils
+    # Must be imported AFTER use_real_pyzm has cleared mock modules
     from pyzm import Detector
 
     ctx = ssl.create_default_context()
@@ -176,19 +174,10 @@ def run_detect_chain(
     assert g.config.get("ml_sequence"), "ml_sequence missing after process_config"
     assert g.config.get("stream_sequence"), "stream_sequence missing after process_config"
 
-    # Step 2: secret substitution (same as zm_detect.py lines 86-88)
+    # Secrets are now resolved recursively in process_config
     ml_options = g.config["ml_sequence"]
-    secrets_flat = {}
-    if g.config.get("secrets"):
-        secrets_flat = pyzmutils.read_config(g.config["secrets"]).get("secrets", {})
-    ml_options = ast.literal_eval(
-        pyzmutils.template_fill(
-            input_str=str(ml_options), config=None, secrets=secrets_flat
-        )
-    )
-    g.config["ml_sequence"] = ml_options
 
-    # Step 3: build Detector from parsed config
+    # Step 2: build Detector from parsed config
     detector = Detector.from_dict(ml_options)
 
     # Optionally inject zones (--file clears g.polygons, so inject manually)
