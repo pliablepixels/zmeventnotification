@@ -13,45 +13,15 @@
 import argparse, ast, json, os, ssl, sys, time, traceback
 
 import cv2
-import numpy as np
 
 from pyzm import __version__ as pyzm_version
 from pyzm import Detector, ZMClient
 from pyzm.models.config import StreamConfig
+from pyzm.models.detection import DetectionResult
 from pyzm.models.zm import Zone
 import zmes_hook_helpers.common_params as g
 from zmes_hook_helpers import __version__ as __app_version__
 import zmes_hook_helpers.utils as utils
-
-
-def _draw_bbox(image, boxes, labels, confidences=None, polygons=None,
-               poly_color=(255, 255, 255), poly_thickness=1, write_conf=True):
-    """Draw bounding boxes, labels, and zone polygons on *image*."""
-    slate_colors = [(39, 174, 96), (142, 68, 173), (0, 129, 254),
-                    (254, 60, 113), (243, 134, 48), (91, 177, 47)]
-    bgr_slate_colors = slate_colors[::-1]
-    image = image.copy()
-
-    if poly_thickness and polygons:
-        for ps in polygons:
-            cv2.polylines(image, [np.asarray(ps['value'], dtype=np.int32)], True,
-                          poly_color, thickness=poly_thickness)
-
-    arr_len = len(bgr_slate_colors)
-    for i, label in enumerate(labels):
-        box_color = bgr_slate_colors[i % arr_len]
-        if write_conf and confidences:
-            label += ' {:.2f}%'.format(confidences[i] * 100)
-        cv2.rectangle(image, (boxes[i][0], boxes[i][1]),
-                       (boxes[i][2], boxes[i][3]), box_color, 2)
-        font_scale, font_type, font_thickness = 0.8, cv2.FONT_HERSHEY_SIMPLEX, 1
-        text_size = cv2.getTextSize(label, font_type, font_scale, font_thickness)[0]
-        r_top_left = (boxes[i][0], boxes[i][1] - text_size[1] - 4)
-        r_bottom_right = (boxes[i][0] + text_size[0] + 4, boxes[i][1])
-        cv2.rectangle(image, r_top_left, r_bottom_right, box_color, -1)
-        cv2.putText(image, label, (boxes[i][0] + 2, boxes[i][1] - 2),
-                    font_type, font_scale, (255, 255, 255), font_thickness)
-    return image
 
 
 def main_handler():
@@ -162,6 +132,9 @@ def main_handler():
         matched_data.setdefault('frame_id', 'snapshot')
         matched_data.setdefault('polygons', g.polygons)
         matched_data.setdefault('image_dimensions', {})
+        # Rebuild DetectionResult from overridden data
+        result = DetectionResult.from_dict(matched_data)
+        result.image = matched_data.get('image')
 
     if not matched_data.get('labels'): g.logger.Debug(1, 'No detection data'); return
 
@@ -173,13 +146,14 @@ def main_handler():
 
     # --- Write images ---
     if matched_data.get('image') is not None and (g.config['write_image_to_zm'] == 'yes' or g.config['write_debug_image'] == 'yes'):
-        debug_image = _draw_bbox(image=matched_data['image'], boxes=matched_data['boxes'],
-            labels=matched_data['labels'], confidences=matched_data['confidences'],
-            polygons=matched_data.get('polygons', []), poly_thickness=g.config['poly_thickness'],
-            write_conf=(g.config['show_percent'] == 'yes'))
+        draw_errors = g.config['write_debug_image'] == 'yes'
+        debug_image = result.annotate(
+            polygons=matched_data.get('polygons', []),
+            poly_thickness=g.config['poly_thickness'],
+            write_conf=(g.config['show_percent'] == 'yes'),
+            draw_error_boxes=draw_errors,
+        )
         if g.config['write_debug_image'] == 'yes':
-            for _b in matched_data.get('error_boxes', []):
-                cv2.rectangle(debug_image, (_b[0], _b[1]), (_b[2], _b[3]), (0, 0, 255), 1)
             cv2.imwrite(os.path.join(g.config['image_path'], '{}-{}-debug.jpg'.format(os.path.basename(stream), matched_data['frame_id'])), debug_image)
         if g.config['write_image_to_zm'] == 'yes':
             ev = zm.event(int(args['eventid'])) if args.get('eventid') else None

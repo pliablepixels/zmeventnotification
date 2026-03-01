@@ -72,9 +72,24 @@ _mock_helpers_utils = types.ModuleType("pyzm.helpers.utils")
 _mock_helpers_utils.read_config = lambda f: yaml.safe_load(open(f)) if os.path.isfile(f) else {}
 _mock_helpers_utils.template_fill = lambda input_str, config=None, secrets=None: input_str
 
+class _StubDetectionResult:
+    def __init__(self, **kw):
+        self.detections = kw.get('detections', [])
+        self.frame_id = kw.get('frame_id')
+        self.image = kw.get('image')
+        self.image_dimensions = kw.get('image_dimensions', {})
+        self.error_boxes = kw.get('error_boxes', [])
+    @classmethod
+    def from_dict(cls, data):
+        return cls(frame_id=data.get('frame_id'), image_dimensions=data.get('image_dimensions', {}))
+    def annotate(self, **kw):
+        return self.image.copy() if self.image is not None else None
+
 _mock_models = types.ModuleType("pyzm.models")
 _mock_models_config = types.ModuleType("pyzm.models.config")
 _mock_models_config.StreamConfig = _StubStreamConfig
+_mock_models_detection = types.ModuleType("pyzm.models.detection")
+_mock_models_detection.DetectionResult = _StubDetectionResult
 _mock_models_zm = types.ModuleType("pyzm.models.zm")
 _mock_models_zm.Zone = _StubZone
 
@@ -84,6 +99,7 @@ sys.modules.setdefault("pyzm.helpers", _mock_helpers)
 sys.modules.setdefault("pyzm.helpers.utils", _mock_helpers_utils)
 sys.modules.setdefault("pyzm.models", _mock_models)
 sys.modules.setdefault("pyzm.models.config", _mock_models_config)
+sys.modules.setdefault("pyzm.models.detection", _mock_models_detection)
 sys.modules.setdefault("pyzm.models.zm", _mock_models_zm)
 
 # ---------------------------------------------------------------------------
