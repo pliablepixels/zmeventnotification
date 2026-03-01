@@ -111,7 +111,7 @@ def rescale_polygons(xfactor, yfactor):
 
 
 def str2tuple(str):
-    m = [tuple(map(int, x.strip().split(','))) for x in str.split(' ')]
+    m = [tuple(map(float, x.strip().split(','))) for x in str.split(' ')]
     if len(m) < 3:
         raise ValueError ('{} formed an invalid polygon. Needs to have at least 3 points'.format(m))
     else:
