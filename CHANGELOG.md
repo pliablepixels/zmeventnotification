@@ -3,7 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.10] - 2026-03-01
+
+### Miscellaneous
+
+- bump version to v7.0.10 ([114c50e](https://github.com/pliablepixels/zmeventnotification/commit/114c50e9505f70c89175905f29243433530336a4))
+- pyzm ver bump ([07b4ca7](https://github.com/pliablepixels/zmeventnotification/commit/07b4ca7626ea185e6a00063cb1127d5804a217eb))
+
 ## [7.0.9] - 2026-02-23
+
+### Documentation
+
+- update CHANGELOG for v7.0.9 ([9d27e2e](https://github.com/pliablepixels/zmeventnotification/commit/9d27e2e308ca69a71f80ffb5b73567113d093593))
 
 ### Fix
 
