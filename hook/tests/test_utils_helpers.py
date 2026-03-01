@@ -25,6 +25,16 @@ class TestStr2Tuple:
         with pytest.raises(ValueError, match="invalid polygon"):
             str2tuple("0,0")
 
+    def test_float_coords(self):
+        """Percentage-based coords must parse. Ref: pliablepixels/zmeventnotification#18"""
+        result = str2tuple("26.41,33.5 75.2,33.5 75.2,90.1 26.41,90.1")
+        assert result == [(26.41, 33.5), (75.2, 33.5), (75.2, 90.1), (26.41, 90.1)]
+
+    def test_mixed_int_float_coords(self):
+        """Integer coords still work (parsed as float)."""
+        result = str2tuple("0,0 100,0 100,100 0,100")
+        assert result == [(0, 0), (100, 0), (100, 100), (0, 100)]
+
 
 class TestStrSplit:
     def test_basic_split(self):
