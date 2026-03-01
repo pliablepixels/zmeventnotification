@@ -215,10 +215,15 @@ def process_config(args, ctx):
             if not has_secrets:
                 raise ValueError('Secret token found, but no secret file specified')
             token = val[1:]
-            if token in secrets_file.get('secrets', {}):
-                return secrets_file['secrets'][token]
-            else:
-                raise ValueError('secret token {} not found in secrets file'.format(val))
+            secrets_dict = secrets_file.get('secrets', {})
+            # Case-insensitive lookup: try exact match first, then lowercase
+            if token in secrets_dict:
+                return secrets_dict[token]
+            token_lower = token.lower()
+            for k, v in secrets_dict.items():
+                if k.lower() == token_lower:
+                    return v
+            raise ValueError('secret token {} not found in secrets file'.format(val))
         elif isinstance(val, dict):
             return {k: _resolve_secret(v) for k, v in val.items()}
         elif isinstance(val, list):
