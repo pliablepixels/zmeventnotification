@@ -54,6 +54,22 @@ And ``/etc/zm/secrets.yml`` contains:
 
 Then, while parsing the config file every time a value is found that starts with ``!`` that means it's a secret token and the corresponding value from the secrets file will be substituted.
 
+Secret resolution is **recursive** — tokens are resolved throughout the
+entire config, including inside nested structures like ``ml_sequence``
+and ``stream_sequence``. For example, you can use ``!ALPR_KEY`` inside
+an ALPR model entry:
+
+::
+
+  ml:
+    ml_sequence:
+      alpr:
+        sequence:
+          - alpr_key: "!ALPR_KEY"
+
+Token matching is **case-insensitive**: ``!ZM_USER``, ``!zm_user``, and
+``!Zm_User`` all match a secret named ``ZM_USER`` (or ``zm_user``).
+
 The same concept applies to ``/etc/zm/zmeventnotification.yml``.
 
 **Obviously this means you can no longer have a password beginning with an exclamation mark directly in the config. It will be treated as a secret token**.
