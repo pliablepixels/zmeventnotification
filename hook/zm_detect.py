@@ -10,7 +10,7 @@
 #        /path/to/zm_detect.py -c /path/to/config.yml -e %EID% -m %MID% -r "%EC%" -n
 #      ZM substitutes %EID%, %MID%, %EC% tokens at runtime (same as zmfilter.pl).
 
-import argparse, ast, json, os, ssl, sys, time, traceback
+import argparse, ast, os, ssl, sys, time, traceback
 
 import cv2
 
@@ -157,16 +157,14 @@ def main_handler():
             cv2.imwrite(os.path.join(g.config['image_path'], '{}-{}-debug.jpg'.format(os.path.basename(stream), matched_data['frame_id'])), debug_image)
         if g.config['write_image_to_zm'] == 'yes':
             ev = zm.event(int(args['eventid'])) if args.get('eventid') else None
-            eventpath = args.get('eventpath') or (ev.path() if ev else None)
-            if eventpath:
-                os.makedirs(eventpath, exist_ok=True)
-                objdetect_path = os.path.join(eventpath, 'objdetect.jpg')
-                cv2.imwrite(objdetect_path, debug_image)
-                g.logger.Debug(1, 'Wrote objdetect image to {}'.format(objdetect_path))
+            if ev:
                 try:
-                    with open(os.path.join(eventpath, 'objects.json'), 'w') as f:
-                        json.dump({k: matched_data[k] for k in ('labels','boxes','frame_id','confidences','image_dimensions') if k in matched_data}, f)
-                except Exception as e: g.logger.Error('Error writing objects.json: {}'.format(e))
+                    written = ev.save_objdetect(debug_image, matched_data, path_override=args.get('eventpath') or None)
+                    if written:
+                        g.logger.Debug(1, 'Wrote objdetect artifacts to {}'.format(written))
+                    else:
+                        g.logger.Debug(1, 'No event path available, skipping write_image_to_zm')
+                except Exception as e: g.logger.Error('Error writing objdetect: {}'.format(e))
             else:
                 g.logger.Debug(1, 'No event path available, skipping write_image_to_zm')
 

@@ -32,6 +32,7 @@ class _StubEvent:
     def path(self): return None
     def update_notes(self, notes): pass
     def tag(self, labels): pass
+    def save_objdetect(self, image, metadata, path_override=None): return path_override
 
 class _StubZMClient:
     api = None
