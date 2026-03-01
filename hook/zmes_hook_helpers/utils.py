@@ -184,12 +184,26 @@ def import_zm_zones(mid, reason):
                 continue
         item['Zone']['Name'] = item['Zone']['Name'].replace(' ','_').lower()
         g.logger.Debug(2,'importing zoneminder polygon: {} [{}]'.format(item['Zone']['Name'], item['Zone']['Coords']))
-        g.polygons.append({
-            'name': item['Zone']['Name'],
-            'value': str2tuple(item['Zone']['Coords']),
-            'pattern': None
-
-        })
+        coords = item['Zone']['Coords']
+        if item['Zone'].get('Units') == 'Percent':
+            # ZoneMinder now stores zone coordinates as percentages (0-100).
+            # Convert to pixels using the monitor resolution from the API.
+            try:
+                mon_url = g.config['api_portal'] + '/monitors/' + mid + '.json'
+                mon_url += '?username=' + g.config['user']
+                mon_url += '&password=' + urllib.parse.quote(g.config['password'], safe='')
+                mon_input = opener.open(mon_url)
+                mon_j = json.loads(mon_input.read())
+                mon_w = int(mon_j['monitor']['Monitor']['Width'])
+                mon_h = int(mon_j['monitor']['Monitor']['Height'])
+                g.logger.Debug(1, 'Converting percent zone coords to pixels using monitor {}x{}'.format(mon_w, mon_h))
+                pixel_coords = [(int(round(pt[0] * mon_w / 100.0)), int(round(pt[1] * mon_h / 100.0))) for pt in str2tuple(coords)]
+                g.polygons.append({'name': item['Zone']['Name'], 'value': pixel_coords, 'pattern': None})
+            except Exception as e:
+                g.logger.Error('Failed to convert percent zone coords to pixels: {}'.format(e))
+                g.polygons.append({'name': item['Zone']['Name'], 'value': str2tuple(coords), 'pattern': None})
+        else:
+            g.polygons.append({'name': item['Zone']['Name'], 'value': str2tuple(coords), 'pattern': None})
 
 
 
