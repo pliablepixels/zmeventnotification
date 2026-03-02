@@ -3,7 +3,35 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.11] - 2026-03-02
+
+### Bug Fixes
+
+- case-insensitive secret token lookup in _resolve_secret ([f526979](https://github.com/pliablepixels/zmeventnotification/commit/f526979c2c8b9f6a59273c607750894fb2b0462f))
+- ensure cv2.polylines receives int32 coordinates ([a35358c](https://github.com/pliablepixels/zmeventnotification/commit/a35358cc886dcd6e064356452a27f306a538aa27))
+- parse float zone coordinates in objectconfig.yml ([3dc483e](https://github.com/pliablepixels/zmeventnotification/commit/3dc483e0e56b97ca83e27551a06019e563655e61))
+
+### Documentation
+
+- fix ([e190179](https://github.com/pliablepixels/zmeventnotification/commit/e19017934f18726ede3b32ecae6106e879a9e515))
+- document recursive and case-insensitive secret resolution ([7b46539](https://github.com/pliablepixels/zmeventnotification/commit/7b46539ed908069d9b44170a17bda1718210f65e))
+
+### Miscellaneous
+
+- bump version to v7.0.11 ([c398d1b](https://github.com/pliablepixels/zmeventnotification/commit/c398d1b2f24ddfc724b3ac28734fad230be7113e))
+
+### Refactoring
+
+- use Event.save_objdetect() from pyzm for image writing ([7cc665d](https://github.com/pliablepixels/zmeventnotification/commit/7cc665ddd05ad5728fa2d986fa1f3f64439d09fc))
+- replace _draw_bbox with result.annotate() from pyzm ([6575f19](https://github.com/pliablepixels/zmeventnotification/commit/6575f190e2d2bb68889b90d75ed244defbc86ae9))
+- recursive secret resolution in process_config ([8b0f9e9](https://github.com/pliablepixels/zmeventnotification/commit/8b0f9e91312ff332cf1c935cf9880c19cf7fc861))
+- use pyzm ZMClient for zone import instead of raw urllib ([8d83425](https://github.com/pliablepixels/zmeventnotification/commit/8d834258da3d371680cfb59bdaa1efb953419da6))
+
 ## [7.0.10] - 2026-03-01
+
+### Documentation
+
+- update CHANGELOG for v7.0.10 ([81adc64](https://github.com/pliablepixels/zmeventnotification/commit/81adc64693718acb7a59ca566834760dbe2b6bea))
 
 ### Miscellaneous
 
