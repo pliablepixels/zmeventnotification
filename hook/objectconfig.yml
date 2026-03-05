@@ -114,9 +114,6 @@ ml:
   ml_sequence:
     general:
       model_sequence: "object,face,alpr"
-      disable_locks: "no"
-      match_past_detections: "no"
-      past_det_max_diff_area: "5%"
       car_past_det_max_diff_area: "10%"
       #ignore_past_detection_labels: ['dog', 'cat']
       aliases:
@@ -134,9 +131,6 @@ ml:
           object_labels: "${base_data_path}/models/coral_edgetpu/coco_indexed.names"
           object_min_confidence: 0.6
           object_framework: coral_edgetpu
-          tpu_max_processes: 1
-          tpu_max_lock_wait: 100
-          max_detection_size: "90%"
 
         - name: YOLOv4
           enabled: "no"
@@ -146,11 +140,6 @@ ml:
           object_min_confidence: 0.3
           object_framework: opencv
           object_processor: gpu
-          gpu_max_processes: 1
-          gpu_max_lock_wait: 100
-          cpu_max_processes: 3
-          cpu_max_lock_wait: 100
-          max_detection_size: "90%"
 
         - name: YOLO ONNX
           enabled: "yes"
@@ -162,11 +151,6 @@ ml:
           object_min_confidence: 0.3
           object_framework: opencv
           object_processor: gpu
-          gpu_max_processes: 1
-          gpu_max_lock_wait: 100
-          cpu_max_processes: 3
-          cpu_max_lock_wait: 100
-          max_detection_size: "90%"
 
     face:
       general:
@@ -193,10 +177,6 @@ ml:
           face_recog_dist_threshold: 0.6
           face_num_jitters: 1
           face_upsample_times: 1
-          gpu_max_processes: 1
-          gpu_max_lock_wait: 100
-          cpu_max_processes: 3
-          cpu_max_lock_wait: 100
           max_size: 800
 
     alpr:
