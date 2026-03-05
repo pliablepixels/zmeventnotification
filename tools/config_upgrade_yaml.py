@@ -41,6 +41,45 @@ def deep_merge(base, override):
     return added
 
 
+def resolve_dotted(d, dotted_key):
+    """Resolve a dotted key path like 'fcm.fcm_v1_key' in a nested dict.
+    Returns the value if found, or None if any segment is missing.
+    """
+    parts = dotted_key.split('.')
+    cur = d
+    for part in parts:
+        if not isinstance(cur, dict) or part not in cur:
+            return None
+        cur = cur[part]
+    return cur
+
+
+def set_dotted(d, dotted_key, value):
+    """Set a value at a dotted key path in a nested dict."""
+    parts = dotted_key.split('.')
+    cur = d
+    for part in parts[:-1]:
+        cur = cur[part]
+    cur[parts[-1]] = value
+
+
+def apply_managed_defaults(user, example, managed):
+    """Replace user values that match known old defaults with current example values.
+    Returns a list of dotted key-paths that were updated.
+    """
+    updated = []
+    for dotted_key, old_values in managed.items():
+        user_val = resolve_dotted(user, dotted_key)
+        if user_val is None:
+            continue
+        if user_val in old_values:
+            new_val = resolve_dotted(example, dotted_key)
+            if new_val is not None:
+                set_dotted(user, dotted_key, new_val)
+                updated.append(dotted_key)
+    return updated
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Upgrade a YAML config by adding new keys from a reference example')
@@ -52,6 +91,8 @@ def main():
                         help='Write to a different file instead of updating in-place')
     parser.add_argument('--dry-run', action='store_true',
                         help='Show what would be added without writing anything')
+    parser.add_argument('-m', '--managed-defaults',
+                        help='Path to managed defaults YAML (keys to force-update from old defaults)')
     args = parser.parse_args()
 
     with open(args.example) as f:
@@ -68,13 +109,25 @@ def main():
 
     added = deep_merge(example, user)
 
-    if not added:
+    managed_updated = []
+    if args.managed_defaults:
+        with open(args.managed_defaults) as f:
+            managed = yaml.safe_load(f) or {}
+        managed_updated = apply_managed_defaults(user, example, managed)
+
+    if not added and not managed_updated:
         print("Config is already up to date — no new keys found.")
         return
 
-    print("New keys added from example:")
-    for key in sorted(added):
-        print("  + {}".format(key))
+    if added:
+        print("New keys added from example:")
+        for key in sorted(added):
+            print("  + {}".format(key))
+
+    if managed_updated:
+        print("Managed defaults updated (old default replaced with current):")
+        for key in sorted(managed_updated):
+            print("  * {}".format(key))
 
     if args.dry_run:
         print("\nDry run — no files written.")
