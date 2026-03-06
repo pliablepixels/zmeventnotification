@@ -70,12 +70,23 @@ Detection results are:
 - Saved as ``objdetect.jpg`` and ``objects.json`` in the event folder
   (if ``write_image_to_zm: "yes"`` in ``objectconfig.yml``)
 - Optionally tagged in ZM (if ``tag_detected_objects: "yes"``, requires ZM >= 1.37.44)
+- Optionally sent as **push notifications** via FCM (if ``push.enabled: "yes"`` in
+  ``objectconfig.yml``, requires ZM >= 1.39.2 with the Notifications API)
 
 **What you get:** object/face/ALPR/audio detection, annotated images, detection notes in ZM,
-local or remote ML via ``pyzm.serve``.
+local or remote ML via ``pyzm.serve``, and (optionally) FCM push notifications to
+registered devices.
 
-**What you don't get:** push notifications (FCM), WebSocket notifications, MQTT,
-notification rules/muting, zmNg/zmNinja push, or the ES control interface.
+**What you don't get:** WebSocket notifications, MQTT,
+notification rules/muting, or the ES control interface.
+
+.. note::
+
+   Push notifications in Path 1 require ZoneMinder 1.39.2+ (which adds the
+   ``Notifications`` REST API for token storage). Devices register their FCM tokens
+   via the ZM API; ``zm_detect`` reads them via pyzm and sends push notifications
+   through an FCM cloud function proxy after detection. See the ``push`` section
+   in ``objectconfig.yml`` for configuration.
 
 To set up Path 1, you only need to:
 
@@ -83,6 +94,8 @@ To set up Path 1, you only need to:
 2. Edit ``/etc/zm/objectconfig.yml`` with your ZM portal credentials and desired models
 3. Set the **Event Start Command** in the monitor's Config -> Recording tab as shown above
 4. Optionally, set **Event End Command** (same tab) to a similar invocation if you want end-of-event processing
+5. Optionally, enable push notifications by configuring the ``push`` section in
+   ``objectconfig.yml`` (see :ref:`push_config`)
 
 .. _path2_setup:
 

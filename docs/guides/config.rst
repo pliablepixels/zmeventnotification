@@ -109,6 +109,26 @@ The ``objectconfig.yml`` file is organized into these sections:
 - ``animation`` — create GIF/MP4 animations from event frames around the detection.
   Key settings: ``create_animation`` (``yes``/``no``), ``animation_types`` (``mp4,gif``),
   ``animation_width``, ``animation_retry_sleep``, ``animation_max_tries``, ``fast_gif``
+
+.. _push_config:
+
+- ``push`` — direct FCM push notifications from ``zm_detect`` (Path 1 only, requires
+  ZM 1.39.2+). ``zm_detect`` reads registered tokens from ZM's ``Notifications`` table
+  via pyzm and sends push notifications through an FCM cloud function proxy after
+  detection. Key settings:
+
+  - ``enabled`` — ``yes``/``no`` (default ``no``)
+  - ``fcm_v1_url`` — URL of the FCM cloud function proxy
+  - ``fcm_v1_key`` — authorization key for the proxy (use a secret token like ``!FCM_V1_KEY``)
+  - ``replace_push_messages`` — ``yes`` to collapse notifications per monitor
+  - ``include_picture`` — ``yes`` to include event image URL in the notification
+  - ``android_priority`` — FCM priority (``high`` or ``normal``)
+  - ``android_ttl`` — optional TTL in seconds
+
+  Tokens are managed by client apps (e.g. zmNg) via the ZM ``/api/notifications.json``
+  REST endpoint. ``zm_detect`` respects per-token monitor filtering, throttle intervals,
+  and push state. Invalid tokens are automatically cleaned up.
+
 - ``remote`` — remote ML server (``pyzm.serve``) gateway URL, mode, credentials, fallback
 - ``ml`` — the detection pipeline:
 
