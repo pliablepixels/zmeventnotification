@@ -115,7 +115,14 @@ def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, caus
                 timeout=10,
             )
 
-            if resp.ok:
+            body_text = resp.text
+            # Check for token errors in the response body.
+            # The proxy may return 200 with an error in the JSON body,
+            # or a non-200 status. Either way, if "Error" appears in the
+            # response referencing this token, the token is invalid.
+            has_token_error = 'Error' in body_text and notif.token[:8] in body_text
+
+            if resp.ok and not has_token_error:
                 logger.Debug(1, 'push: FCM proxy returned 200 for token ...{}'.format(token_suffix))
                 try:
                     notif.update_last_sent(badge=badge)
@@ -123,9 +130,11 @@ def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, caus
                     logger.Debug(1, 'push: failed to update LastNotifiedAt: {}'.format(e))
                 sent_count += 1
             else:
-                body_text = resp.text
                 logger.Error('push: FCM proxy error for token ...{}: {}'.format(token_suffix, body_text))
-                if 'not a valid FCM' in body_text or 'entity was not found' in body_text or 'NotRegistered' in body_text:
+                # Remove token on client errors (4xx) or any token-specific
+                # error in the body. Don't remove on server errors (5xx) or
+                # network issues — those are transient.
+                if has_token_error or (not resp.ok and 400 <= resp.status_code < 500):
                     logger.Debug(1, 'push: removing invalid token ...{}'.format(token_suffix))
                     try:
                         notif.delete()
