@@ -3,6 +3,51 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.12] - 2026-03-06
+
+### Bug Fixes
+
+- feat: auto-update managed FCM defaults during install in [#22](https://github.com/pliablepixels/zmeventnotification/pull/22) ([0c8c889](https://github.com/pliablepixels/zmeventnotification/commit/0c8c889e1a402c4be270f40c8b691afc2d9d6a50))
+- read hook version from VERSION file instead of installed package ([9767d62](https://github.com/pliablepixels/zmeventnotification/commit/9767d6248fcea13b56845ffd6936c370df8934cd))
+- generic invalid token detection for FCM proxy responses ([a4b4c13](https://github.com/pliablepixels/zmeventnotification/commit/a4b4c135f33b0b392a01a8ead7062b337fc33516))
+- clean up NotRegistered tokens from FCM proxy response ([be58ae2](https://github.com/pliablepixels/zmeventnotification/commit/be58ae29ae732a9af71f5587b8516d7b1608d1d7))
+- include push module in setup.py py_modules ([03a50a6](https://github.com/pliablepixels/zmeventnotification/commit/03a50a6ba90e6bfe5c358dba9d4e67ab5b18c198))
+- log FCM payload at debug level 1 for visibility in logfile ([d7e7f51](https://github.com/pliablepixels/zmeventnotification/commit/d7e7f51acbcd1dd659b8c7efcfbbe9524f2355c4))
+
+### Documentation
+
+- add manual push notification testing instructions ([a076f74](https://github.com/pliablepixels/zmeventnotification/commit/a076f7479dc667652416da113af6beeb7d5a2c5b))
+- add note about desktop polling in Direct mode ([70f9a12](https://github.com/pliablepixels/zmeventnotification/commit/70f9a12509189de11cfd9758b67724c31147414a))
+- update Path 1 references to reflect push notification support ([7daceb0](https://github.com/pliablepixels/zmeventnotification/commit/7daceb079802564379b79283fc5f9dd51058e633))
+- add setup steps for push config with secrets and key instructions ([5a16c56](https://github.com/pliablepixels/zmeventnotification/commit/5a16c5621d94ddd653d5f27323d71dcfc8ee61c6))
+- document push notification support in Path 1 and push config section ([c7d7ae2](https://github.com/pliablepixels/zmeventnotification/commit/c7d7ae2c0e8a591cacd21721d30f1f8ed9a3759d))
+
+### Features
+
+- warn when push include_picture is set but picture_url is missing ([4dbecf8](https://github.com/pliablepixels/zmeventnotification/commit/4dbecf81c70dd2ee5b26a976553e6bd964da3600))
+- include picture URL in push notification payload ([c0918cc](https://github.com/pliablepixels/zmeventnotification/commit/c0918cc3249b71b8d090f7e35091b5c80df4e023))
+- ship managed FCM key and URL as defaults in push config ([6bc1f8f](https://github.com/pliablepixels/zmeventnotification/commit/6bc1f8f6b2b79e891e3162c166b3c64c8037160c))
+- add direct FCM push notifications to zm_detect ([ca13f62](https://github.com/pliablepixels/zmeventnotification/commit/ca13f6228d57424c765f03ade05cd0bd27b74ba9))
+- pass managed_defaults.yml during ES config upgrade ([f5bddc5](https://github.com/pliablepixels/zmeventnotification/commit/f5bddc583fee2e85b90236d3315e5ce719e16c1e))
+- add --managed-defaults flag to config_upgrade_yaml.py ([ccab79c](https://github.com/pliablepixels/zmeventnotification/commit/ccab79cf48dceb17f3c1424f35f072d2ec5214e3))
+
+### Miscellaneous
+
+- bump ES to 7.0.12, require pyzm >= 2.3.0 ([72f60c8](https://github.com/pliablepixels/zmeventnotification/commit/72f60c8ba643342bbcd2b5c418274ba047dae17a))
+- add managed_defaults.yml with old FCM key/URL defaults ([8c02fc8](https://github.com/pliablepixels/zmeventnotification/commit/8c02fc89f9ee9e3290ad96e9fa0bb8b9ef65ddc1))
+- update FCM defaults to zmng-b7af6 cloud function ([e11324b](https://github.com/pliablepixels/zmeventnotification/commit/e11324b2ad63bc729e080ff8c6551aeaa10f769f))
+
+### Refactoring
+
+- use picture_url template for push image instead of hardcoding ([f1bb55d](https://github.com/pliablepixels/zmeventnotification/commit/f1bb55da753e166508fb0c8c04e96a2fc399b15f))
+- unified managed defaults for ES and hook configs ([6b64dbd](https://github.com/pliablepixels/zmeventnotification/commit/6b64dbd96738197eadbbbe4653bd2a7d0256ec52))
+- remove redundant keys from objectconfig.yml ([009b1a2](https://github.com/pliablepixels/zmeventnotification/commit/009b1a257fa2ea6a2029ad64386185d230a3ac38))
+- remove deprecated FCM legacy API, add monitorName/cause to push data ([4756a26](https://github.com/pliablepixels/zmeventnotification/commit/4756a26cd0ad0087a7b731dc0b91b26f2a9bda1a))
+
+### Testing
+
+- add tests for managed defaults config upgrade ([71d15b1](https://github.com/pliablepixels/zmeventnotification/commit/71d15b17727601c9c5b40a1660490a352cc5456d))
+
 ## [7.0.11] - 2026-03-02
 
 ### Bug Fixes
@@ -13,6 +58,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- update CHANGELOG for v7.0.11 ([2a13157](https://github.com/pliablepixels/zmeventnotification/commit/2a131570ca0486a80f3d4f00fe71f5d1e82952e0))
 - fix ([e190179](https://github.com/pliablepixels/zmeventnotification/commit/e19017934f18726ede3b32ecae6106e879a9e515))
 - document recursive and case-insensitive secret resolution ([7b46539](https://github.com/pliablepixels/zmeventnotification/commit/7b46539ed908069d9b44170a17bda1718210f65e))
 
