@@ -76,6 +76,13 @@ def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, caus
             },
         }
 
+        # Include picture URL if configured
+        if push_cfg.get('include_picture') == 'yes':
+            portal = config.get('portal', '').rstrip('/')
+            if portal:
+                image_url = '{}/index.php?view=image&eid={}&fid=objdetect&width=600'.format(portal, event_id)
+                payload['image_url'] = image_url
+
         # Platform-specific fields (proxy format, matching ES FCM.pm proxy mode)
         if notif.platform == 'android':
             payload['android'] = {
