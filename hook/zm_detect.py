@@ -186,6 +186,23 @@ def main_handler():
             g.logger.Debug(1, 'Tagging complete for event {}'.format(args['eventid']))
         except Exception as e: g.logger.Error('Error tagging event: {}'.format(e))
 
+    # --- Push notifications ---
+    if g.config.get('push', {}).get('enabled') == 'yes' and args.get('eventid') and args.get('monitorid'):
+        try:
+            from zmes_hook_helpers.push import send_push_notifications
+            mon_name = 'Monitor {}'.format(args['monitorid'])
+            try:
+                mon = zm.monitor(int(args['monitorid']))
+                if mon:
+                    mon_name = mon.name
+            except Exception:
+                pass
+            send_push_notifications(
+                zm, g.config, args['monitorid'], args['eventid'],
+                mon_name, pred, g.logger)
+        except Exception as e:
+            g.logger.Error('Push notification error: {}'.format(e))
+
     # --- Animation ---
     if g.config.get('create_animation') == 'yes' and args.get('eventid'):
         try:

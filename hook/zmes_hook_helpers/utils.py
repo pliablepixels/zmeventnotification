@@ -286,6 +286,9 @@ def process_config(args, ctx):
                     else:
                         g.config[k] = v
 
+        # Handle [push] section as nested dict
+        g.config['push'] = _resolve_secret(yml.get('push', {}))
+
         # SSL settings
         if g.config['allow_self_signed'] == 'yes':
             ctx.check_hostname = False

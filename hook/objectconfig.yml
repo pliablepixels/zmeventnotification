@@ -78,6 +78,24 @@ animation:
   fast_gif: "no"
 
 
+# Push notifications via FCM cloud function proxy
+# zm_detect reads registered tokens from ZM's Notifications table (via pyzm)
+# and sends push notifications directly after detection.
+push:
+  enabled: "no"
+  # Cloud function proxy URL and authorization key
+  fcm_v1_url: "https://us-central1-zmng-b7af6.cloudfunctions.net/send_push"
+  fcm_v1_key: "!FCM_V1_KEY"
+  # Replace previous push for same monitor (collapses notifications)
+  replace_push_messages: "yes"
+  # Include event image URL in push notification
+  include_picture: "yes"
+  # Android notification priority
+  android_priority: "high"
+  # Android TTL in seconds (omit to use FCM default)
+  #android_ttl: 60
+
+
 # Remote ML gateway (pyzm.serve -- replaces legacy mlapi)
 # Start server on GPU box: python -m pyzm.serve --models yolo11s --port 5000
 # With auth: python -m pyzm.serve --models yolo11s --port 5000 --auth --auth-user admin --auth-password secret
