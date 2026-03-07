@@ -109,41 +109,8 @@ The ``objectconfig.yml`` file is organized into these sections:
 - ``animation`` — create GIF/MP4 animations from event frames around the detection.
   Key settings: ``create_animation`` (``yes``/``no``), ``animation_types`` (``mp4,gif``),
   ``animation_width``, ``animation_retry_sleep``, ``animation_max_tries``, ``fast_gif``
-
-.. _push_config:
-
-- ``push`` — direct FCM push notifications from ``zm_detect`` (Path 1 only, requires
-  ZM 1.39.2+). ``zm_detect`` reads registered tokens from ZM's ``Notifications`` table
-  via pyzm and sends push notifications through an FCM cloud function proxy after
-  detection. Key settings:
-
-  - ``enabled`` — ``yes``/``no`` (default ``no``)
-  - ``fcm_v1_url`` — URL of the FCM cloud function proxy. Pre-configured with the
-    managed zmNg default (same proxy used by the ES). Replace only if you run your
-    own cloud function.
-  - ``fcm_v1_key`` — authorization key for the cloud function proxy. Pre-configured
-    with the managed zmNg default. Replace only if you run your own cloud function.
-  - ``replace_push_messages`` — ``yes`` to collapse notifications per monitor
-  - ``include_picture`` — ``yes`` to include event image URL in the notification
-  - ``android_priority`` — FCM priority (``high`` or ``normal``)
-  - ``android_ttl`` — optional TTL in seconds
-
-  **Setup steps:**
-
-  1. Ensure ZoneMinder is 1.39.2+ (adds the Notifications REST API).
-  2. Set ``push.enabled`` to ``yes`` in ``objectconfig.yml``.
-     The cloud function URL and key are pre-configured with the managed zmNg
-     defaults (same as the ES) — no additional configuration needed.
-  3. Register device tokens: client apps (e.g. zmNg) register FCM tokens via
-     the ZM ``/api/notifications.json`` REST endpoint. Tokens are stored in ZM's
-     ``Notifications`` database table.
-
-  If you run your own FCM cloud function proxy, replace ``fcm_v1_url`` and
-  ``fcm_v1_key`` with your own values.
-
-  ``zm_detect`` respects per-token monitor filtering, throttle intervals,
-  and push state. Invalid tokens are automatically cleaned up.
-
+- ``push`` — direct FCM push notifications from ``zm_detect`` (Path 1 only, ZM 1.39.2+).
+  See :ref:`push_config` below for full details.
 - ``remote`` — remote ML server (``pyzm.serve``) gateway URL, mode, credentials, fallback
 - ``ml`` — the detection pipeline:
 
@@ -155,6 +122,45 @@ The ``objectconfig.yml`` file is organized into these sections:
   ``stream_sequence``, and ``zones`` (with ``detection_pattern`` and ``ignore_pattern``)
 
 Refer to the sample config files for the full list of options with inline comments.
+
+.. _push_config:
+
+Direct Push Notifications (``push`` section)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``push`` section in ``objectconfig.yml`` configures direct FCM push notifications
+from ``zm_detect`` — **Path 1 only**, requires ZM 1.39.2+. ``zm_detect`` reads registered
+tokens from ZM's ``Notifications`` table via pyzm and sends push notifications through an
+FCM cloud function proxy after detection.
+
+**Key settings:**
+
+- ``enabled`` — ``yes``/``no`` (default ``no``)
+- ``fcm_v1_url`` — URL of the FCM cloud function proxy. Pre-configured with the
+  managed zmNg default (same proxy used by the ES). Replace only if you run your
+  own cloud function.
+- ``fcm_v1_key`` — authorization key for the cloud function proxy. Pre-configured
+  with the managed zmNg default. Replace only if you run your own cloud function.
+- ``replace_push_messages`` — ``yes`` to collapse notifications per monitor
+- ``include_picture`` — ``yes`` to include event image URL in the notification
+- ``android_priority`` — FCM priority (``high`` or ``normal``)
+- ``android_ttl`` — optional TTL in seconds
+
+**Setup steps:**
+
+1. Ensure ZoneMinder is 1.39.2+ (adds the Notifications REST API).
+2. Set ``push.enabled`` to ``yes`` in ``objectconfig.yml``.
+   The cloud function URL and key are pre-configured with the managed zmNg
+   defaults (same as the ES) — no additional configuration needed.
+3. Register device tokens: client apps (e.g. zmNg) register FCM tokens via
+   the ZM ``/api/notifications.json`` REST endpoint. Tokens are stored in ZM's
+   ``Notifications`` database table.
+
+If you run your own FCM cloud function proxy, replace ``fcm_v1_url`` and
+``fcm_v1_key`` with your own values.
+
+``zm_detect`` respects per-token monitor filtering, throttle intervals,
+and push state. Invalid tokens are automatically cleaned up.
 
 Configuration Tools
 ---------------------
