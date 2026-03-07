@@ -1,12 +1,15 @@
-Path 1: Detection Only (no ES)
-==============================
+Path 1: Detection + Optional Push (no ES)
+==========================================
 
 Use ZoneMinder's ``EventStartCommand`` to run ML detection directly — no Event Server needed.
 Requires **ZM 1.38.1 or above**.
 
-Push notifications are supported directly via ``zm_detect`` (see the ``push`` section
-in ``objectconfig.yml`` and :ref:`push_config`). If you also want WebSockets or MQTT,
-see :doc:`install_path2`.
+**Push notifications** are supported directly from ``zm_detect`` — no ES required.
+Configure the ``push`` section in ``objectconfig.yml`` (see :ref:`push_config`).
+Requires **ZM 1.39.2+** (which adds the Notifications REST API for token storage).
+
+If you also want WebSocket notifications, MQTT, notification rules/muting, or the
+ES control interface, see :doc:`install_path2`.
 
 .. important::
 
@@ -179,6 +182,25 @@ Then test detection (``--config`` defaults to ``/etc/zm/objectconfig.yml``):
    wget https://upload.wikimedia.org/wikipedia/commons/c/c4/Anna%27s_hummingbird.jpg -O /tmp/bird.jpg
    sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
        --file /tmp/bird.jpg --debug
+
+**Testing push notifications (Path 1 direct push):**
+
+If you have ``push.enabled: "yes"`` in ``objectconfig.yml`` and devices have registered
+tokens via the ZM Notifications API, you can test push delivery from the command line.
+Use ``--file`` with ``--eventid`` and ``--monitorid`` to trigger push without a live event.
+The ``--fakeit`` flag overrides detection results so you don't need an image that actually
+matches your detection pattern:
+
+.. code:: bash
+
+   sudo -u www-data /var/lib/zmeventnotification/bin/zm_detect.py \
+       --file /path/to/any/image.jpg --eventid <eid> --monitorid <mid> \
+       --debug --fakeit "person"
+
+Replace ``<eid>`` with a real event ID (so the notification links to a viewable event)
+and ``<mid>`` with the monitor ID. Registered devices should receive a push notification
+within a few seconds. Check the debug output for ``push:`` log lines to verify delivery.
+See :ref:`push_config` for push configuration details.
 
 Optional: Face recognition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

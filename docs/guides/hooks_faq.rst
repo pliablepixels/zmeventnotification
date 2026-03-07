@@ -4,9 +4,11 @@ Machine Learning Hooks FAQ
 How do the hooks actually invoke object detection?
 -----------------------------------------------------
 
-* When the Event Notification Server detects an event, it invokes the script specified in ``event_start_hook`` in your ``zmeventnotification.yml``. This is typically ``/var/lib/zmeventnotification/bin/zm_event_start.sh``
+There are two paths:
 
-* ``zm_event_start.sh`` in turn invokes ``zm_detect.py`` that does the actual machine learning. Upon exit, it returns ``0`` (success) meaning an object was found, or ``1`` (failure) meaning nothing was detected. Based on how you have configured your settings, this information is then stored in ZM and/or pushed to your mobile device as a notification.
+**Path 1 (no ES):** ZoneMinder calls ``zm_detect.py`` directly via ``EventStartCommand``. The script runs ML detection and writes results back to the event. If ``push.enabled`` is ``yes`` in ``objectconfig.yml`` (requires ZM 1.39.2+), it also sends FCM push notifications directly to registered devices.
+
+**Path 2 (full ES):** The Event Notification Server detects an event and invokes the script specified in ``event_start_hook`` in ``zmeventnotification.yml`` (typically ``/var/lib/zmeventnotification/bin/zm_event_start.sh``). That script in turn invokes ``zm_detect.py`` for the actual machine learning. Upon exit, it returns ``0`` (success) meaning an object was found, or ``1`` (failure) meaning nothing was detected. The ES then decides whether to send notifications based on your channel configuration.
 
 
 Necessary Reading - Sample Config Files

@@ -4,7 +4,7 @@ Machine Learning Hooks
 .. note::
 
         This page covers the ML detection pipeline, which is required for **both**
-        Path 1 (detection only) and Path 2 (full ES).
+        Path 1 (detection + optional push) and Path 2 (full ES).
         For installation instructions, see :doc:`installation`.
         The hooks use `pyzm <https://pyzmv2.readthedocs.io/en/latest/>`__ v2
         for detection. Make sure you have ``pyzm`` installed before proceeding.
@@ -48,10 +48,10 @@ connects to ZoneMinder, downloads event frames, runs the ML detection pipeline
 
 .. _path1_setup:
 
-Path 1: Detection only (no ES)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Path 1: Detection + optional push (no ES)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Requires ZM 1.37+.** ZoneMinder can call ``zm_detect.py`` directly via its
+**Requires ZM 1.38.1+.** ZoneMinder can call ``zm_detect.py`` directly via its
 Event Start Command feature — no Event Server needed.
 
 Configure per monitor in ZM: go to the monitor's **Config -> Recording** tab and set:

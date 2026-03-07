@@ -5,13 +5,13 @@ Summary
 +++++++++
 This guide explains the detection and notification flow for ZoneMinder's ML ecosystem. There are two paths:
 
-* **Path 1 (Detection + optional push)** — ZoneMinder calls ``zm_detect.py`` directly via ``EventStartCommand``. No daemon needed. Optionally sends FCM push notifications directly (requires ZM 1.39.2+).
-* **Path 2 (Full Event Server)** — The Event Notification Server (ES) monitors shared memory for new events, invokes ML hooks, and sends notifications via FCM push, WebSockets, MQTT, and 3rd-party APIs.
+* **Path 1 (Detection + optional push)** — ZoneMinder calls ``zm_detect.py`` directly via ``EventStartCommand``. No daemon needed. Optionally sends FCM push notifications directly to registered devices (requires ZM 1.39.2+). See :ref:`push_config` for push setup.
+* **Path 2 (Full Event Server)** — The Event Notification Server (ES) monitors shared memory for new events, invokes ML hooks, and sends notifications via FCM push, WebSockets, MQTT, and 3rd-party APIs. Also provides notification rules, per-device monitor filtering, and a dynamic control interface.
 
-Both paths use the same ML pipeline (``zm_detect.py`` + ``objectconfig.yml``). The difference is what triggers detection and what happens with the results.
+Both paths use the same ML pipeline (``zm_detect.py`` + ``objectconfig.yml``). The difference is what triggers detection and what notification channels are available.
 
-Path 1: From Event to Detection
-+++++++++++++++++++++++++++++++++
+Path 1: From Event to Detection (+ Optional Push)
++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. note::
 
@@ -47,7 +47,19 @@ When detection finishes, ``zm_detect.py`` produces the following:
 * **Detection metadata** — An ``objects.json`` file with labels, boxes, confidences, and frame info is saved alongside the image.
 * **Event tags** — When ``tag_detected_objects: yes`` (requires ZM >= 1.37.44), detected labels are tagged in ZoneMinder.
 
-That is the complete Path 1 flow. There is no daemon running, no shared memory polling, and no notifications — ZoneMinder calls the script, the script runs detection, and results are written back to the event.
+That is the core Path 1 detection flow. There is no daemon running and no shared memory polling — ZoneMinder calls the script, the script runs detection, and results are written back to the event.
+
+4: Optional — Direct Push Notifications
+-----------------------------------------
+Starting with ZM 1.39.2+, ``zm_detect.py`` can also send **FCM push notifications directly** to registered mobile devices — no Event Server needed. This is configured via the ``push`` section in ``objectconfig.yml`` (see :ref:`push_config`).
+
+When ``push.enabled`` is set to ``yes``, after detection completes ``zm_detect`` reads registered device tokens from ZoneMinder's ``Notifications`` database table (devices register via the ZM REST API) and sends push notifications through an FCM cloud function proxy. It respects per-token monitor filtering, throttle intervals, and push state, and automatically cleans up invalid tokens.
+
+**What Path 1 push gives you:** FCM push notifications to registered iOS/Android devices after detection, with optional event images.
+
+**What Path 1 push does NOT give you:** WebSocket notifications, MQTT, notification rules/time-based muting, the ``tokens.txt`` per-device control file, or the ES control interface. For those, you need :ref:`Path 2 <from-detection-to-notification>`.
+
+See :ref:`push_config` in the configuration guide and the "Testing push notifications" section in :doc:`hooks` for how to test.
 
 .. _from-detection-to-notification:
 
@@ -56,7 +68,7 @@ Path 2: From Event Detection to Notification
 
 .. note::
 
-   This section covers the full Event Notification Server (ES) flow. If you are using Path 1 (detection only via ``EventStartCommand``), you can skip this section.
+   This section covers the full Event Notification Server (ES) flow. If you are using Path 1 (detection + optional push via ``EventStartCommand``), you can skip this section.
 
 1: How it starts
 ----------------------
