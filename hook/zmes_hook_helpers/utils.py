@@ -155,7 +155,8 @@ def import_zm_zones(mid, reason, zm_client):
         g.polygons.append({
             'name': name,
             'value': z.points,
-            'pattern': None
+            'pattern': z.pattern,
+            'ignore_pattern': z.ignore_pattern,
         })
 
 

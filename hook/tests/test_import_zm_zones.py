@@ -116,6 +116,38 @@ class TestImportZmZones:
         assert len(g.polygons) == 1
         assert g.polygons[0]['value'] == [(26.41, 33.5), (75.2, 33.5), (75.2, 90.1), (26.41, 90.1)]
 
+    def test_zone_pattern_passed_through(self):
+        """Zone pattern and ignore_pattern from ZM are passed through."""
+        from zmes_hook_helpers.utils import import_zm_zones
+
+        mock_zm = MagicMock()
+        mock_monitor = MagicMock()
+        z = _make_zone("Front Yard", "0,0 100,0 100,100 0,100")
+        z.pattern = "person|car"
+        z.ignore_pattern = "chair"
+        mock_monitor.get_zones.return_value = [z]
+        mock_zm.monitor.return_value = mock_monitor
+
+        import_zm_zones("1", None, mock_zm)
+        assert len(g.polygons) == 1
+        assert g.polygons[0]['pattern'] == 'person|car'
+        assert g.polygons[0]['ignore_pattern'] == 'chair'
+
+    def test_zone_no_pattern_stays_none(self):
+        """Zone without pattern/ignore_pattern sets them to None."""
+        from zmes_hook_helpers.utils import import_zm_zones
+
+        mock_zm = MagicMock()
+        mock_monitor = MagicMock()
+        mock_monitor.get_zones.return_value = [
+            _make_zone("Back Yard", "0,0 100,0 100,100 0,100"),
+        ]
+        mock_zm.monitor.return_value = mock_monitor
+
+        import_zm_zones("1", None, mock_zm)
+        assert g.polygons[0]['pattern'] is None
+        assert g.polygons[0]['ignore_pattern'] is None
+
     def test_name_normalization(self):
         """Zone names: spaces to underscores, lowercased."""
         from zmes_hook_helpers.utils import import_zm_zones
