@@ -1,19 +1,19 @@
-import zmes_hook_helpers.common_params as g
-from shapely.geometry import Polygon
-import cv2
-import numpy as np
-import pickle
-import re
-import requests
-import time
+import io
 import os
+import time
 import traceback
 import urllib.parse
+
+import requests
+
+import zmes_hook_helpers.common_params as g
 # Generic image related algorithms
 
 
 def createAnimation(frametype, eid, fname, types):
     import imageio
+
+    verify = g.config.get('allow_self_signed') != 'yes'
 
     url = '{}/index.php?view=image&width={}&eid={}&username={}&password={}'.format(g.config['portal'],g.config['animation_width'],eid,g.config['user'],urllib.parse.quote(g.config['password'], safe=''))
     api_url = '{}/events/{}.json?username={}&password={}'.format(g.config['api_portal'],eid,g.config['user'],urllib.parse.quote(g.config['password'], safe=''))
@@ -36,7 +36,7 @@ def createAnimation(frametype, eid, fname, types):
         g.logger.Debug (1,'animation: Try:{} Getting {}'.format(g.config['animation_max_tries']-rtries+1,disp_api_url ))
         r = None
         try:
-            resp = requests.get(api_url)
+            resp = requests.get(api_url, verify=verify)
             resp.raise_for_status()
             r = resp.json()
         except requests.exceptions.RequestException as e:
@@ -62,6 +62,8 @@ def createAnimation(frametype, eid, fname, types):
     
         totframes=len(r_frame)
         total_time=round(float(r_frame[-1]['Delta']))
+        if total_time <= 0:
+            total_time = 1
         fps=round(totframes/total_time)
 
         if not r_frame_len >= fid+fps*buffer_seconds:
@@ -93,7 +95,9 @@ def createAnimation(frametype, eid, fname, types):
     od_url= '{}/index.php?view=image&eid={}&fid={}&username={}&password={}&width={}'.format(g.config['portal'],eid,frametype,g.config['user'],urllib.parse.quote(g.config['password'], safe=''),g.config['animation_width'])
     g.logger.Debug (1,'Grabbing anchor frame: {}...'.format(frametype))
     try:
-        od_frame = imageio.imread(od_url)
+        od_resp = requests.get(od_url, verify=verify)
+        od_resp.raise_for_status()
+        od_frame = imageio.imread(io.BytesIO(od_resp.content))
         # 1 second @ 2fps
         od_images.append(od_frame)
         od_images.append(od_frame)
@@ -104,7 +108,9 @@ def createAnimation(frametype, eid, fname, types):
         p_url=url+'&fid={}'.format(i)
         g.logger.Debug (2,'animation: Grabbing Frame:{}'.format(i))
         try:
-            images.append(imageio.imread(p_url))
+            frame_resp = requests.get(p_url, verify=verify)
+            frame_resp.raise_for_status()
+            images.append(imageio.imread(io.BytesIO(frame_resp.content)))
         except Exception as e:
             g.logger.Error ('Error downloading frame {}: Error:{}'.format(i,e))
 
