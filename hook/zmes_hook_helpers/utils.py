@@ -360,7 +360,7 @@ def process_config(args, ctx):
         g.logger.Error('Error parsing config:{}'.format(args.get('config')))
         g.logger.Error('Error was:{}'.format(e))
         g.logger.Fatal('error: Traceback:{}'.format(traceback.format_exc()))
-        exit(0)
+        sys.exit(1)
 
     # Path substitution: replace ${base_data_path} (and legacy {{base_data_path}})
     # in all string values throughout the config, including nested ml_sequence.
