@@ -67,6 +67,44 @@ On the GPU box, start with::
    python -m pyzm.serve --models yolo11s --port 5000 --auth --auth-user admin --auth-password secret
 
 
+Config Cleanup (7.x)
+~~~~~~~~~~~~~~~~~~~~~~
+
+Several config keys have been moved, removed, or fixed. If you have a custom
+``objectconfig.yml``, review the changes below. Running ``install.sh`` will
+automatically merge new defaults from the example config.
+
+**Keys removed:**
+
+- ``general.version`` — was never read by any code
+- ``general.delete_after_analyze`` — was never read by ``zm_detect.py``
+- ``general.cpu_max_processes``, ``general.tpu_max_processes``, ``general.gpu_max_processes`` — pyzm
+  reads these per-model from ``ml_sequence`` items, not from flat config
+- ``general.cpu_max_lock_wait``, ``general.tpu_max_lock_wait``, ``general.gpu_max_lock_wait`` — same reason
+- ``animation`` section (``create_animation``, ``animation_types``, ``animation_width``,
+  ``animation_retry_sleep``, ``animation_max_tries``, ``fast_gif``) — animation support removed entirely
+
+**Keys moved to correct section:**
+
+- ``ml.stream_sequence.frame_strategy`` → ``ml.ml_sequence.general.frame_strategy`` —
+  ``StreamConfig`` ignores this key; ``DetectorConfig`` reads it from ``ml_sequence.general``
+- ``ml.disable_locks`` → ``ml.ml_sequence.general.disable_locks`` —
+  was a sibling of ``ml_sequence``/``stream_sequence`` and never reached pyzm
+- ``monitors.<id>.resize`` → ``monitors.<id>.stream_sequence.resize`` —
+  top-level ``resize`` in a monitor override was stored in ``g.config`` but pyzm reads it
+  from ``stream_sequence``
+- ``monitors.<id>.match_past_detections`` → ``monitors.<id>.ml_sequence.general.match_past_detections`` —
+  same issue: top-level copy never reached pyzm
+
+**Default changed:**
+
+- ``stream_sequence.resize`` default changed from ``800`` to ``None`` (no resize). You must now
+  explicitly set ``resize: 800`` (or another value) in ``stream_sequence`` if you want frame
+  downscaling before detection.
+
+**No action required** if you run ``install.sh`` — it merges new keys from the example config
+via ``config_upgrade_yaml.py``. If you maintain your config manually, apply the moves listed above.
+
 YAML Migration (current master)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

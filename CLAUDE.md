@@ -25,10 +25,16 @@ Development notes
 
 Documentation notes
 -------------------
-- You are an expert document writer and someone who cares deeply that documentation is clear, easy to follow, user friendly and comprehensive and CORRECT. 
-- Analyze RTD docs and make sure the documents fully represent the capabilities of the system, does not have outdated or incomplete things and is user forward.  
+- You are an expert document writer and someone who cares deeply that documentation is clear, easy to follow, user friendly and comprehensive and CORRECT.
+- Analyze RTD docs and make sure the documents fully represent the capabilities of the system, does not have outdated or incomplete things and is user forward.
 - Remember that zm_detect.py leans on pyzm (~/fiddle/pyzm) for most of its functionality. Always validate what is true by reading pyzm code
 - Never make changes to CHANGELOG. It is auto generated
+- When adding, removing, or changing ANY config key, you MUST update:
+  * The config reference table in `docs/guides/config.rst` (under "Complete Hook Config Reference")
+  * The example config `hook/objectconfig.example.yml`
+  * `hook/zmes_hook_helpers/common_params.py` (for flat keys)
+  * Any code examples in `docs/guides/hooks.rst` that reference the key
+  * pyzm docs if the key is consumed by pyzm
 
 When responding to issues or PRs from others
 --------------------------------------------

@@ -120,7 +120,215 @@ The ``objectconfig.yml`` file is organized into these sections:
 - ``monitors`` — per-monitor overrides for ``wait``, ``ml_sequence``,
   ``stream_sequence``, and ``zones`` (with ``detection_pattern`` and ``ignore_pattern``)
 
-Refer to the sample config files for the full list of options with inline comments.
+.. _hook_config_reference:
+
+Complete Hook Config Reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every key accepted by ``objectconfig.yml``, grouped by YAML section.
+Keys not listed here will be logged as unrecognized and ignored.
+
+.. note::
+
+   Several keys have been moved or removed in 7.x. See :doc:`breaking` for details
+   on what changed and migration steps.
+
+**general** — app-level settings consumed by ``zm_detect.py`` / ``utils.py``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 15 57
+
+   * - Key
+     - Default
+     - Description
+   * - ``secrets``
+     - *none*
+     - Path to secrets YAML file for ``!TOKEN`` substitution
+   * - ``base_data_path``
+     - ``/var/lib/zmeventnotification``
+     - Base path for model files and data directories
+   * - ``portal``
+     - ``""``
+     - ZoneMinder portal URL (e.g. ``https://zm.example.com/zm``)
+   * - ``api_portal``
+     - ``""``
+     - ZoneMinder API URL (e.g. ``https://zm.example.com/zm/api``)
+   * - ``user``
+     - *none*
+     - ZoneMinder username
+   * - ``password``
+     - *none*
+     - ZoneMinder password
+   * - ``allow_self_signed``
+     - ``yes``
+     - Accept self-signed SSL certificates
+   * - ``image_path``
+     - ``${base_data_path}/images``
+     - Directory for detection images and past-detection files
+   * - ``pyzm_overrides``
+     - ``{}``
+     - Dict of pyzm settings to override (e.g. ``log_level_debug``)
+   * - ``wait``
+     - ``0``
+     - Seconds to sleep before running detection
+   * - ``show_percent``
+     - ``no``
+     - Show confidence percentage in detection output
+   * - ``show_models``
+     - ``no``
+     - Show model name in detection output (e.g. ``(YOLOv11) person``)
+   * - ``write_image_to_zm``
+     - ``yes``
+     - Write annotated image back to ZoneMinder event
+   * - ``write_debug_image``
+     - ``yes``
+     - Write a debug image with all detections to ``image_path``
+   * - ``tag_detected_objects``
+     - ``no``
+     - Write detected labels as ZM Tags (requires ZM >= 1.37.44)
+   * - ``poly_color``
+     - ``(255,255,255)``
+     - RGB color for polygon overlays on annotated images
+   * - ``poly_thickness``
+     - ``2``
+     - Line thickness for polygon overlays (pixels)
+   * - ``import_zm_zones``
+     - ``no``
+     - Import zone definitions from ZoneMinder instead of using config zones
+   * - ``only_triggered_zm_zones``
+     - ``no``
+     - When ``yes``, import only ZM zones that triggered the alarm (forces ``import_zm_zones: yes``)
+
+**remote** — remote ML gateway settings (forwarded to pyzm ``Detector``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 15 57
+
+   * - Key
+     - Default
+     - Description
+   * - ``ml_gateway``
+     - *none*
+     - URL of remote ``pyzm.serve`` instance (e.g. ``http://gpu:5000``)
+   * - ``ml_gateway_mode``
+     - ``url``
+     - ``url`` (server fetches frames) or ``image`` (client sends JPEG)
+   * - ``ml_user``
+     - *none*
+     - Username for remote gateway authentication
+   * - ``ml_password``
+     - *none*
+     - Password for remote gateway authentication
+   * - ``ml_timeout``
+     - ``60``
+     - Gateway request timeout in seconds
+   * - ``ml_fallback_local``
+     - ``no``
+     - Fall back to local detection if remote gateway fails
+
+**ml.stream_sequence** — frame extraction settings (read by pyzm ``StreamConfig``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 15 57
+
+   * - Key
+     - Default
+     - Description
+   * - ``frame_set``
+     - ``snapshot,alarm,1``
+     - Comma-separated list of frames to extract (``snapshot``, ``alarm``, or numeric IDs)
+   * - ``resize``
+     - *none*
+     - Resize frames to this width (pixels) before detection. Omit for original resolution.
+   * - ``max_frames``
+     - ``0``
+     - Maximum frames to extract (``0`` = no limit)
+   * - ``start_frame``
+     - ``1``
+     - First frame index to consider
+   * - ``frame_skip``
+     - ``1``
+     - Process every Nth frame
+   * - ``contig_frames_before_error``
+     - ``5``
+     - Contiguous frame errors before giving up
+   * - ``max_attempts``
+     - ``1``
+     - Retries per frame on failure
+   * - ``sleep_between_attempts``
+     - ``3``
+     - Seconds between retries
+   * - ``save_frames``
+     - ``no``
+     - Save extracted frames to disk
+   * - ``save_frames_dir``
+     - ``/tmp``
+     - Directory for saved frames
+   * - ``convert_snapshot_to_fid``
+     - ``yes``
+     - Convert snapshot frame to its actual frame ID
+
+**ml.ml_sequence.general** — detection pipeline settings (read by pyzm ``DetectorConfig``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 15 57
+
+   * - Key
+     - Default
+     - Description
+   * - ``model_sequence``
+     - ``object``
+     - Comma-separated model types to run (``object``, ``face``, ``alpr``, ``audio``)
+   * - ``frame_strategy``
+     - ``most_models``
+     - How to pick the best frame: ``most_models``, ``first``, ``first_new``, ``most``, ``most_unique``
+   * - ``same_model_sequence_strategy``
+     - ``first``
+     - How to combine results from multiple models of the same type: ``first``, ``most``, ``most_unique``, ``union``
+   * - ``disable_locks``
+     - ``no``
+     - Disable file-based locking for model execution
+   * - ``match_past_detections``
+     - ``no``
+     - Deduplicate static objects across successive detections
+   * - ``past_det_max_diff_area``
+     - ``5%``
+     - Area difference threshold for past-detection matching
+   * - ``<label>_past_det_max_diff_area``
+     - —
+     - Per-label override (e.g. ``car_past_det_max_diff_area: 10%``)
+   * - ``ignore_past_detection_labels``
+     - ``[]``
+     - Labels to never deduplicate (e.g. ``['dog', 'cat']``)
+   * - ``max_detection_size``
+     - *none*
+     - Maximum bounding box size to accept (pixels or percentage, e.g. ``90%``)
+   * - ``pattern``
+     - ``.*``
+     - Global regex pattern for accepted labels
+   * - ``aliases``
+     - ``[]``
+     - Groups of labels to treat as equivalent (e.g. ``[['car','bus','truck']]``)
+
+**ml.ml_sequence.<type>** — per-type settings (``object``, ``face``, ``alpr``, ``audio``):
+
+Each type has a ``general`` section for overrides and a ``sequence`` list of model
+configurations. See :doc:`hooks` for details on model-specific keys (``object_weights``,
+``face_detection_framework``, ``alpr_service``, etc.).
+
+**push** — direct FCM push notifications:
+
+See :ref:`push_config` below.
+
+**monitors** — per-monitor overrides:
+
+Any key from the sections above can be overridden per monitor. Dict values
+(``ml_sequence``, ``stream_sequence``) are deep-merged; scalar values are replaced.
+See :doc:`hooks` for zone configuration (``detection_pattern``, ``ignore_pattern``).
 
 .. _push_config:
 
