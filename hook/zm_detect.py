@@ -108,7 +108,7 @@ def main_handler():
             result = detector.detect_event(zm, int(stream), zones=zones, stream_config=stream_cfg)
         matched_data = result.to_dict(); matched_data['polygons'] = g.polygons
     except Exception as e:
-        if detector._gateway and g.config.get('ml_fallback_local') == 'yes':
+        if g.config.get('ml_gateway') and g.config.get('ml_fallback_local') == 'yes':
             g.logger.Debug(1, 'Remote failed ({}), falling back to local'.format(e))
             ml_options['general']['ml_gateway'] = None
             local = Detector.from_dict(ml_options)
@@ -121,6 +121,14 @@ def main_handler():
             raise
 
     if not matched_data: g.logger.Debug(1, 'No detection data'); matched_data = {}
+
+    # Fetch event once and reuse for write_image, notes, tagging
+    ev = None
+    if args.get('eventid'):
+        try:
+            ev = zm.event(int(args['eventid']))
+        except Exception as e:
+            g.logger.Error('Error fetching event: {}'.format(e))
 
     # --- Fake override ---
     if args.get('fakeit'):
@@ -156,7 +164,6 @@ def main_handler():
         if g.config['write_debug_image'] == 'yes':
             cv2.imwrite(os.path.join(g.config['image_path'], '{}-{}-debug.jpg'.format(os.path.basename(stream), matched_data['frame_id'])), debug_image)
         if g.config['write_image_to_zm'] == 'yes':
-            ev = zm.event(int(args['eventid'])) if args.get('eventid') else None
             if ev:
                 try:
                     written = ev.save_objdetect(debug_image, matched_data, path_override=args.get('eventpath') or None)
@@ -169,19 +176,17 @@ def main_handler():
                 g.logger.Debug(1, 'No event path available, skipping write_image_to_zm')
 
     # --- Update ZM event notes ---
-    if args.get('notes') and args.get('eventid'):
+    if args.get('notes') and args.get('eventid') and ev:
         try:
-            ev = zm.event(int(args['eventid']))
             old = ev.notes or ''
             parts = old.split('Motion:') if old else ['']
             ev.update_notes(pred + ('Motion:' + parts[1] if len(parts) > 1 else ''))
         except Exception as e: g.logger.Error('Error updating notes: {}'.format(e))
 
     # --- Tag detected objects in ZM ---
-    if g.config.get('tag_detected_objects') == 'yes' and args.get('eventid') and matched_data.get('labels'):
+    if g.config.get('tag_detected_objects') == 'yes' and args.get('eventid') and ev and matched_data.get('labels'):
         try:
             g.logger.Debug(1, 'Tagging event {} with labels: {}'.format(args['eventid'], matched_data['labels']))
-            ev = zm.event(int(args['eventid']))
             ev.tag(matched_data['labels'])
             g.logger.Debug(1, 'Tagging complete for event {}'.format(args['eventid']))
         except Exception as e: g.logger.Error('Error tagging event: {}'.format(e))
