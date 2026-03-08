@@ -134,10 +134,10 @@ FCM cloud function proxy after detection.
 
 - ``enabled`` — ``yes``/``no`` (default ``no``)
 - ``fcm_v1_url`` — URL of the FCM cloud function proxy. Pre-configured with the
-  managed zmNg default (same proxy used by the ES). Replace only if you run your
+  managed zmNinjaNG default (same proxy used by the ES). Replace only if you run your
   own cloud function.
 - ``fcm_v1_key`` — authorization key for the cloud function proxy. Pre-configured
-  with the managed zmNg default. Replace only if you run your own cloud function.
+  with the managed zmNinjaNG default. Replace only if you run your own cloud function.
 - ``replace_push_messages`` — ``yes`` to collapse notifications per monitor
 - ``include_picture`` — ``yes`` to include event image URL in the notification
 - ``android_priority`` — FCM priority (``high`` or ``normal``)
@@ -147,9 +147,9 @@ FCM cloud function proxy after detection.
 
 1. Ensure ZoneMinder is 1.39.2+ (adds the Notifications REST API).
 2. Set ``push.enabled`` to ``yes`` in ``objectconfig.yml``.
-   The cloud function URL and key are pre-configured with the managed zmNg
+   The cloud function URL and key are pre-configured with the managed zmNinjaNG
    defaults (same as the ES) — no additional configuration needed.
-3. Register device tokens: client apps (e.g. zmNg) register FCM tokens via
+3. Register device tokens: client apps (e.g. zmNinjaNG) register FCM tokens via
    the ZM ``/api/notifications.json`` REST endpoint. Tokens are stored in ZM's
    ``Notifications`` database table.
 

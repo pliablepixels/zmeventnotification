@@ -117,10 +117,6 @@ So at this stage, we have a new event and we need to decide if the ES will send 
 3.2.1: Notification channels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
-
 .. sidebar:: Summary of rules:
 
   * if hooks are used, needs to return 0 as exit status
@@ -132,8 +128,8 @@ So at this stage, we have a new event and we need to decide if the ES will send 
 
 At a high level, there are 4 types of clients that are interested in receiving notifications:
 
-* zmNg/zmNinja: the mobile app that uses Firebase Cloud Messaging (FCM) to get push notifications. This is the "fcm" channel
-* Any websocket client: This includes zmNg/zmNinja desktop and any other custom client you may have written to receive notifications via web sockets. This is the "web" channel
+* zmNinjaNG: the mobile app that uses Firebase Cloud Messaging (FCM) to get push notifications. This is the "fcm" channel
+* Any websocket client: This includes zmNinjaNG desktop and any other custom client you may have written to receive notifications via web sockets. This is the "web" channel
 * receivers that use MQTT. This is the "mqtt" channel.
 * Any 3rd party push solution which you may be using to deliver push notifications. A popular one is "pushover" for which I provide a `plugin <https://github.com/pliablepixels/zmeventnotification/blob/master/pushapi_plugins/pushapi_pushover.py>`__. This is the "api" channel.
 
@@ -144,7 +140,7 @@ So, for example:
   event_start_notify_on_hook_success = all
   event_start_notify_on_hook_fail = api,web
 
-With this configuration, all channels may receive a notification when the hook succeeds, but on hook failure only API and Web channels are notified — FCM is excluded, so the zmNg/zmNinja mobile app will not receive a push. If you want to avoid excessive mobile notifications, do not include ``fcm`` in ``event_start_notify_on_hook_fail``.
+With this configuration, all channels may receive a notification when the hook succeeds, but on hook failure only API and Web channels are notified — FCM is excluded, so the zmNinjaNG mobile app will not receive a push. If you want to avoid excessive mobile notifications, do not include ``fcm`` in ``event_start_notify_on_hook_fail``.
 
 3.2.2: The tokens.txt file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,12 +150,12 @@ Even when the channel and hook conditions are met, a notification is not guarant
 
     ``tokens.txt`` is a configuration file that affects FCM (mobile push) notification delivery. It is covered in detail below.
 
-The file ``/var/lib/zmeventnotification/push/tokens.txt`` controls whether FCM notifications are ultimately delivered. It predates the hook system and was originally created for zmNg/zmNinja push notification support.
+The file ``/var/lib/zmeventnotification/push/tokens.txt`` controls whether FCM notifications are ultimately delivered. It predates the hook system and was originally created for zmNinjaNG push notification support.
 
-This file is actually created  when zmNg/zmNinja sets up push notification. Here is how it works:
+This file is actually created  when zmNinjaNG sets up push notification. Here is how it works:
 
-* When zmNg/zmNinja runs and you enable push notifications, it asks either Apple or Google for a unique token to receive notifications via their push servers.
-* This token is then sent to the ES via websockets. The ES stores this token in the ``tokens.txt`` file and every time it restarts, it reloads these tokens so it knows these clients expect notifications over FCM. **So if your zmNg/zmNinja app cannot connect to the ES for the first time, the token will never be saved and the ES will never be able to send notifications to your zmNg/zmNinja app**.
+* When zmNinjaNG runs and you enable push notifications, it asks either Apple or Google for a unique token to receive notifications via their push servers.
+* This token is then sent to the ES via websockets. The ES stores this token in the ``tokens.txt`` file and every time it restarts, it reloads these tokens so it knows these clients expect notifications over FCM. **So if your zmNinjaNG app cannot connect to the ES for the first time, the token will never be saved and the ES will never be able to send notifications to your zmNinjaNG app**.
 
 The ``tokens.txt`` file stores additional fields beyond the token itself. Here is a typical entry (migrated from a colon-separated format to JSON in ES 6.0.1):
 
@@ -180,16 +176,16 @@ The ``tokens.txt`` file stores additional fields beyond the token itself. Here i
 
 * long token = unique token, we discussed this above
 * monlist = list of monitors that will be processed for events for this connection. For example, in the first row, this device will ONLY get notifications for monitors 1,2,5
-* intlist = interval in seconds before the next notification is sent. If we look at the first row, it says monitor 1 events will be sent as soon as they occur, however for monitor 2 and 5, notifications will only be sent if the previous notification for that monitor was *at least* 120 seconds before (2 mins). How is this set? You actually set it via zmNg/zmNinja->Settings->Event Server Settings
+* intlist = interval in seconds before the next notification is sent. If we look at the first row, it says monitor 1 events will be sent as soon as they occur, however for monitor 2 and 5, notifications will only be sent if the previous notification for that monitor was *at least* 120 seconds before (2 mins). How is this set? You actually set it via zmNinjaNG->Settings->Event Server Settings
 * platform the device type (we need this to create a push notification message correctly)
-* pushstate = Finally, this tells us if push is enabled or disabled for this device. There are two ways to disable - you can disable push notifications for zmNg/zmNinja on your device, or you can simply uncheck "use event server" in zmNg/zmNinja. This is for the latter case. If you uncheck "use event server", we need to be able to tell the ES that even though it has a token on file, it should not send notifications.
-* appversion = version of zmNg/zmNinja (so we know if FCMv1 is supported). For any zmNg/zmNinja version prior to ``1.6.000`` this is set to ``unknown``.
+* pushstate = Finally, this tells us if push is enabled or disabled for this device. There are two ways to disable - you can disable push notifications for zmNinjaNG on your device, or you can simply uncheck "use event server" in zmNinjaNG. This is for the latter case. If you uncheck "use event server", we need to be able to tell the ES that even though it has a token on file, it should not send notifications.
+* appversion = version of zmNinjaNG (so we know if FCMv1 is supported). For any zmNinjaNG version prior to ``1.6.000`` this is set to ``unknown``.
 
 .. important::
 
-    It is important to note here that if zmNg/zmNinja is not able to connect to the ES at least for the first time, you will never receive notifications. Check your ``tokens.txt`` file to make sure you have entries. If you don't that means zmNg/zmNinja can't reach your ES.
+    It is important to note here that if zmNinjaNG is not able to connect to the ES at least for the first time, you will never receive notifications. Check your ``tokens.txt`` file to make sure you have entries. If you don't that means zmNinjaNG can't reach your ES.
 
-You will also note that ``tokens.txt`` does not contain any other entries besides android and iOS. zmNg/zmNinja desktop does not feature here, for example. That is because ``tokens.txt`` only exists to store FCM registrations. zmNg/zmNinja desktop only receives notifications when it is running and via websockets, so that connection is established when the desktop app runs. FCM tokens on the other hand need to be remembered, because zmNg/zmNinja may not be running in your phone and the ES still needs to send out notifications to all tokens (devices) that might have previously registered.
+You will also note that ``tokens.txt`` does not contain any other entries besides android and iOS. zmNinjaNG desktop does not feature here, for example. That is because ``tokens.txt`` only exists to store FCM registrations. zmNinjaNG desktop only receives notifications when it is running and via websockets, so that connection is established when the desktop app runs. FCM tokens on the other hand need to be remembered, because zmNinjaNG may not be running in your phone and the ES still needs to send out notifications to all tokens (devices) that might have previously registered.
 
 
 3.2.3: The Rules file

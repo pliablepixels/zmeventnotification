@@ -109,7 +109,7 @@ When an event occurs, the ES invokes ``zm_event_start.sh``, which calls ``zm_det
 Based on the detection result and your notification settings, the ES sends alerts via
 FCM (iOS/Android push), WebSockets, MQTT, and/or third-party push APIs.
 
-**What you get (in addition to Path 1):** push notifications to zmNg/zmNinja and other
+**What you get (in addition to Path 1):** push notifications to zmNinjaNG and other
 FCM clients, WebSocket notifications, MQTT publishing, notification rules (time-based
 muting, per-monitor controls), per-device monitor filtering via ``tokens.txt``, and the
 ES control interface.

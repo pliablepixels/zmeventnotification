@@ -32,7 +32,7 @@
    * - Notification rules / time-based muting
      - |no|
      - |yes|
-   * - zmNg/zmNinja integration
+   * - zmNinjaNG integration
      - |no|
      - |yes|
    * - Per-device monitor filtering (``tokens.txt``)

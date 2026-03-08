@@ -18,10 +18,10 @@ How do I talk to it?
    server will close your connection
 -  As of today, there are 2 categories of messages:
 
-  - 'normal' messages that are exchanged between a client (like zmNg/zmNinja) and the ES. These messages are the following types:
+  - 'normal' messages that are exchanged between a client (like zmNinjaNG) and the ES. These messages are the following types:
     - auth (from client to server)
     - control (from client to server)
-    - push (only applicable for zmNg/zmNinja)
+    - push (only applicable for zmNinjaNG)
     - alarm notifications (from server to client)
 
   - 'escontrol' messages. This allows the client to change the behaviour of the ES dynamically. The changes are stored persistently in ``/var/lib/zmeventnotification/misc/escontrol_interface.dat``.
@@ -148,10 +148,6 @@ Alarms are events sent from the Server to the Client
 Push Notifications (for both iOS and Android)
 ''''''''''''''''''''''''''''''''''''''''''''''''''
 
-.. note::
-
-   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
-
 Push notifications can be delivered two ways:
 
 - **Path 1 (Direct):** ``zm_detect`` sends push notifications directly after detection.
@@ -165,11 +161,11 @@ Push notifications can be delivered two ways:
 
    **Desktop clients (Windows/Linux/macOS):** FCM push notifications are not supported
    on desktop platforms because Tauri's embedded webview does not support the Web Push API.
-   When using Direct mode (Path 1), zmNg desktop will poll the ZM API for new events at
+   When using Direct mode (Path 1), zmNinjaNG desktop will poll the ZM API for new events at
    regular intervals instead of receiving real-time push. Mobile clients (Android/iOS)
    continue to receive real-time FCM push notifications in both modes.
 
-Concepts of Push and why it is only for zmNg/zmNinja
+Concepts of Push and why it is only for zmNinjaNG
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Both Apple and Google ensure that a "trusted" application server can

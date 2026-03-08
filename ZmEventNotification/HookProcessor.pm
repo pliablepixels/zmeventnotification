@@ -556,7 +556,7 @@ sub processNewAlarmsInFork {
             main::Debug(1, 'Skipping FCM notification as Monitor:'
                 . $temp_alarm_obj->{Name} . '('
                 . $temp_alarm_obj->{MonitorId}
-                . ') is excluded from zmNinja monitor list');
+                . ') is excluded from zmNinjaNG monitor list');
           }
         }
       }

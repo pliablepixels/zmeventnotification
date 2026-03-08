@@ -52,7 +52,7 @@ general:
 # zm_detect reads registered tokens from ZM's Notifications table (via pyzm)
 # and sends push notifications directly after detection.
 # Requires ZM 1.39.2+ (Notifications API). Just set enabled to "yes" to use.
-# The URL and key below are the managed zmNg defaults (same as ES).
+# The URL and key below are the managed zmNinjaNG defaults (same as ES).
 # If you run your own cloud function, replace both values.
 push:
   enabled: "no"

@@ -4,7 +4,7 @@
 
 Note
 -----
-This is a newer version of ES (7.x) that I'm redoing for zmNg support and better features.
+This is a newer version of ES (7.x) that I'm redoing for zmNinjaNG support and better features.
 Read about what is [different](CHANGES.md). 
 
 What

@@ -76,7 +76,7 @@ If you already use SSL for ZoneMinder, just point the ES to those same certs.
    Set the **Common Name** to the hostname or IP you'll use to access the server
    (e.g. ``myserver.ddns.net``).
 
-For zmNg/zmNinja picture messaging, you need a real certificate (e.g. `LetsEncrypt <https://letsencrypt.org>`__) —
+For zmNinjaNG picture messaging, you need a real certificate (e.g. `LetsEncrypt <https://letsencrypt.org>`__) —
 self-signed won't work for that.
 
 Step 5: Configure

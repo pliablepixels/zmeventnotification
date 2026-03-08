@@ -235,7 +235,7 @@ sub sendOverFCMV1 {
       main::Debug(2, "fcmv1: Using direct FCM URL: $uri");
 
   } else {
-      main::Debug(2, "fcmv1: Using shared proxy mode (zmNinja)");
+      main::Debug(2, "fcmv1: Using shared proxy mode (zmNinjaNG)");
       $key = $fcm_config{v1_key};
       $uri = $fcm_config{v1_url};
       main::Debug(2, "fcmv1: Using proxy URL: $uri");

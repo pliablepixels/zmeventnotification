@@ -38,7 +38,7 @@ Why do we need it?
 Is this officially developed by ZM developers?
 ----------------------------------------------
 
-No. I developed it for zmNg/zmNinja, but you can use it with your own
+No. I developed it for zmNinjaNG, but you can use it with your own
 consumer.
 
 How can I use this with Node-Red or Home Assistant?
@@ -323,7 +323,7 @@ I just added a new monitor and the ES is not sending notifications for it
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This generally happens if you add a monitor _after_ you configure the ES.
-Go to zmNg/zmNinja's ``Menu->Settings->Event Server`` option, enable the monitor you just added, and press save.
+Go to zmNinjaNG's ``Menu->Settings->Event Server`` option, enable the monitor you just added, and press save.
 
 The ES is missing events. I see them being triggered in ZM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -354,7 +354,7 @@ the following conditions must be met:
 - You must use HTTPS
 - There is a 1MB limit to image size
 - You can't use self signed certs 
-- The IP/hostname needs to be accessible by zmNg/zmNinja on the mobile device you are receiving pushes on
+- The IP/hostname needs to be accessible by zmNinjaNG on the mobile device you are receiving pushes on
 - You need a recent version of ZM
 - A good way to isolate if its a URL problem or something else is replace the ``picture_url`` in ``/etc/zm/secrets.yml`` 
   with a knows HTTPS url like `this <https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/A_small_bird.jpg/800px-A_small_bird.jpg>`__
@@ -382,14 +382,10 @@ Secure mode just doesn't work (WSS) - WS works
 Try to put in your event server IP in the ``address`` token in
 ``network`` section of ``zmeventnotification.yml``
 
-I'm not receiving push notifications in zmNg/zmNinja
+I'm not receiving push notifications in zmNinjaNG
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   While zmNg supports push notifications, it is not yet available on the App Store or Play Store and therefore FCM push will not work with zmNg as of today. Use zmNinja for push notifications until zmNg is published.
-
-This almost always happens when zmNg/zmNinja is not able to reach the server.
+This almost always happens when zmNinjaNG is not able to reach the server.
 Before reporting an issue, please perform the following steps and include
 the output:
 
@@ -413,24 +409,24 @@ the output:
     2018-12-20,08:31:32 Web Socket Event Server listening on port 9000
     12/20/2018 08:31:32.696406 zmeventnotification[12460].INF [main:582] [Web Socket Event Server listening on port 9000]
 
-6. Now start zmNg/zmNinja. You should see event server logs like this:
+6. Now start zmNinjaNG. You should see event server logs like this:
 
 ::
 
     2018-12-20,08:32:43 Raw incoming message: {"event":"push","data":{"type":"token","platform":"ios","token":"cVuLzCBsEn4:APA91bHYuO3hVJqTIMsm0IRNQEYAUa<deleted>GYBwNdwRfKyZV0","monlist":"1,2,4,5,6,7,11","intlist":"45,60,0,0,0,45,45","state":"enabled"}}
 
-If you don't see these logs on the event server, zmNg/zmNinja is not able to
+If you don't see these logs on the event server, zmNinjaNG is not able to
 connect to the event server. This may be because of several reasons: 
 
 * Your event server IP/DNS is not reachable from your phone 
 
 * If you are using SSL, your certificates are invalid (try disabling SSL first — both
-  on the event server and in zmNg/zmNinja)
+  on the event server and in zmNinjaNG)
 
-* Your zmNg/zmNinja configuration is wrong (a common error is the server has
-  SSL disabled, but zmNg/zmNinja is configured to use ``wss://`` instead of ``ws://``)
+* Your zmNinjaNG configuration is wrong (a common error is the server has
+  SSL disabled, but zmNinjaNG is configured to use ``wss://`` instead of ``ws://``)
 
-7. Assuming the above worked, go to zmNg/zmNinja logs in the app. Somewhere
+7. Assuming the above worked, go to zmNinjaNG logs in the app. Somewhere
    in the logs, you should see a line similar to:
 
 ::
@@ -443,11 +439,11 @@ credentials (and in that case, you'll see an error message)
 
 8.  Finally, after all of the above succeeds, do a
     ``cat /var/lib/zmeventnotification/push/tokens.txt`` to make sure
-    the device token that zmNg/zmNinja sent is stored (desktop apps don't
-    have a device token). If you are using zmNg/zmNinja on a mobile device and
+    the device token that zmNinjaNG sent is stored (desktop apps don't
+    have a device token). If you are using zmNinjaNG on a mobile device and
     don't see an entry in ``tokens.txt``, the registration did not succeed.
 
-9.  Always include logs from both zmNg/zmNinja and zmeventnotification when
+9.  Always include logs from both zmNinjaNG and zmeventnotification when
     reporting issues. Single-line log excerpts are rarely sufficient — include
     the full relevant section.
 
@@ -459,7 +455,7 @@ credentials (and in that case, you'll see an error message)
 
 -  If you don't see an entry in ``tokens.txt`` (typically in
    ``/var/lib/zmeventnotification/push``) then your phone is not
-   registered to get push. Kill zmNg/zmNinja, start the app, make sure the
+   registered to get push. Kill zmNinjaNG, start the app, make sure the
    event server receives the registration and check ``tokens.txt``
 
 -  Sometimes, Google's FCM server goes down, or Apple's APNS server goes
@@ -486,7 +482,7 @@ Some possibilities:
 
 - There are situations where you device token has changed and ``/var/lib/zmeventnotification/push/tokens.txt`` has 
   both the old and new token and both work. In this case, your device will get multiple 
-  notifications. Stop the ES, delete ``tokens.txt`` and let zmNg/zmNinja re-register.
+  notifications. Stop the ES, delete ``tokens.txt`` and let zmNinjaNG re-register.
 
 - At times Google's FCM servers send out duplicate notifications. This is
   rare and typically resolves itself quickly. Before attributing the issue
@@ -528,7 +524,7 @@ There seems to be multiple potential reasons:
 
 - Starting Android 6, a doze mode and battery optimization mode has been introduced which aggressively tries to
   put the phone into low power mode. This results in the apps disconnecting from FCM servers for around 10-15 mins
-  at a stretch, which may explain why you get delayed notifications. To avoid this, remove zmNg/zmNinja from any battery
+  at a stretch, which may explain why you get delayed notifications. To avoid this, remove zmNinjaNG from any battery
   optimization and doze mode effects. There are instructions `here <https://documentation.onesignal.com/docs/notifications-show-successful-but-are-not-being-shown>`__
   on how to do that (scroll to the middle of the page and see the table that describes what to do depending on your phone manufacturer).
 
@@ -595,7 +591,7 @@ As it turns out many folks run ZM inside the LAN only and don't want to
 deal with certificates. Fair enough. For that situation, edit
 zmeventnotification.pl and use ``enable: "no"`` in the ``ssl`` section
 of the configuration file. **Make sure your EventServer
-URL in zmNg/zmNinja also uses ``ws://`` instead of ``wss://``**. Restart
+URL in zmNinjaNG also uses ``ws://`` instead of ``wss://``**. Restart
 the ES after this change.
 
 
@@ -653,9 +649,9 @@ Please always include relevant logs when reporting issues. Read :ref:`es-hooks-l
 
 Here is how to debug and report:
 
-**If your problem involves zmNg/zmNinja:**
+**If your problem involves zmNinjaNG:**
 
--  Enable Debug logs in zmNinja (Setting->Developer Options->Enable
+-  Enable Debug logs in zmNinjaNG (Setting->Developer Options->Enable
    Debug Log)
 
 - Clear the logs, replicate the issue, and collect the logs immediately after. This makes it much easier to identify the relevant entries.
@@ -714,21 +710,21 @@ To get DEBUG logs:
   10/06/19 06:48:46 zmesdetect_m10[13732] DBG zm_detect.py:194 [|--> model:yolo detection took: 3.541227s]
 
 -  If you are debugging problems with receiving push notifications on
-   zmNg/zmNinja mobile, replicate the following scenario:
+   zmNinjaNG mobile, replicate the following scenario:
 
   -  Run the event server in manual mode as described above
-  -  Kill zmNg/zmNinja
-  -  Start zmNg/zmNinja
-  -  At this point, you should see registration messages in the ``zmeventnotification`` logs (refer to logs example above). If you don't, either zmNg/zmNinja is not configured to use the event server, or it can't reach it.
-  -  Make sure zmNg/zmNinja is not running in the foreground (move it to background or kill it). When in the foreground, it receives notifications via websockets instead of push.
+  -  Kill zmNinjaNG
+  -  Start zmNinjaNG
+  -  At this point, you should see registration messages in the ``zmeventnotification`` logs (refer to logs example above). If you don't, either zmNinjaNG is not configured to use the event server, or it can't reach it.
+  -  Make sure zmNinjaNG is not running in the foreground (move it to background or kill it). When in the foreground, it receives notifications via websockets instead of push.
   -  Force an alarm like I described above. If you don't see logs in ``zmeventnotification`` saying "Sending notification over FCM" then the eventserver, for some reason, does not have your app token. Inspect ``tokens.txt`` (typically in ``/etc/zm/``) to make sure an entry for your phone exists
   -  If you see that message, but your mobile phone is not receiving a push notification:
 
     -  Make sure you haven't disabled push notifications on your phone
     -  Make sure you haven't muted notifications
     -  Sometimes Apple's or Google's push servers delay or drop messages temporarily — wait 24 hours and retry
-    -  Open zmNg/zmNinja, go to logs, and include them when reporting an issue
-    -  When reporting issues, include both your zmeventnotification logs and zmNg/zmNinja debug logs
+    -  Open zmNinjaNG, go to logs, and include them when reporting an issue
+    -  When reporting issues, include both your zmeventnotification logs and zmNinjaNG debug logs
 
 
 Brickbats

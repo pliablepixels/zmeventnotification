@@ -30,7 +30,7 @@ Event Notification Server v7+ Documentation
         :caption: Related Projects
 
         pyzmv2+ <https://pyzmv2.readthedocs.io/en/latest/>
-        zmNg <https://zmng.readthedocs.io/>
+        zmNinjaNG <https://zmninjang.readthedocs.io/en/latest/>
 
 
 `Github Repository <https://github.com/pliablepixels/zmeventnotification>`__
@@ -43,9 +43,8 @@ The **Event Notification Server (ES)** is a companion daemon for
 memory for new events and can push real-time notifications to clients via
 WebSockets, FCM (push to iOS/Android), and MQTT. It also supports
 per-monitor notification rules, time-based muting, and integration with
-`zmNinja <https://zmninja.readthedocs.io/en/latest/index.html>`__ and
-`zmNg <https://github.com/pliablepixels/zmNg>`__ (the newer-generation
-app for ZoneMinder).
+`zmNinjaNG <https://zmninjang.readthedocs.io/en/latest/>`__ (the
+newer-generation app for ZoneMinder).
 
 The **ML Ecosystem** (``zm_detect.py + pyzm``) is the machine learning detection
 framework. They take a ZoneMinder event and run it through one or more
@@ -109,10 +108,8 @@ Documentation
         If you want to contribute hook scripts to the ES
 `pyzmv2+ <https://pyzmv2.readthedocs.io/en/latest/>`__
         Documentation for pyzm, the ML detection library
-`zmNinja Documentation <https://zmninja.readthedocs.io/en/latest/index.html>`__
-        Documentation for zmNinja
-`zmNg <https://zmng.readthedocs.io/>`__
-        Documentation for zmNg, the newer-generation app for ZoneMinder
+`zmNinjaNG <https://zmninjang.readthedocs.io/en/latest/>`__
+        Documentation for zmNinjaNG, the newer-generation app for ZoneMinder
 
 
 

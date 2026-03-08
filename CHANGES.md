@@ -31,7 +31,7 @@
 
 ### New Features
 - **Detected objects are now tagged in the ZoneMinder database** (Tags table with CreateDate)
-- `fcm_service_account_file` config option added for FCM auth (if you are compiling zmNg from source, you don't need a central push server)
+- `fcm_service_account_file` config option added for FCM auth (if you are compiling zmNinjaNG from source, you don't need a central push server)
 
 ### Installer Improvements
 - Dependency checks and Perl module auto-install added
