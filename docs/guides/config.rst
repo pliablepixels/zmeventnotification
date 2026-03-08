@@ -105,7 +105,7 @@ Key Hook Configuration Sections
 The ``objectconfig.yml`` file is organized into these sections:
 
 - ``general`` — ZM portal/API credentials, data paths, process locking, debug images,
-  ``import_zm_zones``, ``match_past_detections``, ``tag_detected_objects``
+  ``import_zm_zones``, ``tag_detected_objects``
 - ``animation`` — create GIF/MP4 animations from event frames around the detection.
   Key settings: ``create_animation`` (``yes``/``no``), ``animation_types`` (``mp4,gif``),
   ``animation_width``, ``animation_retry_sleep``, ``animation_max_tries``, ``fast_gif``

@@ -43,13 +43,6 @@ general:
   # Base path for model files and data
   base_data_path: /var/lib/zmeventnotification
 
-  # Deduplicate static objects across detections
-  match_past_detections: "no"
-  past_det_max_diff_area: "5%"
-
-  # Maximum bounding box size to accept (px or %)
-  max_detection_size: "90%"
-
   # Image output settings
   delete_after_analyze: "yes"
   write_debug_image: "no"
@@ -140,7 +133,12 @@ ml:
   ml_sequence:
     general:
       model_sequence: "object,face,alpr"
+      # Deduplicate static objects across detections
+      match_past_detections: "no"
+      past_det_max_diff_area: "5%"
       car_past_det_max_diff_area: "10%"
+      # Maximum bounding box size to accept (px or %)
+      max_detection_size: "90%"
       #ignore_past_detection_labels: ['dog', 'cat']
       aliases:
         - ['car', 'bus', 'truck', 'boat']
