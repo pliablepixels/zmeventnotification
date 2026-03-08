@@ -151,6 +151,18 @@ config_vals = {
             'type': 'string'
         },
 
+        'ml_gateway_mode': {
+            'section': 'remote',
+            'default': 'url',
+            'type': 'string'
+        },
+
+        'ml_timeout': {
+            'section': 'remote',
+            'default': 60,
+            'type': 'int'
+        },
+
         'ml_sequence': {
             'section': 'ml',
             'default': None,

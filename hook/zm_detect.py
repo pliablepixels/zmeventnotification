@@ -93,7 +93,7 @@ def main_handler():
         ml_options['general']['ml_user'] = g.config.get('ml_user')
         ml_options['general']['ml_password'] = g.config.get('ml_password')
         ml_options['general']['ml_timeout'] = g.config.get('ml_timeout', 60)
-        ml_options['general']['ml_gateway_mode'] = g.config.get('ml_gateway_mode', 'image')
+        ml_options['general']['ml_gateway_mode'] = g.config.get('ml_gateway_mode', 'url')
 
     # Inject monitor_id for per-monitor past detection scoping
     mid = args.get('monitorid')
