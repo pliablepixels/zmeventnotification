@@ -7,7 +7,7 @@ use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday);
 use ZmEventNotification::Constants qw(:all);
 use ZmEventNotification::Config qw(:all);
-use ZmEventNotification::Util qw(getConnectionIdentity isInList getInterval parseDetectResults buildPictureUrl stripFrameMatchType appendImagePath getFrameId);
+use ZmEventNotification::Util qw(getConnectionIdentity isInList getInterval parseDetectResults buildPictureUrl appendImagePath getFrameId);
 use ZmEventNotification::FCM qw(sendOverFCM);
 use ZmEventNotification::MQTT qw(sendOverMQTTBroker);
 use ZmEventNotification::Rules qw(isAllowedInRules);
@@ -36,8 +36,6 @@ sub sendOverWebSocket {
   if ( $notify_config{picture_url} && $notify_config{include_picture} ) {
     $alarm->{Picture} = buildPictureUrl($eid, $alarm->{Cause}, $resCode, 'websocket', $frame_id);
   }
-
-  $alarm->{Cause} = stripFrameMatchType($alarm->{Cause});
 
   $alarm->{Cause} = 'End:'.$alarm->{Cause} if $event_type eq 'event_end';
   my $json = encode_json(

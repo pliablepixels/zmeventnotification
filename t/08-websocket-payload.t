@@ -151,18 +151,4 @@ my $alarm_base = {
     ok(!defined $data->{events}[0]{Picture}, 'Picture URL excluded when not configured');
 }
 
-# ===== Test: stripFrameMatchType applied =====
-{
-    $pipe_output = '';
-    local $hooks_config{keep_frame_match_type} = 0;
-    my $ac = { id => 83, type => WEB, conn => $mock_conn, state => VALID_CONNECTION };
-    my $alarm = { %$alarm_base, Cause => '[a] detected:person' };
-    sendOverWebSocket($alarm, $ac, 'event_start', 0);
-
-    my (undef, $json_str) = split(/--SPLIT--/, $pipe_output, 2);
-    chomp $json_str;
-    my $data = decode_json($json_str);
-    unlike($data->{events}[0]{Cause}, qr/^\[.\]/, 'frame match type stripped from Cause');
-}
-
 done_testing();

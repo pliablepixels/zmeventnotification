@@ -315,12 +315,6 @@ hook:
   # and you want that to be shown in your notification (default: yes)
   use_hook_description: "yes"
 
-  # If yes will will append an [a] for alarmed frame match
-  # [s] for snapshot match or [x] if not using bestmatch
-  # really only a debugging feature but useful to know
-  # where object detection is working or failing
-  keep_frame_match_type: "yes"
-
   # list of monitors for which hooks will not run
   # hook_skip_monitors: "2"
 

@@ -54,5 +54,4 @@ hook:
   event_end_notify_on_hook_fail: none
   event_end_notify_if_start_success: "yes"
   use_hook_description: "yes"
-  keep_frame_match_type: "yes"
   max_parallel_hooks: 0

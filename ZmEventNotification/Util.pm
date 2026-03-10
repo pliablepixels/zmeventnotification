@@ -12,7 +12,7 @@ use ZmEventNotification::Config qw(:all);
 our @EXPORT_OK = qw(
   trim rsplit uniq getInterval isValidMonIntList isInList
   getConnFields getObjectForConn getConnectionIdentity parseDetectResults
-  buildPictureUrl stripFrameMatchType maskPassword appendImagePath getFrameId
+  buildPictureUrl maskPassword appendImagePath getFrameId
 );
 
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
@@ -131,12 +131,6 @@ sub getConnectionIdentity {
   }
 
   return $identity;
-}
-
-sub stripFrameMatchType {
-  my $cause = shift;
-  $cause = substr($cause, 4) if (!$hooks_config{keep_frame_match_type} && $cause =~ /^\[.\]/);
-  return $cause;
 }
 
 sub getFrameId {

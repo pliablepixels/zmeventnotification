@@ -233,8 +233,6 @@ sub loadEsConfigSettings {
 
   $hooks_config{use_hook_description} = config_get_val($cfg, 'hook', 'use_hook_description',
     DEFAULT_HOOK_USE_HOOK_DESCRIPTION);
-  $hooks_config{keep_frame_match_type} = config_get_val($cfg, 'hook', 'keep_frame_match_type',
-    DEFAULT_HOOK_KEEP_FRAME_MATCH_TYPE);
   $hooks_config{hook_skip_monitors} = config_get_val($cfg, 'hook', 'hook_skip_monitors');
   $hooks_config{hook_pass_image_path} = config_get_val($cfg, 'hook', 'hook_pass_image_path');
   $hooks_config{tag_detected_objects} = config_get_val($cfg, 'hook', 'tag_detected_objects',
@@ -358,7 +356,6 @@ Notify on Event End (hook fail)....... ${\(_value_or_undef($hooks_config{event_e
 Notify End only if Start success...... ${\(_yes_or_no($hooks_config{event_end_notify_if_start_success}))}
 
 Use Hook Description.................. ${\(_yes_or_no($hooks_config{use_hook_description}))}
-Keep frame match type................. ${\(_yes_or_no($hooks_config{keep_frame_match_type}))}
 Store Frame in ZM..................... ${\(_yes_or_no($hooks_config{hook_pass_image_path}))}
 Tag detected objects in ZM............ ${\(_yes_or_no($hooks_config{tag_detected_objects}))}
 

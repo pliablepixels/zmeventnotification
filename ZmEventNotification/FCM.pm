@@ -8,7 +8,7 @@ use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday);
 use ZmEventNotification::Constants qw(:all);
 use ZmEventNotification::Config qw(:all);
-use ZmEventNotification::Util qw(uniq rsplit buildPictureUrl stripFrameMatchType maskPassword getFrameId);
+use ZmEventNotification::Util qw(uniq rsplit buildPictureUrl maskPassword getFrameId);
 
 our @EXPORT_OK = qw(
   deleteFCMToken get_google_access_token
@@ -177,7 +177,6 @@ sub _prepare_fcm_common {
   my $frame_id = getFrameId($alarm);
 
   my $pic = buildPictureUrl($eid, $alarm->{Cause}, $resCode, $label, $frame_id);
-  $alarm->{Cause} = stripFrameMatchType($alarm->{Cause});
 
   my $body = $alarm->{Cause};
   $body .= ' ended' if $event_type eq 'event_end';

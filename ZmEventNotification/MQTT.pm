@@ -5,8 +5,6 @@ use Exporter 'import';
 use JSON;
 use ZmEventNotification::Constants qw(:all);
 use ZmEventNotification::Config qw(:all);
-use ZmEventNotification::Util qw(stripFrameMatchType);
-
 our @EXPORT_OK   = qw(sendOverMQTTBroker initMQTT);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
@@ -16,7 +14,6 @@ sub sendOverMQTTBroker {
   my $event_type = shift;
   my $resCode    = shift;
 
-  $alarm->{Cause} = stripFrameMatchType($alarm->{Cause});
   my $description = $alarm->{Name}.':('.$alarm->{EventId}.') '.$alarm->{Cause};
 
   $description = 'Ended:' . $description if ( $event_type eq 'event_end' );

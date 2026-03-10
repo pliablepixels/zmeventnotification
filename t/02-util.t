@@ -56,24 +56,6 @@ ZmEventNotification::Util->import(':all');
     is(isInList('-1', 1), 1, 'isInList: -1 allows all');
 }
 
-# ===== stripFrameMatchType =====
-{
-    # keep_frame_match_type is 'yes' (1) from config, so it should NOT strip
-    is(stripFrameMatchType('[a] detected:person'), '[a] detected:person',
-        'stripFrameMatchType: keeps [a] when config says yes');
-
-    # Temporarily disable keep_frame_match_type
-    local $ZmEventNotification::Config::hooks_config{keep_frame_match_type} = 0;
-    is(stripFrameMatchType('[a] detected:person'), 'detected:person',
-        'stripFrameMatchType: strips [a] when config says no');
-    is(stripFrameMatchType('[s] detected:car'), 'detected:car',
-        'stripFrameMatchType: strips [s]');
-    is(stripFrameMatchType('[x] detected:dog'), 'detected:dog',
-        'stripFrameMatchType: strips [x]');
-    is(stripFrameMatchType('no_prefix'), 'no_prefix',
-        'stripFrameMatchType: no prefix unchanged');
-}
-
 # ===== buildPictureUrl =====
 {
     # Set up required config
