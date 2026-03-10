@@ -1,4 +1,4 @@
-"""Tests for config_upgrade_yaml.py — resolve_dotted and apply_managed_defaults."""
+"""Tests for config_upgrade_yaml.py — resolve_dotted, apply_managed_defaults, apply_removed_keys."""
 
 import importlib.util
 import os
@@ -12,6 +12,7 @@ spec.loader.exec_module(mod)
 
 resolve_dotted = mod.resolve_dotted
 apply_managed_defaults = mod.apply_managed_defaults
+apply_removed_keys = mod.apply_removed_keys
 
 
 # ── resolve_dotted ──────────────────────────────────────────────────────
@@ -84,3 +85,30 @@ class TestApplyManagedDefaults:
         updated = apply_managed_defaults(user, example, managed)
         assert updated == ["fcm.fcm_v1_key"]
         assert user["fcm"]["fcm_v1_key"] == "new-key"
+
+
+# ── apply_removed_keys ────────────────────────────────────────────────
+
+class TestApplyRemovedKeys:
+    def test_key_removed(self):
+        user = {"hook": {"keep_frame_match_type": "yes", "enabled": "yes"}}
+        removed = apply_removed_keys(user, ["hook.keep_frame_match_type"])
+        assert removed == ["hook.keep_frame_match_type"]
+        assert "keep_frame_match_type" not in user["hook"]
+        assert user["hook"]["enabled"] == "yes"
+
+    def test_missing_key_skipped(self):
+        user = {"hook": {"enabled": "yes"}}
+        removed = apply_removed_keys(user, ["hook.keep_frame_match_type"])
+        assert removed == []
+
+    def test_missing_parent_skipped(self):
+        user = {"general": {"debug": "yes"}}
+        removed = apply_removed_keys(user, ["hook.keep_frame_match_type"])
+        assert removed == []
+
+    def test_multiple_keys_removed(self):
+        user = {"hook": {"keep_frame_match_type": "yes", "old_key": "val", "enabled": "yes"}}
+        removed = apply_removed_keys(user, ["hook.keep_frame_match_type", "hook.old_key"])
+        assert sorted(removed) == ["hook.keep_frame_match_type", "hook.old_key"]
+        assert list(user["hook"].keys()) == ["enabled"]

@@ -63,6 +63,31 @@ def set_dotted(d, dotted_key, value):
     cur[parts[-1]] = value
 
 
+def remove_dotted(d, dotted_key):
+    """Remove a key at a dotted path. Returns True if removed, False if not found."""
+    parts = dotted_key.split('.')
+    cur = d
+    for part in parts[:-1]:
+        if not isinstance(cur, dict) or part not in cur:
+            return False
+        cur = cur[part]
+    if isinstance(cur, dict) and parts[-1] in cur:
+        del cur[parts[-1]]
+        return True
+    return False
+
+
+def apply_removed_keys(user, removed_keys):
+    """Remove deprecated keys from user config.
+    Returns a list of dotted key-paths that were removed.
+    """
+    removed = []
+    for dotted_key in removed_keys:
+        if remove_dotted(user, dotted_key):
+            removed.append(dotted_key)
+    return removed
+
+
 def apply_managed_defaults(user, example, managed):
     """Replace user values that match known old defaults with current example values.
     Returns a list of dotted key-paths that were updated.
@@ -112,6 +137,7 @@ def main():
     added = deep_merge(example, user)
 
     managed_updated = []
+    removed = []
     if args.managed_defaults:
         with open(args.managed_defaults) as f:
             managed_all = yaml.safe_load(f) or {}
@@ -119,12 +145,16 @@ def main():
             managed = managed_all.get(args.section, {})
             if not managed:
                 print("Note: no managed defaults found for section '{}'".format(args.section))
+            removed_keys = managed_all.get(args.section + '_removed', [])
         else:
             # Legacy: flat format without sections
             managed = managed_all
+            removed_keys = []
         managed_updated = apply_managed_defaults(user, example, managed)
+        if removed_keys:
+            removed = apply_removed_keys(user, removed_keys)
 
-    if not added and not managed_updated:
+    if not added and not managed_updated and not removed:
         print("Config is already up to date — no new keys found.")
         return
 
@@ -137,6 +167,11 @@ def main():
         print("Managed defaults updated (old default replaced with current):")
         for key in sorted(managed_updated):
             print("  * {}".format(key))
+
+    if removed:
+        print("Deprecated keys removed:")
+        for key in sorted(removed):
+            print("  - {}".format(key))
 
     if args.dry_run:
         print("\nDry run — no files written.")

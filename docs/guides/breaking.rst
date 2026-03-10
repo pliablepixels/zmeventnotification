@@ -85,13 +85,19 @@ The ``keep_frame_match_type`` setting has been **removed from the ES config**
 
 **What you need to do:**
 
-1. **Remove** ``keep_frame_match_type`` from your ``zmeventnotification.yml``
-   (under the ``hook:`` section). It is no longer read.
-2. If you previously set ``keep_frame_match_type: "no"`` to hide the prefix,
-   add ``show_frame_match_type: "no"`` to the ``general:`` section of your
-   ``objectconfig.yml`` instead.
-3. If you were using the default (``yes``), no action is needed — the new
-   default is also ``yes``.
+Running ``install.sh`` handles most of this automatically:
+
+- ``keep_frame_match_type`` is **automatically removed** from your
+  ``zmeventnotification.yml`` during upgrade.
+- ``show_frame_match_type`` is **automatically added** to your
+  ``objectconfig.yml`` with the default value of ``"yes"``.
+
+**Manual step (only if you had ``keep_frame_match_type: "no"``):**
+
+If you previously set ``keep_frame_match_type: "no"`` in your ES config to
+hide the prefix, you need to manually set ``show_frame_match_type: "no"`` in
+the ``general:`` section of your ``objectconfig.yml`` after running
+``install.sh``.
 
 
 Config Cleanup (7.x)

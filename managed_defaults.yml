@@ -16,6 +16,11 @@ zmeventnotification:
   fcm.fcm_v1_url:
     - "https://us-central1-zoneminder-ninja.cloudfunctions.net/send_push"
 
+# Keys to remove from user configs during upgrade.
+# Use <section>_removed as the key, with a list of dotted paths.
+zmeventnotification_removed:
+  - hook.keep_frame_match_type
+
 objectconfig:
   push.fcm_v1_key:
     - "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJnZW5lcmF0b3IiOiJwbGlhYmxlIHBpeGVscyIsImlhdCI6MTcyNzQ0OTI1MCwiY2xpZW50Ijoiem1uaW5qYSJ9.2to4a_X0EQ8MtXyNzVCHfftn6zDn6QpwlSjVYicUq8I"
