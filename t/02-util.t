@@ -84,21 +84,50 @@ ZmEventNotification::Util->import(':all');
     local $ZmEventNotification::Config::hooks_config{event_start_hook} = '/usr/bin/hook.sh';
     local $ZmEventNotification::Config::hooks_config{enabled} = 1;
 
-    my $url = buildPictureUrl(12345, '[a] detected:person', 0, 'test');
+    my $url = buildPictureUrl(12345, 'detected:person', 0, 'test', 'alarm');
     like($url, qr/eid=12345/, 'buildPictureUrl: EVENTID replaced');
-    like($url, qr/fid=alarm/, 'buildPictureUrl: BESTMATCH replaced with alarm for [a]');
+    like($url, qr/fid=alarm/, 'buildPictureUrl: BESTMATCH replaced with alarm for frame_id=alarm');
     like($url, qr/username=user1/, 'buildPictureUrl: username appended');
     like($url, qr/password=p%40ss/, 'buildPictureUrl: password url-encoded');
 
-    # Snapshot match
-    my $url_s = buildPictureUrl(999, '[s] detected:car', 0, 'test');
-    like($url_s, qr/fid=snapshot/, 'buildPictureUrl: BESTMATCH replaced with snapshot for [s]');
+    # Snapshot match via frame_id
+    my $url_s = buildPictureUrl(999, 'detected:car', 0, 'test', 'snapshot');
+    like($url_s, qr/fid=snapshot/, 'buildPictureUrl: BESTMATCH replaced with snapshot for frame_id=snapshot');
 
-    # Hook failure -> objdetect replaced with snapshot
+    # Empty frame_id — BESTMATCH left un-substituted
+    my $url_empty = buildPictureUrl(777, 'detected:person', 0, 'test', '');
+    like($url_empty, qr/fid=BESTMATCH/, 'buildPictureUrl: BESTMATCH unchanged when frame_id is empty');
+
+    # Missing frame_id (undef) — BESTMATCH left un-substituted
+    my $url_undef = buildPictureUrl(777, 'detected:person', 0, 'test');
+    like($url_undef, qr/fid=BESTMATCH/, 'buildPictureUrl: BESTMATCH unchanged when frame_id is missing');
+
+    # Hook failure -> objdetect replaced with snapshot regardless of frame_id
     local $ZmEventNotification::Config::notify_config{picture_url} =
         'https://zm.example.com/zm/index.php?view=image&eid=EVENTID&fid=objdetect&width=600';
-    my $url_fail = buildPictureUrl(999, '[a] motion', 1, 'test');
+    my $url_fail = buildPictureUrl(999, 'motion', 1, 'test', 'alarm');
     like($url_fail, qr/fid=snapshot/, 'buildPictureUrl: objdetect -> snapshot on hook fail');
+}
+
+# ===== getFrameId =====
+{
+    # HASH DetectionJson with frame_id
+    is(getFrameId({DetectionJson => {frame_id => 'alarm'}}), 'alarm',
+        'getFrameId: returns alarm from HASH DetectionJson');
+    is(getFrameId({DetectionJson => {frame_id => 'snapshot'}}), 'snapshot',
+        'getFrameId: returns snapshot from HASH DetectionJson');
+
+    # HASH DetectionJson without frame_id key
+    is(getFrameId({DetectionJson => {labels => ['person']}}), '',
+        'getFrameId: returns empty when frame_id key missing');
+
+    # ARRAY DetectionJson (empty default from _build_alarm_obj)
+    is(getFrameId({DetectionJson => []}), '',
+        'getFrameId: returns empty for arrayref DetectionJson');
+
+    # No DetectionJson key at all
+    is(getFrameId({Name => 'test'}), '',
+        'getFrameId: returns empty when DetectionJson absent');
 }
 
 # ===== getInterval =====

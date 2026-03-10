@@ -12,7 +12,7 @@ use ZmEventNotification::Config qw(:all);
 our @EXPORT_OK = qw(
   trim rsplit uniq getInterval isValidMonIntList isInList
   getConnFields getObjectForConn getConnectionIdentity parseDetectResults
-  buildPictureUrl stripFrameMatchType maskPassword appendImagePath
+  buildPictureUrl stripFrameMatchType maskPassword appendImagePath getFrameId
 );
 
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
@@ -139,9 +139,16 @@ sub stripFrameMatchType {
   return $cause;
 }
 
+sub getFrameId {
+  my $alarm = shift;
+  return '' unless ref($alarm->{DetectionJson}) eq 'HASH';
+  return $alarm->{DetectionJson}->{frame_id} // '';
+}
+
 sub buildPictureUrl {
-  my ($eid, $cause, $resCode, $label) = @_;
+  my ($eid, $cause, $resCode, $label, $frame_id) = @_;
   $label //= '';
+  $frame_id //= '';
 
   my $base_url = $notify_config{picture_url} // '';
   return '' if $base_url eq '';
@@ -161,13 +168,12 @@ sub buildPictureUrl {
   $pic .= '&username=' . $notify_config{picture_portal_username} if $notify_config{picture_portal_username};
   $pic .= '&password=' . uri_escape($notify_config{picture_portal_password}) if $notify_config{picture_portal_password};
 
-  my $match_type = substr($cause, 0, 3);
-  if ($match_type eq '[a]') {
+  if ($frame_id eq 'alarm') {
     $pic = $pic =~ s/BESTMATCH/alarm/gr;
     main::Debug(2, "$label: Alarm frame matched, picture url: " . maskPassword($pic));
-  } elsif ($match_type eq '[s]') {
+  } elsif ($frame_id eq 'snapshot') {
     $pic = $pic =~ s/BESTMATCH/snapshot/gr;
-    main::Debug(2, "$label: Snapshot frame matched, picture url: $pic");
+    main::Debug(2, "$label: Snapshot frame matched, picture url: " . maskPassword($pic));
   }
 
   return $pic;
