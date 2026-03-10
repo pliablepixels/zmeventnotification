@@ -76,6 +76,10 @@ def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, caus
             },
         }
 
+        # Include profile if present on notification
+        if notif.profile:
+            payload['data']['profile'] = notif.profile
+
         # Include picture URL if configured
         if push_cfg.get('include_picture') == 'yes':
             pic_url = push_cfg.get('picture_url', '')
