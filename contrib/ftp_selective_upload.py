@@ -67,9 +67,11 @@ def get_image(path, cause):
         return path+'/objdetect.gif'
     elif os.path.exists(path+'/objdetect.jpg'):
         return path+'/objdetect.jpg'
-    prefix = cause[0:2]
+    prefix = cause[0:3] if len(cause) >= 3 else ''
     if prefix == '[a]':
         return path+'/alarm.jpg'
+    elif prefix == '[s]':
+        return path+'/snapshot.jpg'
     else:
         return path+'/snapshot.jpg'
 
