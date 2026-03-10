@@ -462,6 +462,69 @@ subtest 'processEsControlCommand - unsupported command' => sub {
     is($response->{reason}, 'NOTSUPPORTED', 'Reason is NOTSUPPORTED');
 };
 
+subtest 'processIncomingMessage - push token with profile passes to saveFCMTokens' => sub {
+    reset_state();
+    local $fcm_config{enabled} = 1;
+    local $auth_config{enabled} = 0;
+    my $mock_conn = MockConn->new('192.168.1.1', 12345);
+    @main::active_connections = (
+        { conn => $mock_conn, state => VALID_CONNECTION, type => WEB, token => '',
+          monlist => '1,2', intlist => '0,0', platform => 'android', pushstate => 'enabled',
+          appversion => '2.0', invocations => { count => 0, at => 0 }, badge => 0,
+          extra_fields => '', last_sent => {} },
+    );
+
+    my $msg = encode_json({
+        event => 'push',
+        data => {
+            type     => 'token',
+            token    => 'tok_profile_test',
+            platform => 'android',
+            monlist  => '1,2',
+            intlist  => '0,0',
+            state    => 'enabled',
+            appversion => '3.0',
+            profile  => 'My Home Server',
+        }
+    });
+    processIncomingMessage($mock_conn, $msg);
+
+    ok(scalar @save_fcm_tokens_calls > 0, 'saveFCMTokens was called');
+    my $last_call = $save_fcm_tokens_calls[-1];
+    is($last_call->[7], 'My Home Server', 'profile passed as 8th arg to saveFCMTokens');
+};
+
+subtest 'processIncomingMessage - push token without profile passes undef' => sub {
+    reset_state();
+    local $fcm_config{enabled} = 1;
+    local $auth_config{enabled} = 0;
+    my $mock_conn = MockConn->new('192.168.1.2', 12346);
+    @main::active_connections = (
+        { conn => $mock_conn, state => VALID_CONNECTION, type => WEB, token => '',
+          monlist => '1', intlist => '0', platform => 'ios', pushstate => 'enabled',
+          appversion => '2.0', invocations => { count => 0, at => 0 }, badge => 0,
+          extra_fields => '', last_sent => {} },
+    );
+
+    my $msg = encode_json({
+        event => 'push',
+        data => {
+            type     => 'token',
+            token    => 'tok_no_profile',
+            platform => 'ios',
+            monlist  => '1',
+            intlist  => '0',
+            state    => 'enabled',
+            appversion => '3.0',
+        }
+    });
+    processIncomingMessage($mock_conn, $msg);
+
+    ok(scalar @save_fcm_tokens_calls > 0, 'saveFCMTokens was called');
+    my $last_call = $save_fcm_tokens_calls[-1];
+    ok(!defined $last_call->[7], 'profile is undef when not provided');
+};
+
 done_testing();
 
 # Mock connection class

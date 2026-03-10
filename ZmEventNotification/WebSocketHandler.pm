@@ -363,6 +363,7 @@ sub processIncomingMessage {
             $_->{monlist} = $data->{monlist} if isValidMonIntList($data->{monlist});
             $_->{intlist} = $data->{intlist} if isValidMonIntList($data->{intlist});
             $_->{pushstate} = $data->{state};
+            $_->{profile}  = $data->{profile} if defined $data->{profile};
             main::Debug(1, 'JOB: Storing token ...'
                 . substr( $_->{token}, -10 )
                 . ',monlist:'
@@ -373,7 +374,8 @@ sub processIncomingMessage {
                 . $_->{pushstate} . "\n");
             my ( $emonlist, $eintlist ) = saveFCMTokens(
               $_->{token},    $_->{monlist}, $_->{intlist},
-              $_->{platform}, $_->{pushstate}, $_->{invocations}, $_->{appversion}
+              $_->{platform}, $_->{pushstate}, $_->{invocations}, $_->{appversion},
+              $_->{profile}
             );
             $_->{monlist} = $emonlist;
             $_->{intlist} = $eintlist;
@@ -397,6 +399,7 @@ sub processIncomingMessage {
           $_->{monlist}  = $data->{monlist} if isValidMonIntList($data->{monlist});
           $_->{intlist}  = $data->{intlist} if isValidMonIntList($data->{intlist});
           $_->{pushstate} = $data->{state};
+          $_->{profile}  = $data->{profile};
           $_->{invocations} = defined ($stored_invocations) ? $stored_invocations:{count=>0, at=>(localtime)[4]};
           main::Debug(1, 'JOB: Storing token ...'
               . substr( $_->{token}, -10 )
@@ -409,7 +412,8 @@ sub processIncomingMessage {
 
           my ( $emonlist, $eintlist ) = saveFCMTokens(
             $_->{token},    $_->{monlist}, $_->{intlist},
-            $_->{platform}, $_->{pushstate}, $_->{invocations}, $_->{appversion}
+            $_->{platform}, $_->{pushstate}, $_->{invocations}, $_->{appversion},
+            $_->{profile}
           );
           $_->{monlist} = $emonlist;
           $_->{intlist} = $eintlist;
@@ -461,7 +465,8 @@ sub processIncomingMessage {
               . $_->{pushstate} . "\n");
           saveFCMTokens(
             $_->{token},    $_->{monlist}, $_->{intlist},
-            $_->{platform}, $_->{pushstate}, $_->{invocations}, $_->{appversion}
+            $_->{platform}, $_->{pushstate}, $_->{invocations}, $_->{appversion},
+            $_->{profile}
           );
         }
       } # end foreach active_connections

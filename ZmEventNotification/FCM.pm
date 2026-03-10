@@ -450,6 +450,7 @@ sub initFCMTokens {
     my $pushstate  = $token_data->{pushstate} // 'enabled';
     my $appversion = $token_data->{appversion} // 'unknown';
     my $invocations = $token_data->{invocations} // {count=>0, at=>(localtime)[4]};
+    my $profile    = $token_data->{profile};
 
     push @main::active_connections,
       {
@@ -466,7 +467,8 @@ sub initFCMTokens {
       extra_fields => '',
       pushstate    => $pushstate,
       appversion   => $appversion,
-      invocations  => $invocations
+      invocations  => $invocations,
+      profile      => $profile,
       };
   } # end foreach token
 }
@@ -480,6 +482,7 @@ sub saveFCMTokens {
   my $spushstate = shift;
   my $invocations = shift;
   my $appversion = shift || 'unknown';
+  my $sprofile   = shift;
 
   $invocations = {count=>0, at=>(localtime)[4]} if !defined($invocations);
 
@@ -504,6 +507,7 @@ sub saveFCMTokens {
   $tokens_data->{tokens}->{$stoken}->{pushstate} = $spushstate;
   $tokens_data->{tokens}->{$stoken}->{invocations} = $invocations;
   $tokens_data->{tokens}->{$stoken}->{appversion} = $appversion;
+  $tokens_data->{tokens}->{$stoken}->{profile} = $sprofile if defined $sprofile;
 
   writeTokenFile($tokens_data);
   return ( $smonlist, $sintlist );

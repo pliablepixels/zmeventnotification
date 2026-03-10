@@ -168,6 +168,51 @@ my $tmpdir = tempdir(CLEANUP => 1);
     is($data->{tokens}{'tok_m1'}{intlist}, '0,0', 'intlist=-1 did not overwrite');
 }
 
+{
+    # saveFCMTokens stores profile field
+    my $tf = "$tmpdir/save_profile.txt";
+    _write_file($tf, '{"tokens":{}}');
+    local $fcm_config{token_file} = $tf;
+    local $fcm_config{enabled} = 1;
+    saveFCMTokens('tok_prof', '1', '0', 'android', 'enabled', undef, '3.0', 'Home Server');
+    my $data = decode_json(_read_file($tf));
+    is($data->{tokens}{'tok_prof'}{profile}, 'Home Server', 'profile stored in token file');
+}
+
+{
+    # saveFCMTokens with no profile omits field
+    my $tf = "$tmpdir/save_no_profile.txt";
+    _write_file($tf, '{"tokens":{}}');
+    local $fcm_config{token_file} = $tf;
+    local $fcm_config{enabled} = 1;
+    saveFCMTokens('tok_noprof', '1', '0', 'android', 'enabled', undef, '3.0');
+    my $data = decode_json(_read_file($tf));
+    ok(!exists $data->{tokens}{'tok_noprof'}{profile}, 'no profile key when not provided');
+}
+
+{
+    # initFCMTokens loads profile from token data
+    my $tf = "$tmpdir/init_profile.txt";
+    my $tokens = {
+        tokens => {
+            'tok_with_profile' => {
+                monlist   => '1',
+                intlist   => '0',
+                platform  => 'android',
+                pushstate => 'enabled',
+                appversion => '2.0',
+                profile   => 'Office Server',
+                invocations => { count => 0, at => 0 }
+            }
+        }
+    };
+    _write_file($tf, encode_json($tokens));
+    local $fcm_config{token_file} = $tf;
+    @main::active_connections = ();
+    initFCMTokens();
+    is($main::active_connections[0]{profile}, 'Office Server', 'profile loaded from token file');
+}
+
 # ===== deleteFCMToken =====
 
 {
