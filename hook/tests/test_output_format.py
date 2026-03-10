@@ -145,3 +145,26 @@ class TestFormatDetectionOutput:
         output = format_detection_output(data, config)
         txt, _ = output.split('--SPLIT--', 1)
         assert 'yolov4' not in txt
+
+    def test_show_frame_match_type_no(self):
+        data = _make_matched_data(['person'], frame_id='alarm')
+        config = {'show_percent': 'no', 'show_models': 'no', 'show_frame_match_type': 'no'}
+        output = format_detection_output(data, config)
+        txt, _ = output.split('--SPLIT--', 1)
+        assert not txt.startswith('[a]')
+        assert txt == 'detected:person'
+
+    def test_show_frame_match_type_yes(self):
+        data = _make_matched_data(['person'], frame_id='alarm')
+        config = {'show_percent': 'no', 'show_models': 'no', 'show_frame_match_type': 'yes'}
+        output = format_detection_output(data, config)
+        txt, _ = output.split('--SPLIT--', 1)
+        assert txt == '[a] detected:person'
+
+    def test_show_frame_match_type_default_yes(self):
+        """When show_frame_match_type is not specified, prefix is included (backward compat)."""
+        data = _make_matched_data(['person'], frame_id='alarm')
+        config = {'show_percent': 'no', 'show_models': 'no'}
+        output = format_detection_output(data, config)
+        txt, _ = output.split('--SPLIT--', 1)
+        assert txt.startswith('[a]')

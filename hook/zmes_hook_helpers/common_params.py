@@ -106,6 +106,11 @@ config_vals = {
             'default': 'no',
             'type': 'string'
         },
+        'show_frame_match_type': {
+            'section': 'general',
+            'default': 'yes',
+            'type': 'string'
+        },
 
         # remote ML
      

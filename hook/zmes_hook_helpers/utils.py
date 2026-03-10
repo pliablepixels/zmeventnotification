@@ -50,13 +50,15 @@ def format_detection_output(matched_data, config=None):
     seen = {}
     pred = ''
     prefix = ''
+    show_prefix = config.get('show_frame_match_type', 'yes')
 
-    if matched_data['frame_id'] == 'snapshot':
-        prefix = '[s] '
-    elif matched_data['frame_id'] == 'alarm':
-        prefix = '[a] '
-    else:
-        prefix = '[x] '
+    if show_prefix != 'no':
+        if matched_data['frame_id'] == 'snapshot':
+            prefix = '[s] '
+        elif matched_data['frame_id'] == 'alarm':
+            prefix = '[a] '
+        else:
+            prefix = '[x] '
 
     for idx, l in enumerate(matched_data['labels']):
         if l not in seen:

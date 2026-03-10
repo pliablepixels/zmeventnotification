@@ -36,6 +36,11 @@ general:
   write_image_to_zm: "yes"
   show_percent: "yes"
 
+  # Show frame match type prefix in detection output:
+  # [a] = alarm frame, [s] = snapshot frame, [x] = other
+  # Useful for debugging which frame matched. Default: yes
+  show_frame_match_type: "yes"
+
   # Write detected object labels as ZM Tags (requires ZM >= 1.37.44)
   tag_detected_objects: "no"
 
