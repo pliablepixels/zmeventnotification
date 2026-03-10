@@ -130,21 +130,46 @@ from ``zm_detect`` — **Path 1 only**, requires ZM 1.39.2+. ``zm_detect`` reads
 tokens from ZM's ``Notifications`` table via pyzm and sends push notifications through an
 FCM cloud function proxy after detection.
 
-**Key settings:**
+.. list-table::
+   :header-rows: 1
+   :widths: 28 15 57
 
-- ``enabled`` — ``yes``/``no`` (default ``no``)
-- ``fcm_v1_url`` — URL of the FCM cloud function proxy. Pre-configured with the
-  managed zmNinjaNG default (same proxy used by the ES). Replace only if you run your
-  own cloud function.
-- ``fcm_v1_key`` — authorization key for the cloud function proxy. Pre-configured
-  with the managed zmNinjaNG default. Replace only if you run your own cloud function.
-- ``replace_push_messages`` — ``yes`` to collapse notifications per monitor
-- ``include_picture`` — ``yes`` to include event image URL in the notification
-- ``include_profile_in_push`` — ``yes``/``no`` (default ``no``). When enabled and the
-  token has a profile name, it is shown as a subtitle on iOS and appended to the
-  notification body on Android.
-- ``android_priority`` — FCM priority (``high`` or ``normal``)
-- ``android_ttl`` — optional TTL in seconds
+   * - Key
+     - Default
+     - Description
+   * - ``enabled``
+     - ``no``
+     - Enable direct FCM push notifications from ``zm_detect``
+   * - ``fcm_v1_url``
+     - *(managed zmNinjaNG URL)*
+     - URL of the FCM cloud function proxy. Replace only if you run your own.
+   * - ``fcm_v1_key``
+     - *(managed zmNinjaNG key)*
+     - Authorization key for the cloud function proxy. Replace only if you run your own.
+   * - ``replace_push_messages``
+     - ``yes``
+     - Collapse notifications per monitor (replaces previous push)
+   * - ``include_picture``
+     - ``yes``
+     - Include event image URL in the notification
+   * - ``picture_url``
+     - *none*
+     - Picture URL template (use ``EVENTID`` as placeholder for event ID)
+   * - ``picture_portal_username``
+     - *none*
+     - Username for picture URL authentication
+   * - ``picture_portal_password``
+     - *none*
+     - Password for picture URL authentication
+   * - ``include_profile_in_push``
+     - ``no``
+     - Include profile name in push display (iOS subtitle, Android body append)
+   * - ``android_priority``
+     - ``high``
+     - FCM priority for Android (``high`` or ``normal``)
+   * - ``android_ttl``
+     - *none*
+     - Android message TTL in seconds (omit for FCM default)
 
 **Setup steps:**
 
@@ -161,6 +186,319 @@ If you run your own FCM cloud function proxy, replace ``fcm_v1_url`` and
 
 ``zm_detect`` respects per-token monitor filtering, throttle intervals,
 and push state. Invalid tokens are automatically cleaned up.
+
+.. _es_config_reference:
+
+Complete ES Config Reference
+-------------------------------
+
+Every key accepted by ``zmeventnotification.yml``, grouped by YAML section.
+
+``general`` — app-level settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``secrets``
+     - *none*
+     - Path to secrets YAML file for ``!TOKEN`` substitution
+   * - ``base_data_path``
+     - ``/var/lib/zmeventnotification``
+     - Base path for data directories and scripts
+   * - ``use_escontrol_interface``
+     - ``no``
+     - Enable ES control interface for dynamic behaviour overrides
+   * - ``escontrol_interface_file``
+     - ``${base_data_path}/misc/escontrol_interface.dat``
+     - File to persist ES control admin overrides
+   * - ``escontrol_interface_password``
+     - *none*
+     - Password for accepting control interface connections
+   * - ``restart_interval``
+     - ``7200``
+     - Auto-restart ES after this many seconds (``0`` = disable)
+   * - ``skip_monitors``
+     - *none*
+     - Comma-separated monitor IDs to completely skip ES processing
+
+``network`` — WebSocket server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``port``
+     - ``9000``
+     - WebSocket listening port
+   * - ``address``
+     - ``[::]``
+     - Bind address (use ``0.0.0.0`` for all IPv4 interfaces)
+
+``auth`` — authentication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``enable``
+     - ``yes``
+     - Check username/password against ZoneMinder database
+   * - ``timeout``
+     - ``20``
+     - Authentication timeout in seconds
+
+``fcm`` — Firebase Cloud Messaging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``enable``
+     - ``yes``
+     - Enable FCM push notifications
+   * - ``use_fcmv1``
+     - ``yes``
+     - Use FCM V1 protocol (recommended)
+   * - ``replace_push_messages``
+     - ``no``
+     - Replace previous push for same monitor (collapses notifications)
+   * - ``token_file``
+     - ``${base_data_path}/push/tokens.txt``
+     - File to persist registered FCM tokens
+   * - ``date_format``
+     - ``%I:%M %p, %d-%b``
+     - strftime format for notification timestamps
+   * - ``fcm_android_priority``
+     - ``high``
+     - Android push priority (``high`` or ``normal``)
+   * - ``fcm_android_ttl``
+     - *none*
+     - Android message TTL in seconds (omit for FCM default)
+   * - ``fcm_log_raw_message``
+     - ``no``
+     - Log full push message on the cloud function (debugging only)
+   * - ``fcm_log_message_id``
+     - ``NONE``
+     - Unique ID to identify your messages in cloud function logs
+   * - ``fcm_v1_key``
+     - *(managed zmNinjaNG key)*
+     - Authorization key for the FCM cloud function proxy
+   * - ``fcm_v1_url``
+     - *(managed zmNinjaNG URL)*
+     - URL of the FCM cloud function proxy
+   * - ``include_profile_in_push``
+     - ``no``
+     - Include profile name in push display (iOS subtitle, Android body append)
+   * - ``fcm_service_account_file``
+     - *none*
+     - Path to Google service account JSON for direct FCM (bypasses proxy)
+
+``mqtt`` — MQTT messaging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``enable``
+     - ``no``
+     - Enable MQTT notifications
+   * - ``server``
+     - ``127.0.0.1``
+     - MQTT broker hostname or IP
+   * - ``topic``
+     - ``zoneminder``
+     - MQTT topic name
+   * - ``username``
+     - *none*
+     - MQTT broker username
+   * - ``password``
+     - *none*
+     - MQTT broker password
+   * - ``retain``
+     - ``no``
+     - Set retain flag on MQTT messages
+   * - ``tick_interval``
+     - ``15``
+     - MQTT keep-alive interval in seconds
+   * - ``tls_ca``
+     - *none*
+     - Path to CA certificate (enables MQTT over TLS)
+   * - ``tls_cert``
+     - *none*
+     - Path to client certificate (for mutual TLS)
+   * - ``tls_key``
+     - *none*
+     - Path to client private key (for mutual TLS)
+   * - ``tls_insecure``
+     - ``no``
+     - Disable TLS peer verification
+
+``ssl`` — WebSocket SSL
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``enable``
+     - ``yes``
+     - Enable SSL for the WebSocket server
+   * - ``cert``
+     - *none*
+     - Path to SSL certificate file
+   * - ``key``
+     - *none*
+     - Path to SSL private key file
+
+``push`` — third-party push API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``use_api_push``
+     - ``no``
+     - Enable third-party push notifications (e.g. Pushover)
+   * - ``api_push_script``
+     - *none*
+     - Script to invoke for push (receives event ID, monitor ID, name, cause, type, image path)
+
+``customize`` — notification and display
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``es_rules``
+     - *none*
+     - Path to ES rules YAML file for custom notification routing
+   * - ``console_logs``
+     - ``no``
+     - Display log messages to console
+   * - ``es_debug_level``
+     - ``5``
+     - Debug verbosity level for ES messages
+   * - ``event_check_interval``
+     - ``5``
+     - Seconds between event polling checks
+   * - ``monitor_reload_interval``
+     - ``300``
+     - Seconds between monitor list reloads
+   * - ``read_alarm_cause``
+     - ``no``
+     - Read alarm cause from ZM (requires ZM >= 1.31.2)
+   * - ``tag_alarm_event_id``
+     - ``no``
+     - Append event ID to alarm notification title
+   * - ``use_custom_notification_sound``
+     - ``no``
+     - Use custom notification sound
+   * - ``include_picture``
+     - ``no``
+     - Include picture URL in push notifications
+   * - ``picture_url``
+     - *none*
+     - URL template for event images (use ``EVENTID`` as placeholder)
+   * - ``picture_portal_username``
+     - *none*
+     - Username for picture URL authentication
+   * - ``picture_portal_password``
+     - *none*
+     - Password for picture URL authentication
+   * - ``send_event_start_notification``
+     - ``yes``
+     - Send notifications when events start
+   * - ``send_event_end_notification``
+     - ``no``
+     - Send notifications when events end
+   * - ``use_hooks``
+     - ``no``
+     - Master on/off switch for ML hooks
+
+``hook`` — ML hook configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 18 52
+
+   * - Key
+     - Default
+     - Description
+   * - ``max_parallel_hooks``
+     - ``0``
+     - Maximum concurrent hook processes (``0`` = unlimited)
+   * - ``event_start_hook``
+     - *none*
+     - Script to run when an event starts
+   * - ``event_end_hook``
+     - *none*
+     - Script to run when an event ends
+   * - ``event_start_hook_notify_userscript``
+     - *none*
+     - User script to run after event start hook completes
+   * - ``event_end_hook_notify_userscript``
+     - *none*
+     - User script to run after event end hook completes
+   * - ``event_start_notify_on_hook_success``
+     - ``none``
+     - Notification channels when start hook returns 0 (``web``, ``fcm``, ``mqtt``, ``api``, ``all``, ``none``)
+   * - ``event_start_notify_on_hook_fail``
+     - ``none``
+     - Notification channels when start hook returns 1
+   * - ``event_end_notify_on_hook_success``
+     - ``none``
+     - Notification channels when end hook returns 0
+   * - ``event_end_notify_on_hook_fail``
+     - ``none``
+     - Notification channels when end hook returns 1
+   * - ``event_end_notify_if_start_success``
+     - ``yes``
+     - Only send end notification if start notification was sent
+   * - ``use_hook_description``
+     - ``no``
+     - Use hook script output as notification text
+   * - ``hook_skip_monitors``
+     - *none*
+     - Comma-separated monitor IDs to skip hooks for
+   * - ``hook_pass_image_path``
+     - *none*
+     - Pass image storage path to hook script (requires ZM >= 1.33)
+   * - ``tag_detected_objects``
+     - ``no``
+     - Write detected labels as ZM Tags (requires ZM >= 1.37.44)
 
 Configuration Tools
 ---------------------
