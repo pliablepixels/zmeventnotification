@@ -15,6 +15,9 @@ __pycache__/
 # sphinx build output
 docs/_build/
 
+# implementation plans (local only)
+docs/plans/
+
 # due to using tox and pytest
 .tox
 .cache
