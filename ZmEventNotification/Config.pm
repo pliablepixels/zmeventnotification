@@ -157,6 +157,8 @@ sub loadEsConfigSettings {
   $fcm_config{v1_url} = config_get_val($cfg, 'fcm', 'fcm_v1_url',
     DEFAULT_FCM_V1_URL);
   $fcm_config{service_account_file} = config_get_val($cfg, 'fcm', 'fcm_service_account_file');
+  $fcm_config{include_profile_in_push} = config_get_val($cfg, 'fcm', 'include_profile_in_push',
+    DEFAULT_FCM_INCLUDE_PROFILE_IN_PUSH);
 
   # --- mqtt_config ---
   $mqtt_config{enabled} = config_get_val($cfg, 'mqtt', 'enable', DEFAULT_MQTT_ENABLE);

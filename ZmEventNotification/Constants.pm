@@ -79,6 +79,7 @@ use constant {
   DEFAULT_MAX_FCM_PER_MONTH_PER_TOKEN => 8000,
   DEFAULT_FCM_V1_KEY => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJnZW5lcmF0b3IiOiJ6bW5nIiwiaWF0IjoxNzcyNTc5ODMyLCJjbGllbnQiOiJ6bW5nIn0.EVqWa1k_OeWlRk-IojL7rBwYKm_gLGobhoojhz-9fIg',
   DEFAULT_FCM_V1_URL => 'https://us-central1-zmng-b7af6.cloudfunctions.net/send_push',
+  DEFAULT_FCM_INCLUDE_PROFILE_IN_PUSH => 'no',
   DEFAULT_MAX_PARALLEL_HOOKS => 0,
   DEFAULT_HOOK_TAG_DETECTED_OBJECTS => 'no',
 };

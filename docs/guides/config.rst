@@ -86,7 +86,7 @@ The ``zmeventnotification.yml`` file is organized into these sections:
 - ``fcm`` — Firebase Cloud Messaging for push notifications. Supports proxied delivery
   (default via ``fcm_v1_url``) or direct delivery using a Google Service Account
   (``fcm_service_account_file``). Also controls ``replace_push_messages``,
-  ``fcm_android_priority``, ``fcm_android_ttl``, and token storage
+  ``fcm_android_priority``, ``fcm_android_ttl``, ``include_profile_in_push``, and token storage
 - ``mqtt`` — MQTT broker settings with optional TLS (one-way or mutual)
 - ``ssl`` — SSL certificate/key for the WebSocket server
 - ``push`` — third-party push API (e.g. Pushover) via ``api_push_script``
@@ -140,6 +140,9 @@ FCM cloud function proxy after detection.
   with the managed zmNinjaNG default. Replace only if you run your own cloud function.
 - ``replace_push_messages`` — ``yes`` to collapse notifications per monitor
 - ``include_picture`` — ``yes`` to include event image URL in the notification
+- ``include_profile_in_push`` — ``yes``/``no`` (default ``no``). When enabled and the
+  token has a profile name, it is shown as a subtitle on iOS and appended to the
+  notification body on Android.
 - ``android_priority`` — FCM priority (``high`` or ``normal``)
 - ``android_ttl`` — optional TTL in seconds
 

@@ -73,6 +73,10 @@ push:
   picture_url: "!ZMES_PICTURE_URL"
   picture_portal_username: "!ZM_USER"
   picture_portal_password: "!ZM_PASSWORD"
+  # Include profile name in push notifications. When enabled and the token
+  # has a profile (e.g. "Home Server"), it is shown as a subtitle on iOS
+  # and appended to the body on Android. Default: no
+  include_profile_in_push: "no"
   # Android notification priority
   android_priority: "high"
   # Android TTL in seconds (omit to use FCM default)

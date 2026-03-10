@@ -131,6 +131,11 @@ fcm:
   # fcm_v1_url: https://my_custom_url/function_name
   fcm_v1_url: "https://us-central1-zmng-b7af6.cloudfunctions.net/send_push"
 
+  # Include profile name in push notifications. When enabled and the client
+  # has registered a profile (e.g. "Home Server"), it is shown as a subtitle
+  # on iOS and appended to the body on Android. Default: no
+  include_profile_in_push: "no"
+
   # If you want to use a service account directly (bypassing the cloud function)
   # point this to your service account json file.
   #fcm_service_account_file: /etc/zm/zmng-service-account.json
