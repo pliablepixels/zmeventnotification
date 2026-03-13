@@ -187,7 +187,7 @@ def main_handler():
         try:
             old = ev.notes or ''
             parts = old.split('Motion:') if old else ['']
-            ev.update_notes(pred + ('Motion:' + parts[1] if len(parts) > 1 else ''))
+            ev.update_notes(pred + ('| Motion:' + parts[1] if len(parts) > 1 else ''))
         except Exception as e: g.logger.Error('Error updating notes: {}'.format(e))
 
     # --- Tag detected objects in ZM ---
