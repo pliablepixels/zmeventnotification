@@ -33,6 +33,7 @@ def main_handler():
     ap.add_argument('-v', '--version', action='store_true')
     ap.add_argument('--bareversion', action='store_true')
     ap.add_argument('-o', '--output-path', help='path for debug images')
+    ap.add_argument('-O', '--override', action='append', default=[], help='override config value using dot notation (e.g. -O show_percent=20 -O ml_sequence.object.sequence[0].object_min_confidence=0.5)')
     ap.add_argument('-f', '--file', help='skip event download, use local file')
     ap.add_argument('-r', '--reason', help='reason for event')
     ap.add_argument('-n', '--notes', action='store_true', help='update ZM notes')

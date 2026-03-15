@@ -151,6 +151,124 @@ def get_pyzm_config(args):
             g.config['pyzm_overrides'] = ast.literal_eval(pyzm_overrides) if pyzm_overrides else {}
 
 
+def _coerce_value(val):
+    """Coerce a CLI override string to the appropriate Python type."""
+    if val.lower() in ('yes', 'no'):
+        return val
+    try:
+        return int(val)
+    except ValueError:
+        pass
+    try:
+        return float(val)
+    except ValueError:
+        pass
+    return val
+
+
+def _parse_path_segments(path):
+    """Parse a dot-notation path with bracket indexing into segments.
+
+    'ml_sequence.object.sequence[0].object_min_confidence'
+    -> ['ml_sequence', 'object', 'sequence', 0, 'object_min_confidence']
+
+    'ml_sequence.object.sequence[YOLOv11 ONNX].enabled'
+    -> ['ml_sequence', 'object', 'sequence', 'YOLOv11 ONNX', 'enabled']
+
+    Non-numeric bracket content is kept as a string for name-based lookup.
+    """
+    segments = []
+    for part in path.split('.'):
+        # handle bracket indexing like sequence[0] or sequence[Name]
+        bracket_pos = part.find('[')
+        if bracket_pos != -1:
+            segments.append(part[:bracket_pos])
+            rest = part[bracket_pos:]
+            while rest:
+                if rest.startswith('['):
+                    end = rest.index(']')
+                    token = rest[1:end]
+                    try:
+                        segments.append(int(token))
+                    except ValueError:
+                        segments.append(token)  # name-based lookup
+                    rest = rest[end + 1:]
+                else:
+                    break
+        else:
+            segments.append(part)
+    return segments
+
+
+def _find_by_name(lst, name):
+    """Find a dict in *lst* whose 'name' value matches *name* (case-insensitive)."""
+    for item in lst:
+        if isinstance(item, dict) and item.get('name', '').lower() == name.lower():
+            return item
+    return None
+
+
+def _resolve_segment(obj, seg, path_str):
+    """Resolve a single path segment against a dict or list."""
+    if isinstance(seg, int):
+        return obj[seg]
+    if isinstance(obj, list):
+        # name-based lookup on a list of dicts
+        target = _find_by_name(obj, seg)
+        if target is None:
+            raise KeyError('no entry with name "{}"'.format(seg))
+        return target
+    return obj[seg]
+
+
+def apply_cli_overrides(overrides):
+    """Apply --override/-O CLI values to g.config.
+
+    Each override is a string like 'dotted.path[0].key=value'.
+    """
+    for item in overrides:
+        eq_pos = item.find('=')
+        if eq_pos == -1:
+            g.logger.Warning('Ignoring malformed override (no =): {}'.format(item))
+            continue
+
+        path_str = item[:eq_pos].strip()
+        raw_value = item[eq_pos + 1:]
+        segments = _parse_path_segments(path_str)
+        value = _coerce_value(raw_value)
+
+        # Walk to the parent of the target key
+        obj = g.config
+        try:
+            for seg in segments[:-1]:
+                obj = _resolve_segment(obj, seg, path_str)
+            last = segments[-1]
+            if isinstance(last, int):
+                if last >= len(obj):
+                    g.logger.Warning('Override index out of range: {}'.format(path_str))
+                    continue
+                obj[last] = value
+            elif isinstance(obj, list):
+                # name-based lookup for final segment on a list
+                target = _find_by_name(obj, last)
+                if target is None:
+                    g.logger.Warning('Override: no entry with name "{}" in {}'.format(last, path_str))
+                    continue
+                # name-based final segment replaces the entire matched dict — unlikely,
+                # but setting a scalar on a list entry by name doesn't make sense.
+                # This path shouldn't normally be hit; included for safety.
+                idx = obj.index(target)
+                obj[idx] = value
+            else:
+                if last not in obj:
+                    g.logger.Warning('Override key not found in config: {}'.format(path_str))
+                    continue
+                obj[last] = value
+            g.logger.Debug(1, 'CLI override applied: {} = {}'.format(path_str, value))
+        except (KeyError, IndexError, TypeError) as e:
+            g.logger.Warning('Override path invalid ({}): {}'.format(e, path_str))
+
+
 def process_config(args, ctx):
     # parse YAML config file into a dictionary with defaults
 
@@ -373,3 +491,7 @@ def process_config(args, ctx):
         g.logger.Debug(1, 'Output path modified to {}'.format(args.get('output_path')))
         g.config['image_path'] = args.get('output_path')
         g.config['write_debug_image'] = 'yes'
+
+    # Apply CLI overrides last — highest priority
+    if args.get('override'):
+        apply_cli_overrides(args['override'])

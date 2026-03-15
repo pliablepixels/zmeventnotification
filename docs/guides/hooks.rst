@@ -803,6 +803,7 @@ zm_detect.py command-line reference
     zm_detect.py [-h] [-c CONFIG] [-e EVENTID] [-p EVENTPATH] [-m MONITORID]
                  [-v] [--bareversion] [-o OUTPUT_PATH] [-f FILE] [-r REASON]
                  [-n] [-d] [--fakeit LABELS] [--pyzm-debug]
+                 [-O KEY=VALUE [KEY=VALUE ...]]
 
 ``-c, --config``
     Path to ``objectconfig.yml`` (default: ``/etc/zm/objectconfig.yml``).
@@ -843,6 +844,41 @@ zm_detect.py command-line reference
 
 ``-o, --output-path``
     Directory to write debug images to (used with ``write_debug_image``).
+
+``-O, --override KEY=VALUE``
+    Override any config value from ``objectconfig.yml`` via dot-notation paths.
+    Repeatable — specify once per override. Applied after all other config
+    loading (including per-monitor overrides), so this is the highest-priority
+    override.
+
+    **Flat keys:**
+
+    .. code-block:: bash
+
+        zm_detect.py -e 12345 -m 1 -O show_percent=20 -O write_debug_image=yes
+
+    **Nested keys** (use dots to traverse dicts):
+
+    .. code-block:: bash
+
+        zm_detect.py -e 12345 -m 1 -O ml_sequence.object.general.pattern="(car|person)"
+
+    **List indexing** (use ``[N]`` for sequence entries):
+
+    .. code-block:: bash
+
+        zm_detect.py -e 12345 -m 1 -O ml_sequence.object.sequence[0].object_min_confidence=0.5
+
+    **Name-based lookup** (use ``[Name]`` to match by the ``name`` field, case-insensitive):
+
+    .. code-block:: bash
+
+        zm_detect.py -e 12345 -m 1 -O "ml_sequence.object.sequence[YOLOv11 ONNX].enabled=no"
+        zm_detect.py -e 12345 -m 1 -O "ml_sequence.audio.sequence[BirdNET].birdnet_min_conf=0.3"
+
+    Values are auto-coerced: integers and floats are parsed as numbers,
+    ``yes``/``no`` remain as strings. Invalid paths log a warning and are
+    skipped.
 
 Questions
 ~~~~~~~~~~~
