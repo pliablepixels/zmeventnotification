@@ -74,7 +74,7 @@ fcm:
 
   # if yes, will replace notifications with the latest one
   # default: no
-  replace_push_messages: "no"
+  replace_push_messages: "yes"
 
   # Custom FCM API key. Uncomment if you are using
   # your own API key (most people will not need to uncomment)
