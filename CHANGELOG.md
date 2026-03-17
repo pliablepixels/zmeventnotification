@@ -3,10 +3,22 @@
 All notable changes to this project will be documented in this file.
 
 
+## [7.0.16] - 2026-03-17
+
+### Features
+
+- add push.send_push_on_no_match for direct mode push on detection failure ([65ea0dd](https://github.com/pliablepixels/zmeventnotification/commit/65ea0ddff94dcea0261063927cb123625fe3f1a4))
+
+### Miscellaneous
+
+- bump version to v7.0.16 ([dd7efbb](https://github.com/pliablepixels/zmeventnotification/commit/dd7efbb2b9376e7bc9441bc070be5ef38738599e))
+- default replace_push_messages to yes in ES example config ([5dd0b6a](https://github.com/pliablepixels/zmeventnotification/commit/5dd0b6a40ec7d6a42269258cff7ceb8230fc5351))
+
 ## [7.0.15] - 2026-03-15
 
 ### Documentation
 
+- update CHANGELOG for v7.0.15 ([cb2d8dd](https://github.com/pliablepixels/zmeventnotification/commit/cb2d8dd30fd2258c4c981b04728b7b1ccf773964))
 - restructure config guide for clarity ([347b090](https://github.com/pliablepixels/zmeventnotification/commit/347b090cecac2328b530cfc5a6b1baaf9c51d87c))
 - add push table to Complete Hook Config Reference ([459b35d](https://github.com/pliablepixels/zmeventnotification/commit/459b35dd5b16547b4dfbc4afca772e25c6619e49))
 - add complete ES config reference and push config table ([5b90029](https://github.com/pliablepixels/zmeventnotification/commit/5b900296a272c1a2e1886e572d7fbf5b7d7ff9a9))
