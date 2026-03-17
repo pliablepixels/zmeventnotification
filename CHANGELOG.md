@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 ## [7.0.16] - 2026-03-17
 
+### Bug Fixes
+
+- use fid=alarm in push picture URL when detection has no match ([694c993](https://github.com/pliablepixels/zmeventnotification/commit/694c993777178e180c37343aaf3c6a881a4e5b3c))
+
+### Documentation
+
+- update CHANGELOG for v7.0.16 ([36c0a37](https://github.com/pliablepixels/zmeventnotification/commit/36c0a3775dad1081d32d34abb131611a9e9cae04))
+
 ### Features
 
 - add push.send_push_on_no_match for direct mode push on detection failure ([65ea0dd](https://github.com/pliablepixels/zmeventnotification/commit/65ea0ddff94dcea0261063927cb123625fe3f1a4))
