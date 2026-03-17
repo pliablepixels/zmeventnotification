@@ -24,7 +24,7 @@ from zmes_hook_helpers import __version__ as __app_version__
 import zmes_hook_helpers.utils as utils
 
 
-def _try_push(zm, args, cause):
+def _try_push(zm, args, cause, no_match=False):
     """Send FCM push if push is enabled and eventid/monitorid are available."""
     if not (g.config.get('push', {}).get('enabled') == 'yes'
             and args.get('eventid') and args.get('monitorid')):
@@ -40,7 +40,7 @@ def _try_push(zm, args, cause):
             pass
         send_push_notifications(
             zm, g.config, args['monitorid'], args['eventid'],
-            mon_name, cause, g.logger)
+            mon_name, cause, g.logger, no_match=no_match)
     except Exception as e:
         g.logger.Error('Push notification error: {}'.format(e))
 
@@ -176,7 +176,7 @@ def main_handler():
         g.logger.Debug(1, 'No detection data')
         if g.config.get('push', {}).get('send_push_on_no_match') == 'yes':
             g.logger.Info('No detections but send_push_on_no_match is yes, sending push')
-            _try_push(zm, args, args.get('reason') or '')
+            _try_push(zm, args, args.get('reason') or '', no_match=True)
         return
 
     # --- Output ---

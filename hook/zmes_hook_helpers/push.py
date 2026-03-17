@@ -9,7 +9,7 @@ import requests
 from datetime import datetime
 
 
-def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, cause, logger):
+def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, cause, logger, no_match=False):
     """Send FCM push notifications to all qualifying registered tokens.
 
     Args:
@@ -20,6 +20,7 @@ def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, caus
         monitor_name: str, human-readable monitor name.
         cause: str, detection result string (e.g. "person detected").
         logger: pyzm logger instance.
+        no_match: bool, if True use fid=alarm instead of objdetect in picture URL.
     """
     push_cfg = config.get('push', {})
     if not push_cfg or push_cfg.get('enabled') != 'yes':
@@ -85,6 +86,8 @@ def send_push_notifications(zm, config, monitor_id, event_id, monitor_name, caus
             pic_url = push_cfg.get('picture_url', '')
             if pic_url:
                 image_url = pic_url.replace('EVENTID', str(event_id))
+                if no_match:
+                    image_url = image_url.replace('fid=objdetect', 'fid=alarm')
                 pic_user = push_cfg.get('picture_portal_username', '')
                 pic_pass = push_cfg.get('picture_portal_password', '')
                 if pic_user:
