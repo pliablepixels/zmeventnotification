@@ -24,6 +24,27 @@ from zmes_hook_helpers import __version__ as __app_version__
 import zmes_hook_helpers.utils as utils
 
 
+def _try_push(zm, args, cause):
+    """Send FCM push if push is enabled and eventid/monitorid are available."""
+    if not (g.config.get('push', {}).get('enabled') == 'yes'
+            and args.get('eventid') and args.get('monitorid')):
+        return
+    try:
+        from zmes_hook_helpers.push import send_push_notifications
+        mon_name = 'Monitor {}'.format(args['monitorid'])
+        try:
+            mon = zm.monitor(int(args['monitorid']))
+            if mon:
+                mon_name = mon.name
+        except Exception:
+            pass
+        send_push_notifications(
+            zm, g.config, args['monitorid'], args['eventid'],
+            mon_name, cause, g.logger)
+    except Exception as e:
+        g.logger.Error('Push notification error: {}'.format(e))
+
+
 def main_handler():
     ap = argparse.ArgumentParser()
     ap.add_argument('-c', '--config', default='/etc/zm/objectconfig.yml', help='config file with path')
@@ -151,7 +172,12 @@ def main_handler():
         result = DetectionResult.from_dict(matched_data)
         result.image = matched_data.get('image')
 
-    if not matched_data.get('labels'): g.logger.Debug(1, 'No detection data'); return
+    if not matched_data.get('labels'):
+        g.logger.Debug(1, 'No detection data')
+        if g.config.get('push', {}).get('send_push_on_no_match') == 'yes':
+            g.logger.Info('No detections but send_push_on_no_match is yes, sending push')
+            _try_push(zm, args, args.get('reason') or '')
+        return
 
     # --- Output ---
     output = utils.format_detection_output(matched_data, g.config)
@@ -200,21 +226,7 @@ def main_handler():
         except Exception as e: g.logger.Error('Error tagging event: {}'.format(e))
 
     # --- Push notifications ---
-    if g.config.get('push', {}).get('enabled') == 'yes' and args.get('eventid') and args.get('monitorid'):
-        try:
-            from zmes_hook_helpers.push import send_push_notifications
-            mon_name = 'Monitor {}'.format(args['monitorid'])
-            try:
-                mon = zm.monitor(int(args['monitorid']))
-                if mon:
-                    mon_name = mon.name
-            except Exception:
-                pass
-            send_push_notifications(
-                zm, g.config, args['monitorid'], args['eventid'],
-                mon_name, pred, g.logger)
-        except Exception as e:
-            g.logger.Error('Push notification error: {}'.format(e))
+    _try_push(zm, args, pred)
 
 
 

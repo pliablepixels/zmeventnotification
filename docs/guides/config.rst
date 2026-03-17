@@ -466,6 +466,11 @@ If you run your own FCM cloud function proxy, replace ``fcm_v1_url`` and
 ``zm_detect`` respects per-token monitor filtering, throttle intervals,
 and push state. Invalid tokens are automatically cleaned up.
 
+By default, push notifications are only sent when detection finds a match.
+If you use external sensor triggers and want a push even when ML detects
+nothing, set ``push.send_push_on_no_match`` to ``yes``. The event
+cause/reason (e.g. "External Motion") is used as the notification text.
+
 .. _hook_config_reference:
 
 Complete Reference
@@ -594,6 +599,11 @@ See :ref:`push_config` above for setup steps.
    * - ``include_profile_in_push``
      - ``no``
      - Include profile name in push display (iOS subtitle, Android body append)
+   * - ``send_push_on_no_match``
+     - ``no``
+     - Send push notification even when detection finds no matches. Useful for
+       external sensor triggers where you want a notification regardless of ML
+       results. The event cause/reason is used as the notification text.
    * - ``android_priority``
      - ``high``
      - FCM priority for Android (``high`` or ``normal``)

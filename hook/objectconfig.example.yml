@@ -77,6 +77,9 @@ push:
   # has a profile (e.g. "Home Server"), it is shown as a subtitle on iOS
   # and appended to the body on Android. Default: no
   include_profile_in_push: "no"
+  # Send push even when detection finds no matches (useful for external
+  # sensor triggers where you want a notification regardless of ML results)
+  send_push_on_no_match: "no"
   # Android notification priority
   android_priority: "high"
   # Android TTL in seconds (omit to use FCM default)
