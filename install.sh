@@ -534,7 +534,8 @@ install_hook() {
     if [[ "${USE_VENV}" == "yes" ]]; then
         sed -i "s|#!/usr/bin/python3|#!${ZM_VENV}/bin/python|" \
             "${TARGET_BIN_HOOK}/zm_detect.py" \
-            "${TARGET_BIN_HOOK}/zm_train_faces.py"
+            "${TARGET_BIN_HOOK}/zm_train_faces.py" \
+            "${TARGET_BIN_HOOK}/pushapi_pushover.py"
         print_success "Patched shebangs to use ${ZM_VENV}/bin/python"
     fi
 

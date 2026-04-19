@@ -113,7 +113,7 @@ if not param_dict['token'] or param_dict['user']:
         param_dict['token'] = secrets.get('PUSHOVER_APP_TOKEN')
         zmlog.Debug(1, "eid:{} Reading token from secrets".format(eid))
     if not param_dict['user']:
-        param_dict['user'] = secrets.get('PUSHOVER_USER_KEY'),
+        param_dict['user'] = secrets.get('PUSHOVER_USER_KEY')
         zmlog.Debug(1, "eid:{} Reading user from secrets".format(eid))
 
 param_dict['title'] = '{} Alarm ({})'.format(mname,eid)
