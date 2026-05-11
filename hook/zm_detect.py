@@ -69,7 +69,7 @@ def main_handler():
     if not args.get('file') and not args.get('eventid'): print('--eventid required'); sys.exit(1)
 
     # Config + logging
-    from pyzm.log import setup_zm_logging
+    from pyzm.log import setup_zm_logging, get_log_file
     utils.get_pyzm_config(args)
     if args.get('debug'):
         g.config['pyzm_overrides'].update(dump_console=True, log_debug=True, log_level_debug=5, log_debug_target=None)
@@ -77,6 +77,7 @@ def main_handler():
     g.logger = setup_zm_logging(name='zmesdetect_m{}'.format(mid) if mid else 'zmesdetect', override=g.config['pyzm_overrides'])
 
     g.logger.Debug(1, 'zm_detect invoked: {}'.format(' '.join(sys.argv)))
+    g.logger.Debug(1, 'Log file: {}'.format(get_log_file() or '(file logging disabled)'))
     g.logger.Debug(1, '---------| app:{}, pyzm:{}, OpenCV:{}|------------'.format(__app_version__, pyzm_version, cv2.__version__))
 
     g.polygons, g.ctx = [], ssl.create_default_context()
