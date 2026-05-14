@@ -685,8 +685,10 @@ Read by pyzmNg ``StreamConfig``:
      - ``/tmp``
      - Directory for saved frames
    * - ``convert_snapshot_to_fid``
-     - ``yes``
-     - Convert snapshot frame to its actual frame ID
+     - ``no``
+     - When ``yes``, resolve ``"snapshot"`` in ``frame_set`` to the
+       event's ``MaxScoreFrameId`` via the ZM API before fetching.
+       Default ``no`` passes ``fid=snapshot`` through to ZM unchanged.
 
 ``ml.ml_sequence.general`` — detection pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

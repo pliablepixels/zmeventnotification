@@ -112,6 +112,10 @@ ml:
     contig_frames_before_error: 5
     max_attempts: 3
     sleep_between_attempts: 4
+    # "yes" resolves "snapshot" to MaxScoreFrameId via the ZM API before
+    # fetching (stable frame ID, dedups against numeric entries).
+    # "no" passes fid=snapshot through to ZM unchanged.
+    convert_snapshot_to_fid: "no"
 
   # ML detection pipeline — all values inline, no {{}} indirection
   ml_sequence:
