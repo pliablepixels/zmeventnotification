@@ -131,7 +131,7 @@ At a high level, there are 4 types of clients that are interested in receiving n
 * zmNinjaNG: the mobile app that uses Firebase Cloud Messaging (FCM) to get push notifications. This is the "fcm" channel
 * Any websocket client: This includes zmNinjaNG desktop and any other custom client you may have written to receive notifications via web sockets. This is the "web" channel
 * receivers that use MQTT. This is the "mqtt" channel.
-* Any 3rd party push solution which you may be using to deliver push notifications. A popular one is "pushover" for which I provide a `plugin <https://github.com/pliablepixels/zmeventnotificationNg/blob/master/pushapi_plugins/pushapi_pushover.py>`__. This is the "api" channel.
+* Any 3rd party push solution which you may be using to deliver push notifications. A popular one is "pushover" for which I provide a `plugin <https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/pushapi_plugins/pushapi_pushover.py>`__. This is the "api" channel.
 
 So, for example:
 

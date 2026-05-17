@@ -1,4 +1,4 @@
-Before you create an issue, please make sure you have read the [README](https://github.com/pliablepixels/zmeventnotificationNg/blob/master/README.md). If you are asking about the object detection part, I don't provide support for it unless you've tried hard enough.
+Before you create an issue, please make sure you have read the [README](https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/README.md). If you are asking about the object detection part, I don't provide support for it unless you've tried hard enough.
 
 
 **Event Server version**

@@ -15,9 +15,9 @@ Development notes
   * `chore:` maintenance, config, tooling
   * `test:` adding or updating tests
   * Scope is optional: `feat(install):`, `refactor(config):`, etc.
-* NEVER create issues, PRs, or push to the upstream repo (`ZoneMinder/zmeventnotificationNg`). ALL issues, PRs, and pushes MUST go to `pliablepixels/zmeventnotificationNg` (origin).
+* The canonical repo is `ZoneMinder/zmeventnotificationNg` (origin). All issues, PRs, and pushes go there.
 * If you are fixing bugs or creating new features, the process MUST be:
-    - Create a GH issue on `pliablepixels/zmeventnotificationNg` (label it)
+    - Create a GH issue on `ZoneMinder/zmeventnotificationNg` (label it)
     - If developing a feature, create a branch
     - Commit changes referring the issue
     - Wait for the user to confirm before you close the issue

@@ -61,4 +61,4 @@ Screenshots
 Click each image for larger versions. Some of these images are from other users who have granted permission for use
 ###### (permissions received from: Rockedge/ZM Slack channel/Mar 15, 2019)
 
-<img src="https://github.com/pliablepixels/zmeventnotificationNg/blob/master/screenshots/person_face.jpg" width="300px" /> <img src="https://github.com/pliablepixels/zmeventnotificationNg/blob/master/screenshots/delivery.jpg" width="300px" /> <img src="https://github.com/pliablepixels/zmeventnotificationNg/blob/master/screenshots/car.jpg" width="300px" /> <img src="https://github.com/pliablepixels/zmeventnotificationNg/blob/master/screenshots/alpr.jpg" width="300px" />
+<img src="https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/screenshots/person_face.jpg" width="300px" /> <img src="https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/screenshots/delivery.jpg" width="300px" /> <img src="https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/screenshots/car.jpg" width="300px" /> <img src="https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/screenshots/alpr.jpg" width="300px" />

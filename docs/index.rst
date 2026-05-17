@@ -33,7 +33,7 @@ zmesNg Event Notification Server Documentation
         zmNinjaNG <https://zmninjang.readthedocs.io/en/latest/>
 
 
-`Github Repository <https://github.com/pliablepixels/zmeventnotificationNg>`__
+`Github Repository <https://github.com/ZoneMinder/zmeventnotificationNg>`__
 
 What is the Event Server and the ML Ecosystem?
 ++++++++++++++++++++++++++++++++++++++++++++++++

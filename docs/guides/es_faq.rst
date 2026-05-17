@@ -102,7 +102,7 @@ Download the latest version & change dir to it:
 
 ::
 
-  git clone https://github.com/pliablepixels/zmeventnotificationNg.git
+  git clone https://github.com/ZoneMinder/zmeventnotificationNg.git
   cd zmeventnotificationNg/
 
 STEP 2: stop the current ES
@@ -271,7 +271,7 @@ support for person detection)
    notification to the clients listening
 
 Those who want to know more: - Read the detailed notes
-`here <https://github.com/pliablepixels/zmeventnotificationNg/tree/master/hook>`__
+`here <https://github.com/ZoneMinder/zmeventnotificationNg/tree/master/hook>`__
 - Read
 `this <https://medium.com/zmninja/inside-the-hood-machine-learning-enhanced-real-time-alarms-with-zoneminder-e26c34fe354c>`__
 for an explanation of how this works
@@ -560,7 +560,7 @@ in daemon model, please see :doc:`hooks_faq`)
 
 -  Make sure your certificates are readable by ``www-data`` for
    Ubuntu/Debian, or ``apache`` for Fedora/CentOS (thanks to
-   `@jagee <https://github.com/pliablepixels/zmeventnotificationNg/issues/8>`_).
+   `@jagee <https://github.com/ZoneMinder/zmeventnotificationNg/issues/8>`_).
 -  Make sure the *path* to the certificates are readable by ``www-data``
    for Ubuntu/Debian, or ``apache`` for Fedora/CentOS
 

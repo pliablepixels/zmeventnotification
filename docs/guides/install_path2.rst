@@ -31,7 +31,7 @@ Step 3: Run the installer
 
 .. code:: bash
 
-   git clone https://github.com/pliablepixels/zmeventnotificationNg
+   git clone https://github.com/ZoneMinder/zmeventnotificationNg
    cd zmeventnotificationNg
    sudo -H ./install.sh    # say Yes to everything
 

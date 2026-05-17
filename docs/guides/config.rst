@@ -6,9 +6,9 @@ All configuration files use **YAML format**. There are two parts to the configur
 * The Event Notification Server configuration — typically ``/etc/zm/zmeventnotification.yml``
 * The Machine Learning Detection Hook configuration — typically ``/etc/zm/objectconfig.yml``
 
-The ES comes with a `sample ES config file <https://github.com/pliablepixels/zmeventnotificationNg/blob/master/zmeventnotification.example.yml>`__
+The ES comes with a `sample ES config file <https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/zmeventnotification.example.yml>`__
 which you should customize as fit. The sample config file is well annotated, so you really should read the comments to get an
-understanding of what each parameter does. Similarly, the ES also comes with a `sample objectconfig.yml file <https://github.com/pliablepixels/zmeventnotificationNg/blob/master/hook/objectconfig.example.yml>`__
+understanding of what each parameter does. Similarly, the ES also comes with a `sample objectconfig.yml file <https://github.com/ZoneMinder/zmeventnotificationNg/blob/master/hook/objectconfig.example.yml>`__
 which you should read as well if you are using hooks.
 
 .. note::
